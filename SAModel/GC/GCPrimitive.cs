@@ -73,7 +73,7 @@ namespace SonicRetro.SAModel.GC
 		/// <param name="file">The files contents as a byte array</param>
 		/// <param name="address">The starting address of the primitive</param>
 		/// <param name="indexFlags">How the indices of the loops are structured</param>
-		public GCPrimitive(byte[] file, int address, GCIndexAttributeFlags indexFlags, out int end)
+		public GCPrimitive(byte[] file, uint address, GCIndexAttributeFlags indexFlags, out uint end)
 		{
 			primitiveType = (GCPrimitiveType)file[address];
 
@@ -99,7 +99,7 @@ namespace SonicRetro.SAModel.GC
 			bool nrm16bit = hasFlag(GCIndexAttributeFlags.Normal16BitIndex);
 			bool uv16bit = hasFlag(GCIndexAttributeFlags.UV16BitIndex);
 
-			int tmpaddr = address + 3;
+			uint tmpaddr = address + 3;
 
 			loops = new List<Loop>();
 

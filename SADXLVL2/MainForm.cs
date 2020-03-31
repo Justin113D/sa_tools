@@ -1124,8 +1124,8 @@ namespace SonicRetro.SAModel.SADXLVL2
 									progress.SetTask("SET: " + setfmt.Replace(Environment.CurrentDirectory, ""));
 
 									int count = BitConverter.ToInt32(setfile, 0);
-									int setaddr = 0x20;
-									int prmaddr = 0x20;
+									uint setaddr = 0x20;
+									uint prmaddr = 0x20;
 									for (int j = 0; j < count; j++)
 									{
 										progress.SetStep(string.Format("{0}/{1}", (j + 1), count));
@@ -1212,7 +1212,7 @@ namespace SonicRetro.SAModel.SADXLVL2
 							progress.SetTask("CAM: " + formatted.Replace(Environment.CurrentDirectory, ""));
 
 							int count = BitConverter.ToInt32(camfile, 0);
-							int address = 0x40;
+							uint address = 0x40;
 							for (int j = 0; j < count; j++)
 							{
 								progress.SetStep(string.Format("{0}/{1}", (j + 1), count));
@@ -3124,7 +3124,7 @@ namespace SonicRetro.SAModel.SADXLVL2
 							case Basic_PolyType.Strips:
 								foreach (Strip strip in meshSet.Poly)
 								{
-									faces += strip.Size;
+									faces += (int)strip.Size;
 								}
 								break;
 							default:

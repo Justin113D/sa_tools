@@ -32,7 +32,7 @@ namespace SonicRetro.SAModel
 
 		public ModelFile(byte[] file, string filename = null)
 		{
-			int tmpaddr;
+			uint tmpaddr;
 			bool be = ByteConverter.BigEndian;
 			ByteConverter.BigEndian = false;
 			ulong magic = ByteConverter.ToUInt64(file, 0) & FormatMask;
@@ -40,21 +40,21 @@ namespace SonicRetro.SAModel
 			if (version > CurrentVersion)
 				throw new FormatException("Not a valid SA1MDL/SA2MDL file.");
 			Metadata = new Dictionary<uint, byte[]>();
-			Dictionary<int, string> labels = new Dictionary<int, string>();
-			Dictionary<int, Attach> attaches = new Dictionary<int, Attach>();
+			Dictionary<uint, string> labels = new Dictionary<uint, string>();
+			Dictionary<uint, Attach> attaches = new Dictionary<uint, Attach>();
 			if (version < 2)
 			{
 				if (version == 1)
 				{
-					tmpaddr = ByteConverter.ToInt32(file, 0x14);
+					tmpaddr = ByteConverter.ToUInt32(file, 0x14);
 					if (tmpaddr != 0)
 					{
-						int addr = ByteConverter.ToInt32(file, tmpaddr);
-						while (addr != -1)
+						uint addr = ByteConverter.ToUInt32(file, tmpaddr);
+						while (addr != uint.MaxValue)
 						{
-							labels.Add(addr, file.GetCString(ByteConverter.ToInt32(file, tmpaddr + 4)));
+							labels.Add(addr, file.GetCString(ByteConverter.ToUInt32(file, tmpaddr + 4)));
 							tmpaddr += 8;
-							addr = ByteConverter.ToInt32(file, tmpaddr);
+							addr = ByteConverter.ToUInt32(file, tmpaddr);
 						}
 					}
 				}
@@ -69,19 +69,19 @@ namespace SonicRetro.SAModel
 					default:
 						throw new FormatException("Not a valid SA1MDL/SA2MDL file.");
 				}
-				Model = new NJS_OBJECT(file, ByteConverter.ToInt32(file, 8), 0, Format, labels, attaches);
+				Model = new NJS_OBJECT(file, ByteConverter.ToUInt32(file, 8), 0, Format, labels, attaches);
 				if (filename != null)
 				{
-					tmpaddr = ByteConverter.ToInt32(file, 0xC);
+					tmpaddr = ByteConverter.ToUInt32(file, 0xC);
 					if (tmpaddr != 0)
 					{
 						List<string> animfiles = new List<string>();
-						int addr = ByteConverter.ToInt32(file, tmpaddr);
-						while (addr != -1)
+						uint addr = ByteConverter.ToUInt32(file, tmpaddr);
+						while (addr != uint.MaxValue)
 						{
 							animfiles.Add(file.GetCString(addr));
 							tmpaddr += 4;
-							addr = ByteConverter.ToInt32(file, tmpaddr);
+							addr = ByteConverter.ToUInt32(file, tmpaddr);
 						}
 						animationFiles = animfiles.ToArray();
 					}
@@ -104,15 +104,15 @@ namespace SonicRetro.SAModel
 			else
 			{
 				animationFiles = new string[0];
-				tmpaddr = ByteConverter.ToInt32(file, 0xC);
+				tmpaddr = ByteConverter.ToUInt32(file, 0xC);
 				if (tmpaddr != 0)
 				{
 					bool finished = false;
 					while (!finished)
 					{
 						ChunkTypes type = (ChunkTypes)ByteConverter.ToUInt32(file, tmpaddr);
-						int chunksz = ByteConverter.ToInt32(file, tmpaddr + 4);
-						int nextchunk = tmpaddr + 8 + chunksz;
+						uint chunksz = ByteConverter.ToUInt32(file, tmpaddr + 4);
+						uint nextchunk = tmpaddr + 8 + chunksz;
 						tmpaddr += 8;
 						if (version == 2)
 						{
@@ -121,7 +121,7 @@ namespace SonicRetro.SAModel
 								case ChunkTypes.Label:
 									while (ByteConverter.ToInt64(file, tmpaddr) != -1)
 									{
-										labels.Add(ByteConverter.ToInt32(file, tmpaddr), file.GetCString(ByteConverter.ToInt32(file, tmpaddr + 4)));
+										labels.Add(ByteConverter.ToUInt32(file, tmpaddr), file.GetCString(ByteConverter.ToUInt32(file, tmpaddr + 4)));
 										tmpaddr += 8;
 									}
 									break;
@@ -129,7 +129,7 @@ namespace SonicRetro.SAModel
 									List<string> animfiles = new List<string>();
 									while (ByteConverter.ToInt32(file, tmpaddr) != -1)
 									{
-										animfiles.Add(file.GetCString(ByteConverter.ToInt32(file, tmpaddr)));
+										animfiles.Add(file.GetCString(ByteConverter.ToUInt32(file, tmpaddr)));
 										tmpaddr += 4;
 									}
 									animationFiles = animfiles.ToArray();
@@ -155,14 +155,14 @@ namespace SonicRetro.SAModel
 						{
 							byte[] chunk = new byte[chunksz];
 							Array.Copy(file, tmpaddr, chunk, 0, chunksz);
-							int chunkaddr = 0;
+							uint chunkaddr = 0;
 							switch (type)
 							{
 								case ChunkTypes.Label:
 									while (ByteConverter.ToInt64(chunk, chunkaddr) != -1)
 									{
-										labels.Add(ByteConverter.ToInt32(chunk, chunkaddr),
-											chunk.GetCString(ByteConverter.ToInt32(chunk, chunkaddr + 4)));
+										labels.Add(ByteConverter.ToUInt32(chunk, chunkaddr),
+											chunk.GetCString(ByteConverter.ToUInt32(chunk, chunkaddr + 4)));
 										chunkaddr += 8;
 									}
 									break;
@@ -170,7 +170,7 @@ namespace SonicRetro.SAModel
 									List<string> animchunks = new List<string>();
 									while (ByteConverter.ToInt32(chunk, chunkaddr) != -1)
 									{
-										animchunks.Add(chunk.GetCString(ByteConverter.ToInt32(chunk, chunkaddr)));
+										animchunks.Add(chunk.GetCString(ByteConverter.ToUInt32(chunk, chunkaddr)));
 										chunkaddr += 4;
 									}
 									animationFiles = animchunks.ToArray();
@@ -210,7 +210,7 @@ namespace SonicRetro.SAModel
 					default:
 						throw new FormatException("Not a valid SA1MDL/SA2MDL file.");
 				}
-				Model = new NJS_OBJECT(file, ByteConverter.ToInt32(file, 8), 0, Format, labels, attaches);
+				Model = new NJS_OBJECT(file, ByteConverter.ToUInt32(file, 8), 0, Format, labels, attaches);
 				if (filename != null)
 				{
 					string path = Path.GetDirectoryName(filename);

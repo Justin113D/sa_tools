@@ -57,7 +57,7 @@ namespace splitEvent
 					ini.Game = Game.SA2;
 					battle = false;
 				}
-				int ptr = fc.GetPointer(0x20, key);
+				uint ptr = fc.GetPointer(0x20, key);
 				if (ptr != 0)
 					for (int i = 0; i < (battle ? 18 : 16); i++)
 					{
@@ -88,7 +88,7 @@ namespace splitEvent
 						info.RootNode = GetModel(fc, ptr, key, $"{chnam} Root.sa2mdl");
 						if (info.RootNode != null)
 						{
-							int ptr2 = fc.GetPointer(ptr + 4, key);
+							uint ptr2 = fc.GetPointer(ptr + 4, key);
 							if (ptr2 != 0)
 								info.AttachNode1 = $"object_{ptr2:X8}";
 							info.Model1 = GetModel(fc, ptr + 8, key, $"{upnam} Model 1.sa2mdl");
@@ -122,7 +122,7 @@ namespace splitEvent
 					{
 						Directory.CreateDirectory(Path.Combine(path, $"Scene {gn + 1}"));
 						SceneInfo scn = new SceneInfo();
-						int ptr2 = fc.GetPointer(ptr, key);
+						uint ptr2 = fc.GetPointer(ptr, key);
 						int ecnt = ByteConverter.ToInt32(fc, ptr + 4);
 						if (ptr2 != 0)
 						{
@@ -153,7 +153,7 @@ namespace splitEvent
 									ent.Flags = ByteConverter.ToUInt32(fc, ptr2 + 28);
 								}
 								scn.Entities.Add(ent);
-								ptr2 += ini.Game == Game.SA2B ? 0x2C : 0x20;
+								ptr2 += ini.Game == Game.SA2B ? 0x2Cu : 0x20u;
 							}
 						}
 						else
@@ -176,7 +176,7 @@ namespace splitEvent
 							if (big.Model != null)
 							{
 								int anicnt = modelfiles[big.Model].Model.CountAnimated();
-								int ptr3 = fc.GetPointer(ptr2 + 4, key);
+								uint ptr3 = fc.GetPointer(ptr2 + 4, key);
 								if (ptr3 != 0)
 								{
 									int cnt = ByteConverter.ToInt32(fc, ptr2 + 8);
@@ -229,11 +229,11 @@ namespace splitEvent
 		{
 			List<NJS_MOTION> motions = new List<NJS_MOTION>();
 			byte[] fc = File.ReadAllBytes(filename);
-			int addr = 0;
+			uint addr = 0;
 			while (ByteConverter.ToInt64(fc, addr) != 0)
 			{
-				int ptr = ByteConverter.ToInt32(fc, addr);
-				if (ptr == -1)
+				uint ptr = ByteConverter.ToUInt32(fc, addr);
+				if (ptr == uint.MaxValue)
 					motions.Add(null);
 				else
 					motions.Add(new NJS_MOTION(fc, ptr, 0, ByteConverter.ToInt32(fc, addr + 4)));
@@ -242,10 +242,10 @@ namespace splitEvent
 			return motions;
 		}
 
-		private static string GetModel(byte[] fc, int address, uint key, string fn)
+		private static string GetModel(byte[] fc, uint address, uint key, string fn)
 		{
 			string name = null;
-			int ptr3 = fc.GetPointer(address, key);
+			uint ptr3 = fc.GetPointer(address, key);
 			if (ptr3 != 0)
 			{
 				name = $"object_{ptr3:X8}";
@@ -264,10 +264,10 @@ namespace splitEvent
 			return name;
 		}
 
-		private static string GetGCModel(byte[] fc, int address, uint key, string fn)
+		private static string GetGCModel(byte[] fc, uint address, uint key, string fn)
 		{
 			string name = null;
-			int ptr3 = fc.GetPointer(address, key);
+			uint ptr3 = fc.GetPointer(address, key);
 			if (ptr3 != 0)
 			{
 				name = $"object_{ptr3:X8}";
@@ -286,14 +286,14 @@ namespace splitEvent
 			return name;
 		}
 
-		private static string GetMotion(byte[] fc, int address, uint key, string fn, List<NJS_MOTION> motions, int cnt)
+		private static string GetMotion(byte[] fc, uint address, uint key, string fn, List<NJS_MOTION> motions, int cnt)
 		{
 			NJS_MOTION mtn = null;
 			if (motions != null)
 				mtn = motions[ByteConverter.ToInt32(fc, address)];
 			else
 			{
-				int ptr3 = fc.GetPointer(address, key);
+				uint ptr3 = fc.GetPointer(address, key);
 				if (ptr3 != 0)
 					mtn = new NJS_MOTION(fc, ptr3, key, cnt);
 			}

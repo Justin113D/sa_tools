@@ -43,9 +43,9 @@ namespace buildMDL
 				if (Directory.Exists(mdlfilename))
 					mdlfilename += ".prs";
 				Environment.CurrentDirectory = Path.GetDirectoryName(mdlfilename);
-				SortedDictionary<int, NJS_OBJECT> models = new SortedDictionary<int, NJS_OBJECT>();
+				SortedDictionary<uint, NJS_OBJECT> models = new SortedDictionary<uint, NJS_OBJECT>();
 				foreach (string file in Directory.GetFiles(Path.GetFileNameWithoutExtension(mdlfilename), "*.sa2mdl"))
-					if (int.TryParse(Path.GetFileNameWithoutExtension(file), NumberStyles.Integer, NumberFormatInfo.InvariantInfo, out int i))
+					if (uint.TryParse(Path.GetFileNameWithoutExtension(file), NumberStyles.Integer, NumberFormatInfo.InvariantInfo, out uint i))
 						models.Add(i, new ModelFile(file).Model);
 				MDLInfo mdlinfo = IniSerializer.Deserialize<MDLInfo>(
 					Path.Combine(Path.GetFileNameWithoutExtension(mdlfilename), Path.GetFileNameWithoutExtension(mdlfilename) + ".ini"));
@@ -57,13 +57,13 @@ namespace buildMDL
 				List<byte> modelbytes = new List<byte>();
 				Dictionary<string, uint> labels = new Dictionary<string, uint>();
 				uint imageBase = (uint)(mdlinfo.Indexes.Count * 8) + 8;
-				foreach (KeyValuePair<int, NJS_OBJECT> item in models)
+				foreach (KeyValuePair<uint, NJS_OBJECT> item in models)
 				{
 					byte[] tmp = item.Value.GetBytes(imageBase, false, labels, out uint address);
 					modelbytes.AddRange(tmp);
 					imageBase += (uint)tmp.Length;
 				}
-				foreach (KeyValuePair<int, string> item in mdlinfo.Indexes)
+				foreach (KeyValuePair<uint, string> item in mdlinfo.Indexes)
 				{
 					mdlfile.AddRange(ByteConverter.GetBytes(item.Key));
 					mdlfile.AddRange(ByteConverter.GetBytes(labels[item.Value]));

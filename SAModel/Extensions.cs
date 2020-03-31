@@ -15,17 +15,17 @@ namespace SonicRetro.SAModel
 			me.AddRange(new byte[alignment - off]);
 		}
 
-		public static string GetCString(this byte[] file, int address)
+		public static string GetCString(this byte[] file, uint address)
 		{
 			return GetCString(file, address, Encoding.UTF8);
 		}
 
-		public static string GetCString(this byte[] file, int address, Encoding encoding)
+		public static string GetCString(this byte[] file, uint address, Encoding encoding)
 		{
 			int count = 0;
 			while (file[address + count] != 0)
 				count++;
-			return encoding.GetString(file, address, count);
+			return encoding.GetString(file, (int)address, count);
 		}
 
 		public static string ToC(this float num)

@@ -46,7 +46,7 @@ namespace SETCodeGenerator
 				sw.WriteLine("\tObjectMaster *obj;");
 				sw.WriteLine("\tEntityData1 *ent;");
 				int count = BitConverter.ToInt32(setfile, 0);
-				int address = 0x20;
+				uint address = 0x20;
 				for (int i = 0; i < count; i++)
 				{
 					SETItem ent = new SETItem(setfile, address);
@@ -82,14 +82,14 @@ namespace SETCodeGenerator
 
 	class SETItem
 	{
-		public SETItem(byte[] file, int address)
+		public SETItem(byte[] file, uint address)
 		{
 			ushort _id = ByteConverter.ToUInt16(file, address);
 			ID = _id;
 			ClipLevel = (byte)(_id >> 12);
-			ushort xrot = BitConverter.ToUInt16(file, address + 2);
-			ushort yrot = BitConverter.ToUInt16(file, address + 4);
-			ushort zrot = BitConverter.ToUInt16(file, address + 6);
+			ushort xrot = ByteConverter.ToUInt16(file, address + 2);
+			ushort yrot = ByteConverter.ToUInt16(file, address + 4);
+			ushort zrot = ByteConverter.ToUInt16(file, address + 6);
 			Rotation = new Rotation(xrot, yrot, zrot);
 			Position = new Vertex(file, address + 8);
 			Scale = new Vertex(file, address + 0x14);

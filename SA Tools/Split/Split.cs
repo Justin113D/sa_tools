@@ -62,7 +62,7 @@ namespace SA_Tools.Split
 					SA_Tools.FileInfo data = item.Value;
 					Dictionary<string, string> customProperties = data.CustomProperties;
 					string type = data.Type;
-					int address = data.Address;
+					uint address = data.Address;
 					bool nohash = false;
 
 					string fileOutputPath = string.Concat(projectFolderName, data.Filename);
@@ -75,7 +75,7 @@ namespace SA_Tools.Split
 							break;
 						case "model":
 							{
-								NJS_OBJECT mdl = new NJS_OBJECT(datafile, address, imageBase, modelfmt, new Dictionary<int, Attach>());
+								NJS_OBJECT mdl = new NJS_OBJECT(datafile, address, imageBase, modelfmt, new Dictionary<uint, Attach>());
 								string[] mdlanis = new string[0];
 								if (customProperties.ContainsKey("animations"))
 									mdlanis = customProperties["animations"].Split(',');
@@ -87,7 +87,7 @@ namespace SA_Tools.Split
 							break;
 						case "basicmodel":
 							{
-								NJS_OBJECT mdl = new NJS_OBJECT(datafile, address, imageBase, ModelFormat.Basic, new Dictionary<int, Attach>());
+								NJS_OBJECT mdl = new NJS_OBJECT(datafile, address, imageBase, ModelFormat.Basic, new Dictionary<uint, Attach>());
 								string[] mdlanis = new string[0];
 								if (customProperties.ContainsKey("animations"))
 									mdlanis = customProperties["animations"].Split(',');
@@ -99,7 +99,7 @@ namespace SA_Tools.Split
 							break;
 						case "basicdxmodel":
 							{
-								NJS_OBJECT mdl = new NJS_OBJECT(datafile, address, imageBase, ModelFormat.BasicDX, new Dictionary<int, Attach>());
+								NJS_OBJECT mdl = new NJS_OBJECT(datafile, address, imageBase, ModelFormat.BasicDX, new Dictionary<uint, Attach>());
 								string[] mdlanis = new string[0];
 								if (customProperties.ContainsKey("animations"))
 									mdlanis = customProperties["animations"].Split(',');
@@ -111,7 +111,7 @@ namespace SA_Tools.Split
 							break;
 						case "chunkmodel":
 							{
-								NJS_OBJECT mdl = new NJS_OBJECT(datafile, address, imageBase, ModelFormat.Chunk, new Dictionary<int, Attach>());
+								NJS_OBJECT mdl = new NJS_OBJECT(datafile, address, imageBase, ModelFormat.Chunk, new Dictionary<uint, Attach>());
 								string[] mdlanis = new string[0];
 								if (customProperties.ContainsKey("animations"))
 									mdlanis = customProperties["animations"].Split(',');
@@ -123,7 +123,7 @@ namespace SA_Tools.Split
 							break;
 						case "gcmodel":
 							{
-								NJS_OBJECT mdl = new NJS_OBJECT(datafile, address, imageBase, ModelFormat.GC, new Dictionary<int, Attach>());
+								NJS_OBJECT mdl = new NJS_OBJECT(datafile, address, imageBase, ModelFormat.GC, new Dictionary<uint, Attach>());
 								string[] mdlanis = new string[0];
 								if (customProperties.ContainsKey("animations"))
 									mdlanis = customProperties["animations"].Split(',');
@@ -135,7 +135,7 @@ namespace SA_Tools.Split
 							break;
 						case "action":
 							{
-								NJS_ACTION ani = new NJS_ACTION(datafile, address, imageBase, modelfmt, new Dictionary<int, Attach>());
+								NJS_ACTION ani = new NJS_ACTION(datafile, address, imageBase, modelfmt, new Dictionary<uint, Attach>());
 								ani.Animation.Name = filedesc;
 								ani.Animation.Save(fileOutputPath);
 							}
@@ -252,7 +252,7 @@ namespace SA_Tools.Split
 								{
 									flags.Add(new DeathZoneFlags(datafile, address));
 									string file = Path.Combine(path, num++.ToString(NumberFormatInfo.InvariantInfo) + (modelfmt == ModelFormat.Chunk ? ".sa2mdl" : ".sa1mdl"));
-									ModelFile.CreateFile(file, new NJS_OBJECT(datafile, datafile.GetPointer(address + 4, imageBase), imageBase, modelfmt, new Dictionary<int, Attach>()), null, null, null, null, modelfmt);
+									ModelFile.CreateFile(file, new NJS_OBJECT(datafile, datafile.GetPointer(address + 4, imageBase), imageBase, modelfmt, new Dictionary<uint, Attach>()), null, null, null, null, modelfmt);
 									hashes.Add(HelperFunctions.FileHash(file));
 									address += 8;
 								}
@@ -295,10 +295,10 @@ namespace SA_Tools.Split
 								ushort lvlnum = (ushort)ByteConverter.ToUInt32(datafile, address);
 								while (lvlnum != 0xFFFF)
 								{
-									int ptr = ByteConverter.ToInt32(datafile, address + 4);
+									uint ptr = ByteConverter.ToUInt32(datafile, address + 4);
 									if (ptr != 0)
 									{
-										ptr = (int)((uint)ptr - imageBase);
+										ptr -= imageBase;
 										SA1LevelAct level = new SA1LevelAct(lvlnum);
 										string lvldir = Path.Combine(fileOutputPath, level.ToString());
 										PathList.Load(datafile, ptr, imageBase).Save(lvldir, out string[] lvlhashes);

@@ -12,7 +12,7 @@ namespace SonicRetro.SAModel
 		public float U { get; set; }
 		public float V { get; set; }
 
-		public static int Size
+		public static uint Size
 		{
 			get { return 4; }
 		}
@@ -21,12 +21,12 @@ namespace SonicRetro.SAModel
 		{
 		}
 
-		public UV(byte[] file, int address)
+		public UV(byte[] file, uint address)
 			: this(file, address, false)
 		{
 		}
 
-		public UV(byte[] file, int address, bool UVH)
+		public UV(byte[] file, uint address, bool UVH)
 		{
 			U = ByteConverter.ToInt16(file, address) / (UVH ? 1023f : 255f);
 			V = ByteConverter.ToInt16(file, address + 2) / (UVH ? 1023f : 255f);

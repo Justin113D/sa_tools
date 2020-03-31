@@ -13,13 +13,13 @@ namespace SA_Tools
 		{
 			if (ByteConverter.ToUInt16(exefile, 0) != 0x5A4D)
 				return null;
-			int ptr = ByteConverter.ToInt32(exefile, 0x3c);
-			if (ByteConverter.ToInt32(exefile, (int)ptr) != 0x4550) //PE\0\0
+			uint ptr = ByteConverter.ToUInt32(exefile, 0x3c);
+			if (ByteConverter.ToInt32(exefile, ptr) != 0x4550) //PE\0\0
 				return null;
 			ptr += 4;
-			UInt16 numsects = ByteConverter.ToUInt16(exefile, (int)ptr + 2);
+			ushort numsects = ByteConverter.ToUInt16(exefile, ptr + 2);
 			ptr += 0x14;
-			int PEHead = ptr;
+			uint PEHead = ptr;
 			uint imageBase = ByteConverter.ToUInt32(exefile, ptr + 28);
 			byte[] result = new byte[ByteConverter.ToUInt32(exefile, ptr + 56)];
 			Array.Copy(exefile, result, ByteConverter.ToUInt32(exefile, ptr + 60));
@@ -35,28 +35,28 @@ namespace SA_Tools
 
 		public static uint GetNewSectionAddress(byte[] exefile)
 		{
-			int ptr = ByteConverter.ToInt32(exefile, 0x3c);
+			uint ptr = ByteConverter.ToUInt32(exefile, 0x3c);
 			ptr += 4;
-			UInt16 numsects = ByteConverter.ToUInt16(exefile, (int)ptr + 2);
+			ushort numsects = ByteConverter.ToUInt16(exefile, ptr + 2);
 			ptr += 0x14;
 			ptr += 0xe0;
-			ptr += (int)SectOffs.Size * (numsects - 1);
+			ptr += (uint)((byte)SectOffs.Size * (numsects - 1));
 			return HelperFunctions.Align(ByteConverter.ToUInt32(exefile, ptr + (int)SectOffs.VAddr) + ByteConverter.ToUInt32(exefile, ptr + (int)SectOffs.VSize));
 		}
 
 		public static void CreateNewSection(ref byte[] exefile, string name, byte[] data, bool isCode)
 		{
-			int ptr = ByteConverter.ToInt32(exefile, 0x3c);
+			uint ptr = ByteConverter.ToUInt32(exefile, 0x3c);
 			ptr += 4;
-			UInt16 numsects = ByteConverter.ToUInt16(exefile, ptr + 2);
-			int sectnumptr = ptr + 2;
+			ushort numsects = ByteConverter.ToUInt16(exefile, ptr + 2);
+			uint sectnumptr = ptr + 2;
 			ptr += 0x14;
-			int PEHead = ptr;
+			uint PEHead = ptr;
 			ptr += 0xe0;
-			int sectptr = ptr;
-			ptr += (int)SectOffs.Size * numsects;
+			uint sectptr = ptr;
+			ptr += (uint)((byte)SectOffs.Size * numsects);
 			ByteConverter.GetBytes((ushort)(numsects + 1)).CopyTo(exefile, sectnumptr);
-			Array.Clear(exefile, ptr, 8);
+			Array.Clear(exefile, (int)ptr, 8);
 			Encoding.ASCII.GetBytes(name).CopyTo(exefile, ptr);
 			UInt32 vaddr = HelperFunctions.Align(ByteConverter.ToUInt32(exefile, ptr - (int)SectOffs.Size + (int)SectOffs.VAddr) + ByteConverter.ToUInt32(exefile, ptr - (int)SectOffs.Size + (int)SectOffs.VSize));
 			ByteConverter.GetBytes(vaddr).CopyTo(exefile, ptr + (int)SectOffs.VAddr);
@@ -79,15 +79,15 @@ namespace SA_Tools
 		{
 			if (ByteConverter.ToUInt16(exefile, 0) != 0x5A4D)
 				return;
-			int ptr = ByteConverter.ToInt32(exefile, 0x3c);
-			if (ByteConverter.ToInt32(exefile, (int)ptr) != 0x4550) //PE\0\0
+			uint ptr = ByteConverter.ToUInt32(exefile, 0x3c);
+			if (ByteConverter.ToInt32(exefile, ptr) != 0x4550) //PE\0\0
 				return;
 			ptr += 4;
-			UInt16 numsects = ByteConverter.ToUInt16(exefile, (int)ptr + 2);
+			ushort numsects = ByteConverter.ToUInt16(exefile, ptr + 2);
 			ptr += 0x14;
-			int PEHead = ptr;
+			uint PEHead = ptr;
 			uint imageBase = ByteConverter.ToUInt32(exefile, ptr + 28);
-			byte[] result = new byte[ByteConverter.ToInt32(exefile, ptr + 0xe0 + ((int)SectOffs.Size * (numsects - 1)) + (int)SectOffs.FAddr) + ByteConverter.ToInt32(exefile, ptr + 0xe0 + ((int)SectOffs.Size * (numsects - 1)) + (int)SectOffs.FSize)];
+			byte[] result = new byte[ByteConverter.ToInt32(exefile, (uint)(ptr + 0xe0 + ((int)SectOffs.Size * (numsects - 1)) + (int)SectOffs.FAddr)) + ByteConverter.ToInt32(exefile, (uint)(ptr + 0xe0 + ((int)SectOffs.Size * (numsects - 1)) + (int)SectOffs.FSize))];
 			Array.Copy(exefile, result, ByteConverter.ToUInt32(exefile, ptr + 60));
 			ptr += 0xe0;
 			for (int i = 0; i < numsects; i++)
@@ -100,22 +100,22 @@ namespace SA_Tools
 
 		public static void FixRELPointers(byte[] file)
 		{
-						OSModuleHeader header = new OSModuleHeader(file, 0);
+			OSModuleHeader header = new OSModuleHeader(file, 0);
 			OSSectionInfo[] sections = new OSSectionInfo[header.info.numSections];
-			for (int i = 0; i < header.info.numSections; i++)
-				sections[i] = new OSSectionInfo(file, (int)header.info.sectionInfoOffset + (i * 8));
+			for (uint i = 0; i < header.info.numSections; i++)
+				sections[i] = new OSSectionInfo(file, header.info.sectionInfoOffset + (i * 8));
 			OSImportInfo[] imports = new OSImportInfo[header.impSize / 8];
-			for (int i = 0; i < imports.Length; i++)
-				imports[i] = new OSImportInfo(file, (int)header.impOffset + (i * 8));
-			int reladdr = 0;
+			for (uint i = 0; i < imports.Length; i++)
+				imports[i] = new OSImportInfo(file, header.impOffset + (i * 8));
+			uint reladdr = 0;
 			for (int i = 0; i < imports.Length; i++)
 				if (imports[i].id == header.info.id)
 				{
-					reladdr = (int)imports[i].offset;
+					reladdr = imports[i].offset;
 					break;
 				}
 				OSRel rel = new OSRel(file, reladdr);
-				int dataaddr = 0;
+				uint dataaddr = 0;
 				unchecked
 				{
 					while (rel.type != (byte)RelocTypes.R_DOLPHIN_END)
@@ -148,7 +148,7 @@ namespace SA_Tools
 							case (byte)RelocTypes.R_DOLPHIN_END:
 								break;
 							case (byte)RelocTypes.R_DOLPHIN_SECTION:
-								dataaddr = (int)sectionbase;
+								dataaddr = sectionbase;
 								break;
 							default:
 								throw new NotImplementedException();
@@ -201,16 +201,16 @@ namespace SA_Tools
 			}
 		}
 
-		public static string GetCString(this byte[] file, int address)
+		public static string GetCString(this byte[] file, uint address)
 		{
 			return file.GetCString(address, jpenc);
 		}
 
-		public static int GetPointer(this byte[] file, int address, uint imageBase)
+		public static uint GetPointer(this byte[] file, uint address, uint imageBase)
 		{
 			uint tmp = ByteConverter.ToUInt32(file, address);
 			if (tmp == 0) return 0;
-			return (int)(tmp - imageBase);
+			return tmp - imageBase;
 		}
 
 		public static string UnescapeNewlines(this string line)
@@ -576,7 +576,7 @@ namespace SA_Tools
 		public uint next;
 		public uint prev;
 
-		public OSModuleLink(byte[] file, int address)
+		public OSModuleLink(byte[] file, uint address)
 		{
 			next = ByteConverter.ToUInt32(file, address);
 			prev = ByteConverter.ToUInt32(file, address + 4);
@@ -593,7 +593,7 @@ namespace SA_Tools
 		public uint nameSize;		   // size of module name
 		public uint version;			// version number
 
-		public OSModuleInfo(byte[] file, int address)
+		public OSModuleInfo(byte[] file, uint address)
 		{
 			id = ByteConverter.ToUInt32(file, address);
 			address += 4;
@@ -633,7 +633,7 @@ namespace SA_Tools
 		public uint align;			  // module alignment constraint
 		public uint bssAlign;		   // bss alignment constraint
 
-		public OSModuleHeader(byte[] file, int address)
+		public OSModuleHeader(byte[] file, uint address)
 		{
 			info = new OSModuleInfo(file, address);
 			address += 0x20;
@@ -666,7 +666,7 @@ namespace SA_Tools
 		public uint offset;
 		public uint size;
 
-		public OSSectionInfo(byte[] file, int address)
+		public OSSectionInfo(byte[] file, uint address)
 		{
 			offset = ByteConverter.ToUInt32(file, address);
 			size = ByteConverter.ToUInt32(file, address + 4);
@@ -678,7 +678,7 @@ namespace SA_Tools
 		public uint id;				 // external module id
 		public uint offset;			 // offset to OSRel instructions
 
-		public OSImportInfo(byte[] file, int address)
+		public OSImportInfo(byte[] file, uint address)
 		{
 			id = ByteConverter.ToUInt32(file, address);
 			offset = ByteConverter.ToUInt32(file, address + 4);
@@ -692,7 +692,7 @@ namespace SA_Tools
 		public byte section;
 		public uint addend;
 
-		public OSRel(byte[] file, int address)
+		public OSRel(byte[] file, uint address)
 		{
 			offset = ByteConverter.ToUInt16(file, address);
 			type = file[address + 2];

@@ -34,9 +34,25 @@
     <Prefer32Bit>false</Prefer32Bit>
   </PropertyGroup>
   <ItemGroup>
+    <Reference Include="Reloaded.Memory, Version=3.0.1.0, Culture=neutral, processorArchitecture=MSIL">
+      <HintPath>..\packages\Reloaded.Memory.3.0.1\lib\net47\Reloaded.Memory.dll</HintPath>
+    </Reference>
     <Reference Include="System" />
+    <Reference Include="System.Buffers, Version=4.0.3.0, Culture=neutral, PublicKeyToken=cc7b13ffcd2ddd51, processorArchitecture=MSIL">
+      <HintPath>..\packages\System.Buffers.4.5.1\lib\net461\System.Buffers.dll</HintPath>
+    </Reference>
     <Reference Include="System.Core" />
     <Reference Include="System.Drawing" />
+    <Reference Include="System.Memory, Version=4.0.1.1, Culture=neutral, PublicKeyToken=cc7b13ffcd2ddd51, processorArchitecture=MSIL">
+      <HintPath>..\packages\System.Memory.4.5.4\lib\net461\System.Memory.dll</HintPath>
+    </Reference>
+    <Reference Include="System.Numerics" />
+    <Reference Include="System.Numerics.Vectors, Version=4.1.4.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a, processorArchitecture=MSIL">
+      <HintPath>..\packages\System.Numerics.Vectors.4.5.0\lib\net46\System.Numerics.Vectors.dll</HintPath>
+    </Reference>
+    <Reference Include="System.Runtime.CompilerServices.Unsafe, Version=4.0.6.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a, processorArchitecture=MSIL">
+      <HintPath>..\packages\System.Runtime.CompilerServices.Unsafe.4.7.1\lib\net461\System.Runtime.CompilerServices.Unsafe.dll</HintPath>
+    </Reference>
     <Reference Include="System.XML" />
   </ItemGroup>
   <ItemGroup>
@@ -44,37 +60,75 @@
     <Compile Include="BasicAttach.cs" />
     <Compile Include="Attach.cs" />
     <Compile Include="BoundingSphere.cs" />
-    <Compile Include="ByteConverter.cs" />
     <Compile Include="COL.cs" />
     <Compile Include="collada_schema_1_4.cs" />
     <Compile Include="Extensions.cs" />
+    <Compile Include="ModelData\Attach.cs" />
+    <Compile Include="ModelData\BASIC\BasicAttach.cs" />
+    <Compile Include="ModelData\BASIC\Enums.cs" />
+    <Compile Include="ModelData\BASIC\Material.cs" />
+    <Compile Include="ModelData\BASIC\Mesh.cs" />
+    <Compile Include="ModelData\BASIC\Poly.cs" />
+    <Compile Include="ModelData\Buffer\BufferStructs.cs" />
+    <Compile Include="ModelData\Buffer\BufferMaterial.cs" />
+    <Compile Include="ModelData\Buffer\BufferMesh.cs" />
+    <Compile Include="ModelData\CHUNK\ChunkAttach.cs" />
+    <Compile Include="ModelData\CHUNK\Enums.cs" />
+    <Compile Include="ModelData\CHUNK\PolyChunk.cs" />
+    <Compile Include="ModelData\CHUNK\VertexChunk.cs" />
+    <Compile Include="ModelData\Enums.cs" />
     <Compile Include="GC\GCAttach.cs" />
     <Compile Include="GC\GCEnums.cs" />
     <Compile Include="GC\GCMesh.cs" />
-    <Compile Include="GC\GCParameter.cs" />
+    <Compile Include="GC\Parameter.cs" />
     <Compile Include="GC\GCPrimitive.cs" />
     <Compile Include="GC\GCVertexSet.cs" />
-    <Compile Include="GC\Structs.cs" />
     <Compile Include="GeoAnimData.cs" />
     <Compile Include="LandTable.cs" />
+    <Compile Include="ModelData\GC\Enums.cs" />
+    <Compile Include="ModelData\GC\GCAttach.cs" />
+    <Compile Include="ModelData\GC\Mesh.cs" />
+    <Compile Include="ModelData\GC\Parameter.cs" />
+    <Compile Include="ModelData\GC\Poly.cs" />
+    <Compile Include="ModelData\GC\VertexSet.cs" />
     <Compile Include="NJS_MATERIAL.cs" />
     <Compile Include="MathHelper.cs" />
     <Compile Include="NJS_MESHSET.cs" />
     <Compile Include="Enums.cs" />
     <Compile Include="ModelFile.cs" />
     <Compile Include="NJS_OBJECT.cs" />
+    <Compile Include="ObjData\Animation\Action.cs" />
+    <Compile Include="ObjData\Animation\LandEntryMotion.cs" />
+    <Compile Include="ObjData\Animation\Keyframes.cs" />
+    <Compile Include="ObjData\Animation\Motion.cs" />
+    <Compile Include="ObjData\Enums.cs" />
+    <Compile Include="ObjData\LandTable.cs" />
+    <Compile Include="ObjData\LandEntry.cs" />
+    <Compile Include="ObjData\MetaData.cs" />
+    <Compile Include="ObjData\ModelFile.cs" />
+    <Compile Include="ObjData\NjsObject.cs" />
     <Compile Include="Poly.cs" />
     <Compile Include="PolyChunk.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
     <Compile Include="Rotation.cs" />
     <Compile Include="ChunkAttach.cs" />
+    <Compile Include="Structs\Bounds.cs" />
+    <Compile Include="Structs\ByteConverter.cs" />
+    <Compile Include="Structs\Color.cs" />
+    <Compile Include="Structs\Helper.cs" />
+    <Compile Include="Structs\Strippifier.cs" />
+    <Compile Include="Structs\Vector2.cs" />
+    <Compile Include="Structs\Vector3.cs" />
     <Compile Include="UV.cs" />
     <Compile Include="VColor.cs" />
     <Compile Include="Vertex.cs" />
     <Compile Include="VertexChunk.cs" />
     <Compile Include="VertexData.cs" />
   </ItemGroup>
-  <ItemGroup />
+  <ItemGroup>
+    <None Include="app.config" />
+    <None Include="packages.config" />
+  </ItemGroup>
   <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
   <!-- To modify your build process, add your task inside one of the targets below and uncomment it. 
        Other similar extension points exist, see Microsoft.Common.targets.

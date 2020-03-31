@@ -1,4 +1,5 @@
-﻿using System;
+﻿using SonicRetro.SAModel.Structs;
+using System;
 using System.Collections.Generic;
 using System.IO;
 
@@ -46,7 +47,7 @@ namespace SonicRetro.SAModel.GC
 		/// <param name="address">The address at which the attach is located</param>
 		/// <param name="imageBase">The imagebase of the file</param>
 		/// <param name="labels">The labels of the file</param>
-		public GCAttach(byte[] file, int address, uint imageBase, Dictionary<int, string> labels)
+		public GCAttach(byte[] file, uint address, uint imageBase, Dictionary<uint, string> labels)
 		{
 			if (labels.ContainsKey(address))
 				Name = labels[address];
@@ -57,8 +58,8 @@ namespace SonicRetro.SAModel.GC
 
 			uint vertexAddress = ByteConverter.ToUInt32(file, address) - imageBase;
 			//uint gap = ByteConverter.ToUInt32(file, address + 4);
-			int opaqueAddress = (int)(ByteConverter.ToInt32(file, address + 8) - imageBase);
-			int translucentAddress = (int)(ByteConverter.ToInt32(file, address + 12) - imageBase);
+			uint opaqueAddress = ByteConverter.ToUInt32(file, address + 8) - imageBase;
+			uint translucentAddress = ByteConverter.ToUInt32(file, address + 12) - imageBase;
 
 			int opaqueCount = ByteConverter.ToInt16(file, address + 16);
 			int translucentCount = ByteConverter.ToInt16(file, address + 18);
@@ -117,7 +118,7 @@ namespace SonicRetro.SAModel.GC
 
 			using (MemoryStream strm = new MemoryStream())
 			{
-				BinaryWriter writer = new BinaryWriter(strm);
+				ByteWriter writer = new ByteWriter(strm);
 
 				writer.Write(new byte[16]); // address placeholders
 				writer.Write((ushort)opaqueMeshes.Count);
@@ -130,7 +131,7 @@ namespace SonicRetro.SAModel.GC
 					vtx.WriteData(writer);
 				}
 
-				uint vtxAddr = (uint)writer.BaseStream.Length + imageBase;
+				uint vtxAddr = writer.Position + imageBase;
 
 				// writing vertex attributes
 				foreach (GCVertexSet vtx in vertexData)
@@ -156,12 +157,12 @@ namespace SonicRetro.SAModel.GC
 				}
 
 				// writing geometry properties
-				uint opaqueAddress = (uint)writer.BaseStream.Length + imageBase;
+				uint opaqueAddress = writer.Position + imageBase;
 				foreach (GCMesh m in opaqueMeshes)
 				{
 					m.WriteProperties(writer, imageBase);
 				}
-				uint translucentAddress = (uint)writer.BaseStream.Length + imageBase;
+				uint translucentAddress = writer.Position + imageBase;
 				foreach (GCMesh m in translucentMeshes)
 				{
 					m.WriteProperties(writer, imageBase);
@@ -190,10 +191,10 @@ namespace SonicRetro.SAModel.GC
 		{
 			List<MeshInfo> meshInfo = new List<MeshInfo>();
 
-			List<IOVtx> positions	= vertexData.Find(x => x.attribute == GCVertexAttribute.Position)?.data;
-			List<IOVtx> normals		= vertexData.Find(x => x.attribute == GCVertexAttribute.Normal)?.data;
-			List<IOVtx> colors		= vertexData.Find(x => x.attribute == GCVertexAttribute.Color0)?.data;
-			List<IOVtx> uvs			= vertexData.Find(x => x.attribute == GCVertexAttribute.Tex0)?.data;
+			List<IDataStructOut> positions	= vertexData.Find(x => x.attribute == GCVertexAttribute.Position)?.data;
+			List<IDataStructOut> normals	= vertexData.Find(x => x.attribute == GCVertexAttribute.Normal)?.data;
+			List<IDataStructOut> colors		= vertexData.Find(x => x.attribute == GCVertexAttribute.Color0)?.data;
+			List<IDataStructOut> uvs		= vertexData.Find(x => x.attribute == GCVertexAttribute.Tex0)?.data;
 
 			NJS_MATERIAL mat = new NJS_MATERIAL();
 

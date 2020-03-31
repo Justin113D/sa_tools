@@ -63,7 +63,7 @@ namespace SonicRetro.SAModel
 		{
 		}
 
-		public Rotation(byte[] file, int address)
+		public Rotation(byte[] file, uint address)
 		{
 			X = ByteConverter.ToInt32(file, address);
 			Y = ByteConverter.ToInt32(file, address + 4);

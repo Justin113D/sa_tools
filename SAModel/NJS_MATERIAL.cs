@@ -136,9 +136,9 @@ namespace SonicRetro.SAModel
 
 		#endregion
 
-		public static int Size
+		public static uint Size
 		{
-			get { return 0x14; }
+			get => 0x14;
 		}
 
 		/// <summary>
@@ -182,8 +182,8 @@ namespace SonicRetro.SAModel
 		/// </summary>
 		/// <param name="file">byte array representing file</param>
 		/// <param name="address">address of this material within 'file' byte array.</param>
-		public NJS_MATERIAL(byte[] file, int address)
-			: this(file, address, new Dictionary<int, string>())
+		public NJS_MATERIAL(byte[] file, uint address)
+			: this(file, address, new Dictionary<uint, string>())
 		{
 		}
 
@@ -193,7 +193,7 @@ namespace SonicRetro.SAModel
 		/// <param name="file">byte array representing file</param>
 		/// <param name="address">address of this material within 'file' byte array.</param>
 		/// <param name="labels"></param>
-		public NJS_MATERIAL(byte[] file, int address, Dictionary<int, string> labels)
+		public NJS_MATERIAL(byte[] file, uint address, Dictionary<uint, string> labels)
 		{
 			DiffuseColor = Color.FromArgb(ByteConverter.ToInt32(file, address));
 			SpecularColor = Color.FromArgb(ByteConverter.ToInt32(file, address + 4));

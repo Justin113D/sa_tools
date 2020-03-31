@@ -33,12 +33,12 @@ namespace SonicRetro.SAModel
 			NormalName = "normal_" + Extensions.GenerateIdentifier();
 		}
 
-		public BasicAttach(byte[] file, int address, uint imageBase, bool DX)
-			: this(file, address, imageBase, DX, new Dictionary<int, string>())
+		public BasicAttach(byte[] file, uint address, uint imageBase, bool DX)
+			: this(file, address, imageBase, DX, new Dictionary<uint, string>())
 		{
 		}
 
-		public BasicAttach(byte[] file, int address, uint imageBase, bool DX, Dictionary<int, string> labels)
+		public BasicAttach(byte[] file, uint address, uint imageBase, bool DX, Dictionary<uint, string> labels)
 			: this()
 		{
 			if (labels.ContainsKey(address))
@@ -47,7 +47,7 @@ namespace SonicRetro.SAModel
 				Name = "attach_" + address.ToString("X8");
 			Vertex = new Vertex[ByteConverter.ToInt32(file, address + 8)];
 			Normal = new Vertex[Vertex.Length];
-			int tmpaddr = (int)(ByteConverter.ToUInt32(file, address) - imageBase);
+			uint tmpaddr = ByteConverter.ToUInt32(file, address) - imageBase;
 			if (labels.ContainsKey(tmpaddr))
 				VertexName = labels[tmpaddr];
 			else
@@ -57,10 +57,10 @@ namespace SonicRetro.SAModel
 				Vertex[i] = new Vertex(file, tmpaddr);
 				tmpaddr += SAModel.Vertex.Size;
 			}
-			tmpaddr = ByteConverter.ToInt32(file, address + 4);
+			tmpaddr = ByteConverter.ToUInt32(file, address + 4);
 			if (tmpaddr != 0)
 			{
-				tmpaddr = (int)((uint)tmpaddr - imageBase);
+				tmpaddr = tmpaddr - imageBase;
 				if (labels.ContainsKey(tmpaddr))
 					NormalName = labels[tmpaddr];
 				else
@@ -78,10 +78,10 @@ namespace SonicRetro.SAModel
 			}
 			int maxmat = -1;
 			int meshcnt = ByteConverter.ToInt16(file, address + 0x14);
-			tmpaddr = ByteConverter.ToInt32(file, address + 0xC);
+			tmpaddr = ByteConverter.ToUInt32(file, address + 0xC);
 			if (tmpaddr != 0)
 			{
-				tmpaddr = (int)unchecked((uint)tmpaddr - imageBase);
+				tmpaddr = tmpaddr - imageBase;
 				if (labels.ContainsKey(tmpaddr))
 					MeshName = labels[tmpaddr];
 				else
@@ -95,10 +95,10 @@ namespace SonicRetro.SAModel
 			}
 			// fixes case where model declares material array as shorter than it really is
 			int matcnt = Math.Max(ByteConverter.ToInt16(file, address + 0x16), maxmat + 1);
-			tmpaddr = ByteConverter.ToInt32(file, address + 0x10);
+			tmpaddr = ByteConverter.ToUInt32(file, address + 0x10);
 			if (tmpaddr != 0)
 			{
-				tmpaddr = (int)unchecked((uint)tmpaddr - imageBase);
+				tmpaddr -= imageBase;
 				if (labels.ContainsKey(tmpaddr))
 					MaterialName = labels[tmpaddr];
 				else

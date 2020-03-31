@@ -1,7 +1,8 @@
-﻿using System;
-using System.IO;
+﻿using Reloaded.Memory.Streams.Writers;
+using SonicRetro.SAModel.Structs;
+using System;
 
-namespace SonicRetro.SAModel.GC
+namespace SonicRetro.SAModel.ModelData.GC
 {
 	/// <summary>
 	/// The types of parameter that exist
@@ -11,56 +12,59 @@ namespace SonicRetro.SAModel.GC
 		VtxAttrFmt = 0,
 		IndexAttributeFlags = 1,
 		Lighting = 2,
+		Unused = 3,
 		BlendAlpha = 4,
 		AmbientColor = 5,
+		Unknown_6 = 6,
+		Unknown_7 = 7,
 		Texture = 8,
 		Unknown_9 = 9,
 		TexCoordGen = 10,
 	}
-	
+
 	/// <summary>
 	/// Base class for all GC parameter types. <br/>
 	/// Used to store geometry information (like materials).
 	/// </summary>
 	[Serializable]
-	public abstract class GCParameter
+	public abstract class Parameter : ICloneable
 	{
 		/// <summary>
 		/// The type of parameter
 		/// </summary>
-		public readonly ParameterType type;
+		public ParameterType Type { get; }
 
 		/// <summary>
 		/// All parameter data is stored in these 4 bytes
 		/// </summary>
-		protected uint data;
+		protected uint _data;
 
 		/// <summary>
 		/// Base constructor for an empty parameter. <br/>
 		/// Used only in child classes.
 		/// </summary>
 		/// <param name="type">The type of parameter to create</param>
-		protected GCParameter(ParameterType type)
+		protected Parameter(ParameterType type)
 		{
-			this.type = type;
-			data = 0;
+			Type = type;
+			_data = 0;
 		}
 
 		/// <summary>
 		/// Create a parameter object from a file and address
 		/// </summary>
-		/// <param name="file">The file contents</param>
+		/// <param name="source">The file contents</param>
 		/// <param name="address">The address at which the parameter is located</param>
 		/// <returns>Any of the parameter types</returns>
-		public static GCParameter Read(byte[] file, int address)
+		public static Parameter Read(byte[] source, uint address)
 		{
-			GCParameter result = null;
-			ParameterType paramType = (ParameterType)BitConverter.ToUInt32(file, address);
+			Parameter result = null;
+			ParameterType paramType = (ParameterType)ByteConverter.ToUInt32(source, address);
 
 			switch (paramType)
 			{
 				case ParameterType.VtxAttrFmt:
-					result = new VtxAttrFmtParameter(GCVertexAttribute.Null);
+					result = new VtxAttrFmtParameter(VertexAttribute.Null);
 					break;
 				case ParameterType.IndexAttributeFlags:
 					result = new IndexAttributeParameter();
@@ -85,7 +89,7 @@ namespace SonicRetro.SAModel.GC
 					break;
 			}
 
-			result.data = ByteConverter.ToUInt32(file, address + 4);
+			result._data = ByteConverter.ToUInt32(source, address + 4);
 
 			return result;
 		}
@@ -94,11 +98,17 @@ namespace SonicRetro.SAModel.GC
 		/// Writes the parameter contents to a stream
 		/// </summary>
 		/// <param name="writer">The stream writer</param>
-		public void Write(BinaryWriter writer)
+		public void Write(EndianMemoryStream writer)
 		{
-			writer.Write((uint)type);
-			writer.Write(data);
+			writer.Write((uint)Type);
+			writer.Write(_data);
 		}
+
+		object ICloneable.Clone() => Clone();
+
+		public Parameter Clone() => (Parameter)MemberwiseClone();
+
+		public override string ToString() => $"{Type}";
 	}
 
 	/// <summary>
@@ -106,21 +116,21 @@ namespace SonicRetro.SAModel.GC
 	/// A geometry object needs to have one for each 
 	/// </summary>
 	[Serializable]
-	public class VtxAttrFmtParameter : GCParameter
+	public class VtxAttrFmtParameter : Parameter
 	{
 		/// <summary>
 		/// The attribute type that this parameter applies for
 		/// </summary>
-		public GCVertexAttribute VertexAttribute
+		public VertexAttribute VertexAttribute
 		{
 			get
 			{
-				return (GCVertexAttribute)(data >> 16);
+				return (VertexAttribute)(_data >> 16);
 			}
 			set
 			{
-				data &= 0xFFFF;
-				data |= ((uint)value) << 16;
+				_data &= 0xFFFF;
+				_data |= ((uint)value) << 16;
 			}
 		}
 
@@ -132,12 +142,12 @@ namespace SonicRetro.SAModel.GC
 		{
 			get
 			{
-				return (ushort)(data & 0xFFFF);
+				return (ushort)(_data & 0xFFFF);
 			}
 			set
 			{
-				data &= 0xFFFF0000;
-				data |= value;
+				_data &= 0xFFFF0000;
+				_data |= value;
 			}
 		}
 
@@ -145,23 +155,23 @@ namespace SonicRetro.SAModel.GC
 		/// Creates a new parameter with the default value according to each attribute type <br/> (which are the only ones that work ingame)
 		/// </summary>
 		/// <param name="vertexAttrib">The vertex attribute type that the parameter is for</param>
-		public VtxAttrFmtParameter(GCVertexAttribute vertexAttrib) : base(ParameterType.VtxAttrFmt)
+		public VtxAttrFmtParameter(VertexAttribute vertexAttrib) : base(ParameterType.VtxAttrFmt)
 		{
 			VertexAttribute = vertexAttrib;
 
 			// Setting the default values
 			switch (vertexAttrib)
 			{
-				case GCVertexAttribute.Position:
+				case VertexAttribute.Position:
 					Unknown = 5120;
 					break;
-				case GCVertexAttribute.Normal:
+				case VertexAttribute.Normal:
 					Unknown = 9216;
 					break;
-				case GCVertexAttribute.Color0:
+				case VertexAttribute.Color0:
 					Unknown = 27136;
 					break;
-				case GCVertexAttribute.Tex0:
+				case VertexAttribute.Tex0:
 					Unknown = 33544;
 					break;
 				default:
@@ -174,31 +184,33 @@ namespace SonicRetro.SAModel.GC
 		/// </summary>
 		/// <param name="Unknown"></param>
 		/// <param name="vertexAttrib">The vertex attribute type that the parameter is for</param>
-		public VtxAttrFmtParameter(ushort Unknown, GCVertexAttribute vertexAttrib) : base(ParameterType.VtxAttrFmt)
+		public VtxAttrFmtParameter(ushort Unknown, VertexAttribute vertexAttrib) : base(ParameterType.VtxAttrFmt)
 		{
 			this.Unknown = Unknown;
 			VertexAttribute = vertexAttrib;
 		}
+
+		public override string ToString() => $"{Type}: {VertexAttribute} - {Unknown}";
 	}
 
 	/// <summary>
 	/// Holds information about the vertex data thats stored in the geometry
 	/// </summary>
 	[Serializable]
-	public class IndexAttributeParameter : GCParameter
+	public class IndexAttributeParameter : Parameter
 	{
 		/// <summary>
 		/// Holds information about the vertex data thats stored in the geometry 
 		/// </summary>
-		public GCIndexAttributeFlags IndexAttributes
+		public IndexAttributeFlags IndexAttributes
 		{
 			get
 			{
-				return (GCIndexAttributeFlags)data;
+				return (IndexAttributeFlags)_data;
 			}
 			set
 			{
-				data = (uint)value;
+				_data = (uint)value;
 			}
 		}
 
@@ -208,25 +220,26 @@ namespace SonicRetro.SAModel.GC
 		public IndexAttributeParameter() : base(ParameterType.IndexAttributeFlags)
 		{
 			//this always exists
-			IndexAttributes &= GCIndexAttributeFlags.HasPosition;
+			IndexAttributes &= IndexAttributeFlags.HasPosition;
 		}
 
 		/// <summary>
 		/// Creates an index attribute parameter based on existing flags
 		/// </summary>
 		/// <param name="flags"></param>
-		public IndexAttributeParameter(GCIndexAttributeFlags flags) : base(ParameterType.IndexAttributeFlags)
+		public IndexAttributeParameter(IndexAttributeFlags flags) : base(ParameterType.IndexAttributeFlags)
 		{
 			IndexAttributes = flags;
 		}
 
+		public override string ToString() => $"{Type}: {(uint)IndexAttributes}";
 	}
 
 	/// <summary>
 	/// Holds lighting information
 	/// </summary>
 	[Serializable]
-	public class LightingParameter : GCParameter
+	public class LightingParameter : Parameter
 	{
 		/// <summary>
 		/// Lighting flags. Pretty much unknown how they work
@@ -235,12 +248,12 @@ namespace SonicRetro.SAModel.GC
 		{
 			get
 			{
-				return (ushort)(data & 0xFFFF);
+				return (ushort)(_data & 0xFFFF);
 			}
 			set
 			{
-				data &= 0xFFFF0000;
-				data |= value;
+				_data &= 0xFFFF0000;
+				_data |= value;
 			}
 		}
 
@@ -252,12 +265,12 @@ namespace SonicRetro.SAModel.GC
 		{
 			get
 			{
-				return (byte)((data >> 16) & 0xF);
+				return (byte)((_data >> 16) & 0xF);
 			}
 			set
 			{
-				data &= 0xFFF0FFFF;
-				data |= (uint)((value & 0xF) << 16);
+				_data &= 0xFFF0FFFF;
+				_data |= (uint)((value & 0xF) << 16);
 			}
 		}
 
@@ -265,12 +278,12 @@ namespace SonicRetro.SAModel.GC
 		{
 			get
 			{
-				return (byte)((data >> 20) & 0xF);
+				return (byte)((_data >> 20) & 0xF);
 			}
 			set
 			{
-				data &= 0xFFF0FFFF;
-				data |= (uint)((value & 0xF) << 20);
+				_data &= 0xFFF0FFFF;
+				_data |= (uint)((value & 0xF) << 20);
 			}
 		}
 
@@ -278,14 +291,14 @@ namespace SonicRetro.SAModel.GC
 		{
 			get
 			{
-				return (byte)((data >> 24) & 0xFF);
+				return (byte)((_data >> 24) & 0xFF);
 			}
 			set
 			{
-				data &= 0xFFF0FFFF;
-				data |= (uint)(value << 24);
+				_data &= 0xFFF0FFFF;
+				_data |= (uint)(value << 24);
 			}
-		} 
+		}
 
 		/// <summary>
 		/// Creates a lighting parameter with the default data
@@ -302,79 +315,47 @@ namespace SonicRetro.SAModel.GC
 			LightingFlags = lightingFlags;
 			ShadowStencil = shadowStencil;
 		}
+
+		public override string ToString() => $"{Type}: {LightingFlags} - {ShadowStencil} - {Unknown1} - {Unknown2}";
 	}
 
 	/// <summary>
 	/// The blending information for the surface of the geometry
 	/// </summary>
 	[Serializable]
-	public class BlendAlphaParameter : GCParameter
+	public class BlendAlphaParameter : Parameter
 	{
-		/// <summary>
-		/// NJ Blendmode for the source alpha
-		/// </summary>
-		public AlphaInstruction NJSourceAlpha
-		{
-			get
-			{
-				return GCEnumConverter.GXToNJAlphaInstruction((GCBlendModeControl)((data >> 11) & 7));
-			}
-			set
-			{
-				uint inst = (uint)GCEnumConverter.NJtoGXBlendModeControl(value);
-				data &= 0xFFFFC7FF; // ~(7 << 11)
-				data |= (inst & 7) << 11;
-			}
-		}
-
-		/// <summary>
-		/// NJ Blendmode for the destination alpha
-		/// </summary>
-		public AlphaInstruction NJDestAlpha
-		{
-			get
-			{
-				return GCEnumConverter.GXToNJAlphaInstruction((GCBlendModeControl)((data >> 8) & 7));
-			}
-			set
-			{
-				uint inst = (uint)GCEnumConverter.NJtoGXBlendModeControl(value);
-				data &= 0xFFFFF8FF; // ~(7 << 8)
-				data |= (inst & 7) << 8;
-			}
-		}
-
 		/// <summary>
 		/// Blendmode for the source alpha
 		/// </summary>
-		public GCBlendModeControl SourceAlpha
+		public BlendMode SourceAlpha
 		{
 			get
 			{
-				return (GCBlendModeControl)((data >> 11) & 7);
+				return (BlendMode)((_data >> 11) & 7);
 			}
 			set
 			{
 				uint inst = (uint)value;
-				data &= 0xFFFFC7FF; // ~(7 << 11)
-				data |= (inst & 7) << 11;
+				_data &= 0xFFFFC7FF; // ~(7 << 11)
+				_data |= (inst & 7) << 11;
 			}
 		}
 
 		/// <summary>
 		/// Blendmode for the destination alpha
 		/// </summary>
-		public GCBlendModeControl DestAlpha
+		public BlendMode DestAlpha
 		{
 			get
 			{
-				return (GCBlendModeControl)((data >> 8) & 7);
+				return (BlendMode)((_data >> 8) & 7);
 			}
 			set
 			{
 				uint inst = (uint)value;
-				data &= 0xFFFFF8FF; // ~(7 << 8)
-				data |= (inst & 7) << 8;
+				_data &= 0xFFFFF8FF; // ~(7 << 8)
+				_data |= (inst & 7) << 8;
 			}
 		}
 
@@ -382,16 +363,18 @@ namespace SonicRetro.SAModel.GC
 		{
 
 		}
+
+		public override string ToString() => $"{Type}: {SourceAlpha} -> {DestAlpha}";
 	}
 
 	/// <summary>
 	/// Ambient color of the geometry
 	/// </summary>
 	[Serializable]
-	public class AmbientColorParameter : GCParameter
+	public class AmbientColorParameter : Parameter
 	{
 		/// <summary>
-		/// The Color of the 
+		/// Ambient color of the mesh
 		/// </summary>
 		public Color AmbientColor
 		{
@@ -399,27 +382,29 @@ namespace SonicRetro.SAModel.GC
 			{
 				Color col = new Color()
 				{
-					ARGB = data
+					BGRA = _data
 				};
 				return col;
 			}
 			set
 			{
-				data = value.ARGB;
+				_data = value.BGRA;
 			}
 		}
 
 		public AmbientColorParameter() : base(ParameterType.AmbientColor)
 		{
-			data = uint.MaxValue; // white is default
+			_data = uint.MaxValue; // white is default
 		}
+
+		public override string ToString() => $"{Type}: {AmbientColor}";
 	}
 
 	/// <summary>
 	/// Texture information for the geometry
 	/// </summary>
 	[Serializable]
-	public class TextureParameter : GCParameter
+	public class TextureParameter : Parameter
 	{
 		/// <summary>
 		/// The id of the texture
@@ -428,49 +413,51 @@ namespace SonicRetro.SAModel.GC
 		{
 			get
 			{
-				return (ushort)(data & 0xFFFF);
+				return (ushort)(_data & 0xFFFF);
 			}
 			set
 			{
-				data &= 0xFFFF0000;
-				data |= value;
+				_data &= 0xFFFF0000;
+				_data |= value;
 			}
 		}
 
 		/// <summary>
 		/// Texture Tiling properties
 		/// </summary>
-		public GCTileMode Tile
+		public GCTileMode Tiling
 		{
 			get
 			{
-				return (GCTileMode)(data >> 16);
+				return (GCTileMode)(_data >> 16);
 			}
 			set
 			{
-				data &= 0xFFFF;
-				data |= ((uint)value) << 16;
+				_data &= 0xFFFF;
+				_data |= ((uint)value) << 16;
 			}
 		}
 
 		public TextureParameter() : base(ParameterType.Texture)
 		{
 			TextureID = 0;
-			Tile = GCTileMode.WrapU | GCTileMode.WrapV;
+			Tiling = GCTileMode.WrapU | GCTileMode.WrapV;
 		}
 
 		public TextureParameter(ushort TexID, GCTileMode tileMode) : base(ParameterType.Texture)
 		{
 			TextureID = TexID;
-			Tile = tileMode;
+			Tiling = tileMode;
 		}
+
+		public override string ToString() => $"{Type}: {TextureID} - {(uint)Tiling}";
 	}
 
 	/// <summary>
 	/// No idea what this is for, but its needed
 	/// </summary>
 	[Serializable]
-	public class Unknown9Parameter : GCParameter
+	public class Unknown9Parameter : Parameter
 	{
 		/// <summary>
 		/// No idea what this does. Default is 4
@@ -479,12 +466,12 @@ namespace SonicRetro.SAModel.GC
 		{
 			get
 			{
-				return (ushort)(data & 0xFFFF);
+				return (ushort)(_data & 0xFFFF);
 			}
 			set
 			{
-				data &= 0xFFFF0000;
-				data |= (uint)value;
+				_data &= 0xFFFF0000;
+				_data |= (uint)value;
 			}
 		}
 
@@ -495,12 +482,12 @@ namespace SonicRetro.SAModel.GC
 		{
 			get
 			{
-				return (ushort)(data >> 16);
+				return (ushort)(_data >> 16);
 			}
 			set
 			{
-				data &= 0xFFFF;
-				data |= (uint)value << 16;
+				_data &= 0xFFFF;
+				_data |= (uint)value << 16;
 			}
 		}
 
@@ -510,75 +497,74 @@ namespace SonicRetro.SAModel.GC
 			Unknown1 = 4;
 			Unknown2 = 0;
 		}
+
+		public override string ToString() => $"{Type}: {Unknown1} - {Unknown2}";
 	}
 
 	/// <summary>
 	/// Determines where or how the geometry gets the texture coordinates
 	/// </summary>
 	[Serializable]
-	public class TexCoordGenParameter : GCParameter
+	public class TexCoordGenParameter : Parameter
 	{
-		/// <summary>
-		/// The output location of the generated texture coordinates
-		/// </summary>
-		public GCTexCoordID TexCoordID
+		public TexCoordID TexCoordID
 		{
 			get
 			{
-				return (GCTexCoordID)((data >> 16) & 0xFF);
+				return (TexCoordID)((_data >> 16) & 0xFF);
 			}
 			set
 			{
-				data &= 0xFF00FFFF;
-				data |= (uint)value << 16;
+				_data &= 0xFF00FFFF;
+				_data |= (uint)value << 16;
 			}
 		}
 
 		/// <summary>
 		/// The function to use for generating the texture coordinates
 		/// </summary>
-		public GCTexGenType TexGenType
+		public TexGenType TexGenType
 		{
 			get
 			{
-				return (GCTexGenType)((data >> 12) & 0xF);
+				return (TexGenType)((_data >> 12) & 0xF);
 			}
 			set
 			{
-				data &= 0xFFFF0FFF;
-				data |= (uint)value << 12;
+				_data &= 0xFFFF0FFF;
+				_data |= (uint)value << 12;
 			}
 		}
 
 		/// <summary>
 		/// The source which should be used to generate the texture coordinates
 		/// </summary>
-		public GCTexGenSrc TexGenSrc
+		public TexGenSrc TexGenSrc
 		{
 			get
 			{
-				return (GCTexGenSrc)((data >> 4) & 0xFF);
+				return (TexGenSrc)((_data >> 4) & 0xFF);
 			}
 			set
 			{
-				data &= 0xFFFFF00F;
-				data |= (uint)value << 4;
+				_data &= 0xFFFFF00F;
+				_data |= (uint)value << 4;
 			}
 		}
 
 		/// <summary>
 		/// The id of the matrix to use for generating the texture coordinates
 		/// </summary>
-		public GCTexGenMatrix MatrixID
+		public TexGenMatrix MatrixID
 		{
 			get
 			{
-				return (GCTexGenMatrix)(data & 0xF);
+				return (TexGenMatrix)(_data & 0xF);
 			}
 			set
 			{
-				data &= 0xFFFFFFF0;
-				data |= (uint)value;
+				_data &= 0xFFFFFFF0;
+				_data |= (uint)value;
 			}
 		}
 
@@ -594,12 +580,14 @@ namespace SonicRetro.SAModel.GC
 		/// <param name="texGenType">The function to use for generating the texture coordinates</param>
 		/// <param name="texGenSrc">The source which should be used to generate the texture coordinates</param>
 		/// <param name="matrixID">The id of the matrix to use for generating the texture coordinates</param>
-		public TexCoordGenParameter(GCTexCoordID texCoordID, GCTexGenType texGenType, GCTexGenSrc texGenSrc, GCTexGenMatrix matrixID) : base(ParameterType.TexCoordGen)
+		public TexCoordGenParameter(TexCoordID texCoordID, TexGenType texGenType, TexGenSrc texGenSrc, TexGenMatrix matrixID) : base(ParameterType.TexCoordGen)
 		{
 			TexCoordID = texCoordID;
 			TexGenType = texGenType;
 			TexGenSrc = texGenSrc;
 			MatrixID = matrixID;
 		}
+
+		public override string ToString() => $"{Type}: {TexCoordID} - {TexGenType} - {TexGenSrc} - {MatrixID}";
 	}
 }

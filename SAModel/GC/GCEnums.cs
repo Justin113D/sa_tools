@@ -1,4 +1,5 @@
-﻿using System;
+﻿using SonicRetro.SAModel.Structs;
+using System;
 
 namespace SonicRetro.SAModel.GC
 {
@@ -413,6 +414,21 @@ namespace SonicRetro.SAModel.GC
 			return GCBlendModeControl.Zero;
 		}
 
+		public static IOType GCToDataType(GCDataType typ)
+		{
+			switch (typ)
+			{
+				case GCDataType.Signed16:
+					return IOType.Short;
+				case GCDataType.Float32:
+					return IOType.Float;
+				case GCDataType.RGBX8:
+				case GCDataType.RGBA8:
+					return IOType.BGRA8;
+				default:
+					throw new ArgumentException($"{typ} is not a valid type");
+			}
+		}
 	}
 
 }

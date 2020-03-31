@@ -164,7 +164,7 @@ namespace SonicRetro.SAModel.SALVL
 				using (LevelFileDialog dlg = new LevelFileDialog())
 				{
 					dlg.ShowDialog(this);
-					LevelData.geo = new LandTable(file, (int)dlg.NumericUpDown1.Value, (uint)dlg.numericUpDown2.Value, (LandTableFormat)dlg.comboBox2.SelectedIndex);
+					LevelData.geo = new LandTable(file, (uint)dlg.NumericUpDown1.Value, (uint)dlg.numericUpDown2.Value, (LandTableFormat)dlg.comboBox2.SelectedIndex);
 				}
 			}
 			LevelData.ClearLevelItems();

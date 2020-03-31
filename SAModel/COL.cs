@@ -20,7 +20,7 @@ namespace SonicRetro.SAModel
 			set { Flags = (int)value; }
 		}
 
-		public static int Size(LandTableFormat format)
+		public static uint Size(LandTableFormat format)
 		{
 			switch (format)
 			{
@@ -40,17 +40,17 @@ namespace SonicRetro.SAModel
 			Bounds = new BoundingSphere();
 		}
 
-		public COL(byte[] file, int address, uint imageBase, LandTableFormat format, Dictionary<int, Attach> attaches)
-			: this(file, address, imageBase, format, new Dictionary<int, string>(), attaches)
+		public COL(byte[] file, uint address, uint imageBase, LandTableFormat format, Dictionary<uint, Attach> attaches)
+			: this(file, address, imageBase, format, new Dictionary<uint, string>(), attaches)
 		{
 		}
 
-		public COL(byte[] file, int address, uint imageBase, LandTableFormat format, Dictionary<int, string> labels, Dictionary<int, Attach> attaches)
+		public COL(byte[] file, uint address, uint imageBase, LandTableFormat format, Dictionary<uint, string> labels, Dictionary<uint, Attach> attaches)
 			: this(file, address, imageBase, format, labels, false, attaches)
 		{
 		}
 
-		public COL(byte[] file, int address, uint imageBase, LandTableFormat format, Dictionary<int, string> labels, bool? forceBasic, Dictionary<int, Attach> attaches)
+		public COL(byte[] file, uint address, uint imageBase, LandTableFormat format, Dictionary<uint, string> labels, bool? forceBasic, Dictionary<uint, Attach> attaches)
 		{
 			Bounds = new BoundingSphere(file, address);
 			ModelFormat mfmt = 0;
@@ -82,7 +82,7 @@ namespace SonicRetro.SAModel
 					Unknown1 = ByteConverter.ToInt32(file, address + 0x10);
 					Unknown2 = ByteConverter.ToInt32(file, address + 0x14);
 					uint tmpaddr = ByteConverter.ToUInt32(file, address + 0x18) - imageBase;
-					Model = new NJS_OBJECT(file, (int)tmpaddr, imageBase, mfmt, labels, attaches);
+					Model = new NJS_OBJECT(file, tmpaddr, imageBase, mfmt, labels, attaches);
 					Unknown3 = ByteConverter.ToInt32(file, address + 0x1C);
 					Flags = ByteConverter.ToInt32(file, address + 0x20);
 					break;
@@ -92,7 +92,7 @@ namespace SonicRetro.SAModel
 					if (!forceBasic.HasValue && Flags >= 0)
 						mfmt = ModelFormat.Basic;
 					tmpaddr = ByteConverter.ToUInt32(file, address + 0x10) - imageBase;
-					Model = new NJS_OBJECT(file, (int)tmpaddr, imageBase, mfmt, labels, attaches);
+					Model = new NJS_OBJECT(file, tmpaddr, imageBase, mfmt, labels, attaches);
 					Unknown2 = ByteConverter.ToInt32(file, address + 0x14);
 					Unknown3 = ByteConverter.ToInt32(file, address + 0x18);
 					break;

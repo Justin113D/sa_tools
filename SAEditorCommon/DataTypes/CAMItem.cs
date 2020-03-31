@@ -181,21 +181,21 @@ namespace SonicRetro.SAModel.SAEditorCommon.DataTypes
 		/// </summary>
 		/// <param name="file"></param>
 		/// <param name="address"></param>
-		public CAMItem(byte[] file, int address, EditorItemSelection selectionManager)
+		public CAMItem(byte[] file, uint address, EditorItemSelection selectionManager)
 			: base(selectionManager)
 		{
 			CamType = (SADXCamType)file[address];
 			CollisionType = file[address + 1];
 			PanSpeed = file[address + 2];
 			Priority = file[address + 3];
-			Rotation = new Rotation(BitConverter.ToInt16(file, address + 4), BitConverter.ToInt16(file, address + 6), 0);
+			Rotation = new Rotation(ByteConverter.ToInt16(file, address + 4), ByteConverter.ToInt16(file, address + 6), 0);
 			Position = new Vertex(file, address + 8);
 			Scale = new Vertex(file, address + 20);
-			ViewAngleX = BitConverter.ToInt16(file, address + 32);
-			ViewAngleY = BitConverter.ToInt16(file, address + 34);
+			ViewAngleX = ByteConverter.ToInt16(file, address + 32);
+			ViewAngleY = ByteConverter.ToInt16(file, address + 34);
 			PointA = new Vertex(file, address + 36);
 			PointB = new Vertex(file, address + 48);
-			Variable = BitConverter.ToSingle(file, address + 60);
+			Variable = ByteConverter.ToSingle(file, address + 60);
 
 			selectionManager.SelectionChanged += selectionManager_SelectionChanged;
 

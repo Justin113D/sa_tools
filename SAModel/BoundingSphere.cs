@@ -16,7 +16,7 @@ namespace SonicRetro.SAModel
 			Center = new Vertex();
 		}
 
-		public BoundingSphere(byte[] file, int address)
+		public BoundingSphere(byte[] file, uint address)
 		{
 			Center = new Vertex(file, address);
 			Radius = ByteConverter.ToSingle(file, address + Vertex.Size);

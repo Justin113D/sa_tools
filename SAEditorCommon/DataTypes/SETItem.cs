@@ -36,7 +36,7 @@ namespace SonicRetro.SAModel.SAEditorCommon.DataTypes
 			GetHandleMatrix();
 		}
 
-		public SETItem(byte[] file, int address, EditorItemSelection selectionManager)
+		public SETItem(byte[] file, uint address, EditorItemSelection selectionManager)
 			: base(selectionManager)
 		{
 			ushort _id = ByteConverter.ToUInt16(file, address);
@@ -170,7 +170,7 @@ namespace SonicRetro.SAModel.SAEditorCommon.DataTypes
 		{
 			int count = ByteConverter.ToInt32(setfile, 0);
 			List<SETItem> list = new List<SETItem>(count);
-			int address = 0x20;
+			uint address = 0x20;
 			for (int j = 0; j < count; j++)
 			{
 				SETItem ent = new SETItem(setfile, address, selectionManager);

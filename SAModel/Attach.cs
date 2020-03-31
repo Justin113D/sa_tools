@@ -50,12 +50,12 @@ namespace SonicRetro.SAModel
 			throw new ArgumentOutOfRangeException("format");
 		}
 
-		public static Attach Load(byte[] file, int address, uint imageBase, ModelFormat format)
+		public static Attach Load(byte[] file, uint address, uint imageBase, ModelFormat format)
 		{
-			return Load(file, address, imageBase, format, new Dictionary<int, string>());
+			return Load(file, address, imageBase, format, new Dictionary<uint, string>());
 		}
 
-		public static Attach Load(byte[] file, int address, uint imageBase, ModelFormat format, Dictionary<int, string> labels)
+		public static Attach Load(byte[] file, uint address, uint imageBase, ModelFormat format, Dictionary<uint, string> labels)
 		{
 			switch (format)
 			{

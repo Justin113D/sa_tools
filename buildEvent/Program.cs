@@ -77,7 +77,7 @@ namespace buildEvent
 					foreach (string file in ini.Files.Where(a => a.Key.EndsWith(".saanim", StringComparison.OrdinalIgnoreCase) && HelperFunctions.FileHash(Path.Combine(path, a.Key)) != a.Value).Select(a => a.Key))
 						modelbytes.AddRange(NJS_MOTION.Load(Path.Combine(path, file)).GetBytes((uint)(key + modelbytes.Count), labels, out uint _));
 				fc = modelbytes.ToArray();
-				int ptr = fc.GetPointer(0x20, key);
+				uint ptr = fc.GetPointer(0x20, key);
 				if (ptr != 0)
 					for (int i = 0; i < (battle ? 18 : 16); i++)
 					{
@@ -103,7 +103,7 @@ namespace buildEvent
 					for (int gn = 0; gn <= gcnt; gn++)
 					{
 						SceneInfo info = ini.Scenes[gn];
-						int ptr2 = fc.GetPointer(ptr, key);
+						uint ptr2 = fc.GetPointer(ptr, key);
 						int ecnt = Math.Min(ByteConverter.ToInt32(fc, ptr + 4), info.Entities?.Count ?? 0);
 						if (ptr2 != 0)
 							for (int en = 0; en < ecnt; en++)
@@ -124,7 +124,7 @@ namespace buildEvent
 									if (labels.ContainsKey(info.Entities[en].ShadowModel))
 										ByteConverter.GetBytes(labels[info.Entities[en].ShadowModel]).CopyTo(fc, ptr2 + 16);
 								}
-								ptr2 += battle ? 0x2C : 0x20;
+								ptr2 += battle ? 0x2Cu : 0x20u;
 							}
 						if (!battle)
 						{
@@ -147,7 +147,7 @@ namespace buildEvent
 								ByteConverter.GetBytes(labels[info.Big.Model]).CopyTo(fc, ptr2);
 							if (!battle)
 							{
-								int ptr3 = fc.GetPointer(ptr2 + 4, key);
+								uint ptr3 = fc.GetPointer(ptr2 + 4, key);
 								if (ptr3 != 0)
 								{
 									int cnt = ByteConverter.ToInt32(fc, ptr2 + 8);

@@ -109,13 +109,13 @@ namespace SA2MessageFileEditor
 			windows1252ToolStripMenuItem.Checked = !useSJIS;
 			Encoding encoding = useSJIS ? jpenc : euenc;
 			messages.Clear();
-			int address = 0;
-			int off = ByteConverter.ToInt32(fc, 0);
-			while (off != -1)
+			uint address = 0;
+			uint off = ByteConverter.ToUInt32(fc, 0);
+			while (off != uint.MaxValue)
 			{
 				messages.Add(Message.FromString(fc.GetCString(off, encoding)));
 				address += 4;
-				off = ByteConverter.ToInt32(fc, address);
+				off = ByteConverter.ToUInt32(fc, address);
 			}
 			UpdateMessageSelect();
 			messagePanel.Enabled = false;

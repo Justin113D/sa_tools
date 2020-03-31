@@ -12,17 +12,17 @@ namespace SonicRetro.SAModel
 		public NJS_MOTION Animation { get; set; }
 		public int Unknown4 { get; set; }
 
-		public static int Size
+		public static uint Size
 		{
 			get { return 0x18; }
 		}
 
-		public GeoAnimData(byte[] file, int address, uint imageBase, LandTableFormat format, Dictionary<int, Attach> attaches)
-			: this(file, address, imageBase, format, new Dictionary<int, string>(), attaches)
+		public GeoAnimData(byte[] file, uint address, uint imageBase, LandTableFormat format, Dictionary<uint, Attach> attaches)
+			: this(file, address, imageBase, format, new Dictionary<uint, string>(), attaches)
 		{
 		}
 
-		public GeoAnimData(byte[] file, int address, uint imageBase, LandTableFormat format, Dictionary<int, string> labels, Dictionary<int, Attach> attaches)
+		public GeoAnimData(byte[] file, uint address, uint imageBase, LandTableFormat format, Dictionary<uint, string> labels, Dictionary<uint, Attach> attaches)
 		{
 			ModelFormat mfmt = 0;
 			switch (format)
@@ -40,8 +40,8 @@ namespace SonicRetro.SAModel
 			Unknown1 = ByteConverter.ToInt32(file, address);
 			Unknown2 = ByteConverter.ToSingle(file, address + 4);
 			Unknown3 = ByteConverter.ToSingle(file, address + 8);
-			Model = new NJS_OBJECT(file, (int)(ByteConverter.ToUInt32(file, address + 0xC) - imageBase), imageBase, mfmt, labels, attaches);
-			Animation = NJS_MOTION.ReadHeader(file, (int)(ByteConverter.ToUInt32(file, address + 0x10) - imageBase), imageBase, mfmt, labels, attaches);
+			Model = new NJS_OBJECT(file, ByteConverter.ToUInt32(file, address + 0xC) - imageBase, imageBase, mfmt, labels, attaches);
+			Animation = NJS_MOTION.ReadHeader(file, ByteConverter.ToUInt32(file, address + 0x10) - imageBase, imageBase, mfmt, labels, attaches);
 			Unknown4 = ByteConverter.ToInt32(file, address + 0x14);
 		}
 

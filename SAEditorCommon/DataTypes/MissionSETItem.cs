@@ -21,15 +21,15 @@ namespace SonicRetro.SAModel.SAEditorCommon.DataTypes
 			GetHandleMatrix();
 		}
 
-		public MissionSETItem(byte[] setfile, int setaddress, byte[] prmfile, int prmaddress, EditorItemSelection selectionManager)
+		public MissionSETItem(byte[] setfile, uint setaddress, byte[] prmfile, uint prmaddress, EditorItemSelection selectionManager)
 			: base(selectionManager)
 		{
 			ushort _id = ByteConverter.ToUInt16(setfile, setaddress);
 			ID = _id;
 			ClipLevel = (byte)(_id >> 12);
-			ushort xrot = BitConverter.ToUInt16(setfile, setaddress + 2);
-			ushort yrot = BitConverter.ToUInt16(setfile, setaddress + 4);
-			ushort zrot = BitConverter.ToUInt16(setfile, setaddress + 6);
+			ushort xrot = ByteConverter.ToUInt16(setfile, setaddress + 2);
+			ushort yrot = ByteConverter.ToUInt16(setfile, setaddress + 4);
+			ushort zrot = ByteConverter.ToUInt16(setfile, setaddress + 6);
 			rotation = new Rotation(xrot, yrot, zrot);
 			position = new Vertex(setfile, setaddress + 8);
 			scale = new Vertex(setfile, setaddress + 0x14);

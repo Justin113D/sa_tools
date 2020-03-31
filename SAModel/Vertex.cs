@@ -13,16 +13,16 @@ namespace SonicRetro.SAModel
 		public float Y { get; set; }
 		public float Z { get; set; }
 
-		public static int Size
+		public static uint Size
 		{
-			get { return 12; }
+			get => 12;
 		}
 
 		public Vertex()
 		{
 		}
 
-		public Vertex(byte[] file, int address)
+		public Vertex(byte[] file, uint address)
 		{
 			X = ByteConverter.ToSingle(file, address);
 			Y = ByteConverter.ToSingle(file, address + 4);

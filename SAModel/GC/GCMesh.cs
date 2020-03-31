@@ -1,7 +1,7 @@
-﻿using System;
+﻿using SonicRetro.SAModel.Structs;
+using System;
 using System.Collections.Generic;
 using System.IO;
-using System.Linq;
 
 namespace SonicRetro.SAModel.GC
 {
@@ -14,7 +14,7 @@ namespace SonicRetro.SAModel.GC
 		/// <summary>
 		/// The parameters that this mesh sets
 		/// </summary>
-		public readonly List<GCParameter> parameters;
+		public readonly List<Parameter> parameters;
 
 		/// <summary>
 		/// The polygon data
@@ -55,7 +55,7 @@ namespace SonicRetro.SAModel.GC
 		/// </summary>
 		public GCMesh()
 		{
-			parameters = new List<GCParameter>();
+			parameters = new List<Parameter>();
 			primitives = new List<GCPrimitive>();
 		}
 
@@ -64,7 +64,7 @@ namespace SonicRetro.SAModel.GC
 		/// </summary>
 		/// <param name="parameters"></param>
 		/// <param name="primitives"></param>
-		public GCMesh(List<GCParameter> parameters, List<GCPrimitive> primitives)
+		public GCMesh(List<Parameter> parameters, List<GCPrimitive> primitives)
 		{
 			this.parameters = parameters;
 			this.primitives = primitives;
@@ -77,20 +77,20 @@ namespace SonicRetro.SAModel.GC
 		/// <param name="address">The address at which the mesh is located</param>
 		/// <param name="imageBase">The imagebase (used for when reading from an exe)</param>
 		/// <param name="index">Indexattribute parameter of the previous mesh</param>
-		public GCMesh(byte[] file, int address, uint imageBase, GCIndexAttributeFlags indexFlags)
+		public GCMesh(byte[] file, uint address, uint imageBase, GCIndexAttributeFlags indexFlags)
 		{
 			// getting the addresses and sizes
-			int parameters_offset = (int)(ByteConverter.ToInt32(file, address) - imageBase);
-			int parameters_count = ByteConverter.ToInt32(file, address + 4);
+			uint parameters_offset = ByteConverter.ToUInt32(file, address) - imageBase;
+			uint parameters_count = ByteConverter.ToUInt32(file, address + 4);
 
-			int primitives_offset = (int)(ByteConverter.ToInt32(file, address + 8) - imageBase);
-			int primitives_size = ByteConverter.ToInt32(file, address + 12);
+			uint primitives_offset = ByteConverter.ToUInt32(file, address + 8) - imageBase;
+			uint primitives_size = ByteConverter.ToUInt32(file, address + 12);
 
 			// reading the parameters
-			parameters = new List<GCParameter>();
+			parameters = new List<Parameter>();
 			for (int i = 0; i < parameters_count; i++)
 			{
-				parameters.Add(GCParameter.Read(file, parameters_offset));
+				parameters.Add(Parameter.Read(file, parameters_offset));
 				parameters_offset += 8;
 			}
 
@@ -101,7 +101,7 @@ namespace SonicRetro.SAModel.GC
 
 			// reading the primitives
 			primitives = new List<GCPrimitive>();
-			int end_pos = primitives_offset + primitives_size;
+			uint end_pos = primitives_offset + primitives_size;
 
 			while (primitives_offset < end_pos)
 			{
@@ -116,23 +116,23 @@ namespace SonicRetro.SAModel.GC
 		/// </summary>
 		/// <param name="writer">The ouput stream</param>
 		/// <param name="indexFlags">The index flags</param>
-		public void WriteData(BinaryWriter writer, GCIndexAttributeFlags indexFlags)
+		public void WriteData(ByteWriter writer, GCIndexAttributeFlags indexFlags)
 		{
-			paramAddress = (uint)writer.BaseStream.Length;
+			paramAddress = writer.Position;
 
-			foreach(GCParameter param in parameters)
+			foreach(Parameter param in parameters)
 			{
 				param.Write(writer);
 			}
 
-			primitiveAddress = (uint)writer.BaseStream.Length;
+			primitiveAddress = writer.Position;
 
 			foreach(GCPrimitive prim in primitives)
 			{
 				prim.Write(writer, indexFlags);
 			}
 
-			primitiveSize = (uint)writer.BaseStream.Length - primitiveAddress;
+			primitiveSize = writer.Position - primitiveAddress;
 		}
 
 		/// <summary>
@@ -162,10 +162,10 @@ namespace SonicRetro.SAModel.GC
 		/// <param name="colors">The color data</param>
 		/// <param name="uvs">The uv data</param>
 		/// <returns>A mesh info for the mesh</returns>
-		public MeshInfo Process(NJS_MATERIAL material, List<IOVtx> positions, List<IOVtx> normals, List<IOVtx> colors, List<IOVtx> uvs)
+		public MeshInfo Process(NJS_MATERIAL material, List<IDataStructOut> positions, List<IDataStructOut> normals, List<IDataStructOut> colors, List<IDataStructOut> uvs)
 		{
 			// setting the material properties according to the parameters
-			foreach (GCParameter param in parameters)
+			foreach (Parameter param in parameters)
 			{
 				switch (param.type)
 				{
@@ -233,7 +233,7 @@ namespace SonicRetro.SAModel.GC
 			}
 
 			// creating the vertex data
-			SAModel.VertexData[] vertData = new SAModel.VertexData[corners.Count];
+			VertexData[] vertData = new SAModel.VertexData[corners.Count];
 			bool hasNormals = normals != null;
 			bool hasColors = colors != null;
 			bool hasUVs = uvs != null;
@@ -241,11 +241,11 @@ namespace SonicRetro.SAModel.GC
 			for(int i = 0; i < corners.Count; i++)
 			{
 				Loop l = corners[i];
-				vertData[i] = new SAModel.VertexData(
+				vertData[i] = new VertexData(
 						(Vector3)positions[l.PositionIndex],
-						hasNormals ? (Vector3)normals[l.NormalIndex] : new Vector3(0, 1, 0),
+						hasNormals ? (Vector3)normals[l.NormalIndex] : Vector3.UnitY,
 						hasColors ? (Color)colors[l.Color0Index] : new Color(255, 255, 255, 255),
-						hasUVs ? (UV)uvs[l.UV0Index] : new UV(0, 0)
+						hasUVs ? (Vector2)uvs[l.UV0Index] : default
 						);
 			}
 

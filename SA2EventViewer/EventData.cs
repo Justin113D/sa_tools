@@ -38,7 +38,7 @@ namespace SA2EventViewer
 			if (battle)
 				motions = ReadMotionFile(Path.ChangeExtension(filename, null) + "motion.bin");
 			Dictionary<string, NJS_OBJECT> models = new Dictionary<string, NJS_OBJECT>();
-			int ptr = fc.GetPointer(0x20, key);
+			uint ptr = fc.GetPointer(0x20, key);
 			if (ptr != 0)
 			{
 				int cnt = battle ? 18 : 16;
@@ -66,11 +66,11 @@ namespace SA2EventViewer
 		{
 			List<NJS_MOTION> motions = new List<NJS_MOTION>();
 			byte[] fc = File.ReadAllBytes(filename);
-			int addr = 0;
+			uint addr = 0;
 			while (ByteConverter.ToInt64(fc, addr) != 0)
 			{
-				int ptr = ByteConverter.ToInt32(fc, addr);
-				if (ptr == -1)
+				uint ptr = ByteConverter.ToUInt32(fc, addr);
+				if (ptr == uint.MaxValue)
 					motions.Add(null);
 				else
 					motions.Add(new NJS_MOTION(fc, ptr, 0, ByteConverter.ToInt32(fc, addr + 4)));
@@ -79,10 +79,10 @@ namespace SA2EventViewer
 			return motions;
 		}
 
-		public static NJS_OBJECT GetModel(byte[] file, int address, uint imageBase, Dictionary<string, NJS_OBJECT> models)
+		public static NJS_OBJECT GetModel(byte[] file, uint address, uint imageBase, Dictionary<string, NJS_OBJECT> models)
 		{
 			NJS_OBJECT result = null;
-			int ptr = file.GetPointer(address, imageBase);
+			uint ptr = file.GetPointer(address, imageBase);
 			if (ptr != 0)
 			{
 				result = new NJS_OBJECT(file, ptr, imageBase, ModelFormat.Chunk, null);
@@ -95,10 +95,10 @@ namespace SA2EventViewer
 			return result;
 		}
 
-		public static NJS_OBJECT GetGCModel(byte[] file, int address, uint imageBase, Dictionary<string, NJS_OBJECT> models)
+		public static NJS_OBJECT GetGCModel(byte[] file, uint address, uint imageBase, Dictionary<string, NJS_OBJECT> models)
 		{
 			NJS_OBJECT result = null;
-			int ptr = file.GetPointer(address, imageBase);
+			uint ptr = file.GetPointer(address, imageBase);
 			if (ptr != 0)
 			{
 				result = new NJS_OBJECT(file, ptr, imageBase, ModelFormat.GC, null);
@@ -121,9 +121,9 @@ namespace SA2EventViewer
 
 		public const int Size = 32;
 
-		public EventScene(byte[] file, int address, uint imageBase, bool battle, Dictionary<string, NJS_OBJECT> models, List<NJS_MOTION> motions)
+		public EventScene(byte[] file, uint address, uint imageBase, bool battle, Dictionary<string, NJS_OBJECT> models, List<NJS_MOTION> motions)
 		{
-			int ptr = file.GetPointer(address, imageBase);
+			uint ptr = file.GetPointer(address, imageBase);
 			if (ptr != 0)
 			{
 				int cnt = ByteConverter.ToInt32(file, address + 4);
@@ -171,9 +171,9 @@ namespace SA2EventViewer
 		[TypeConverter(typeof(UInt32HexConverter))]
 		public uint Flags { get; set; }
 
-		public static int Size(bool battle) => battle ? 44 : 32;
+		public static uint Size(bool battle) => battle ? 44u : 32u;
 
-		public EventEntity(byte[] file, int address, uint imageBase, bool battle, Dictionary<string, NJS_OBJECT> models, List<NJS_MOTION> motions)
+		public EventEntity(byte[] file, uint address, uint imageBase, bool battle, Dictionary<string, NJS_OBJECT> models, List<NJS_MOTION> motions)
 		{
 			Model = Event.GetModel(file, address, imageBase, models);
 			if (battle)
@@ -187,7 +187,7 @@ namespace SA2EventViewer
 			}
 			else
 			{
-				int ptr = file.GetPointer(address + 4, imageBase);
+				uint ptr = file.GetPointer(address + 4, imageBase);
 				if (ptr != 0)
 					Motion = new NJS_MOTION(file, ptr, imageBase, Model.CountAnimated());
 				ptr = file.GetPointer(address + 8, imageBase);
@@ -205,10 +205,10 @@ namespace SA2EventViewer
 		public List<(NJS_MOTION a, NJS_MOTION b)> Motions { get; set; }
 		public int Unknown { get; set; }
 
-		public EventBig(byte[] file, int address, uint imageBase, bool battle, Dictionary<string, NJS_OBJECT> models, List<NJS_MOTION> motions)
+		public EventBig(byte[] file, uint address, uint imageBase, bool battle, Dictionary<string, NJS_OBJECT> models, List<NJS_MOTION> motions)
 		{
 			Model = Event.GetModel(file, address, imageBase, models);
-			int ptr = file.GetPointer(address + 4, imageBase);
+			uint ptr = file.GetPointer(address + 4, imageBase);
 			if (ptr != 0)
 			{
 				int cnt = ByteConverter.ToInt32(file, address + 8);
@@ -220,7 +220,7 @@ namespace SA2EventViewer
 					else
 					{
 						NJS_MOTION a = null;
-						int ptr2 = file.GetPointer(ptr, imageBase);
+						uint ptr2 = file.GetPointer(ptr, imageBase);
 						if (ptr2 != 0)
 							a = new NJS_MOTION(file, ptr2, imageBase, Model.CountAnimated());
 						NJS_MOTION b = null;
@@ -246,7 +246,7 @@ namespace SA2EventViewer
 
 		public const int Size = 20;
 
-		public EventUpgrade(byte[] file, int address, uint imageBase, Dictionary<string, NJS_OBJECT> models)
+		public EventUpgrade(byte[] file, uint address, uint imageBase, Dictionary<string, NJS_OBJECT> models)
 		{
 			RootNode = Event.GetModel(file, address, imageBase, models);
 			AttachNode1 = Event.GetModel(file, address + 4, imageBase, models);

@@ -5,12 +5,12 @@ namespace SonicRetro.SAModel
 {
 	public static class VColor
 	{
-		public static Color FromBytes(byte[] file, int address)
+		public static Color FromBytes(byte[] file, uint address)
 		{
 			return FromBytes(file, address, ColorType.ARGB8888_32);
 		}
 
-		public static Color FromBytes(byte[] file, int address, ColorType type)
+		public static Color FromBytes(byte[] file, uint address, ColorType type)
 		{
 			switch (type)
 			{
@@ -88,7 +88,7 @@ namespace SonicRetro.SAModel
 			return "{ 0x" + color.ToArgb().ToString("X8") + " }";
 		}
 
-		public static int Size(ColorType type)
+		public static uint Size(ColorType type)
 		{
 			switch (type)
 			{

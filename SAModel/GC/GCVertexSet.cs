@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.IO;
+using SonicRetro.SAModel.Structs;
 
 namespace SonicRetro.SAModel.GC
 {
@@ -69,7 +70,7 @@ namespace SonicRetro.SAModel.GC
 		/// <summary>
 		/// The vertex data
 		/// </summary>
-		public readonly List<IOVtx> data;
+		public readonly List<IDataStructOut> data;
 
 		/// <summary>
 		/// The address of the vertex attribute (gets set after writing
@@ -106,7 +107,7 @@ namespace SonicRetro.SAModel.GC
 					throw new ArgumentException($"Datatype { attribute } is not a valid vertex type for SA2");
 			}
 
-			data = new List<IOVtx>();
+			data = new List<IDataStructOut>();
 		}
 
 		/// <summary>
@@ -121,7 +122,7 @@ namespace SonicRetro.SAModel.GC
 			this.attribute = attribute;
 			this.dataType = dataType;
 			this.structType = structType;
-			data = new List<IOVtx>();
+			data = new List<IDataStructOut>();
 		}
 
 		/// <summary>
@@ -135,7 +136,7 @@ namespace SonicRetro.SAModel.GC
 			attribute = (GCVertexAttribute)file[address];
 			if (attribute == GCVertexAttribute.Null) return;
 
-			uint structure = ByteConverter.ToUInt32(file, (int)address + 4);
+			uint structure = ByteConverter.ToUInt32(file, address + 4);
 			structType = (GCStructType)(structure & 0x0F);
 			dataType = (GCDataType)((structure >> 4) & 0x0F);
 			if (file[address + 1] != StructSize)
@@ -144,10 +145,10 @@ namespace SonicRetro.SAModel.GC
 			}
 
 			// reading the data
-			int count = ByteConverter.ToUInt16(file, (int)address + 2);
-			int tmpaddr = (int)(ByteConverter.ToUInt32(file, (int)address + 8) - imageBase);
+			ushort count = ByteConverter.ToUInt16(file, address + 2);
+			uint tmpaddr = ByteConverter.ToUInt32(file, address + 8) - imageBase;
 
-			data = new List<IOVtx>();
+			data = new List<IDataStructOut>();
 
 			switch (attribute)
 			{
@@ -155,21 +156,19 @@ namespace SonicRetro.SAModel.GC
 				case GCVertexAttribute.Normal:
 					for (int i = 0; i < count; i++)
 					{
-						data.Add(new Vector3(file, tmpaddr));
-						tmpaddr += 12;
+						data.Add(Vector3.Read(file, ref tmpaddr, IOType.Float));
 					}
 					break;
 				case GCVertexAttribute.Color0:
 					for (int i = 0; i < count; i++)
 					{
-						data.Add(new Color(file, tmpaddr, dataType, out tmpaddr));
+						data.Add(Color.Read(file, ref tmpaddr, IOType.BGRA8));
 					}
 					break;
 				case GCVertexAttribute.Tex0:
 					for (int i = 0; i < count; i++)
 					{
-						data.Add(new UV(file, tmpaddr));
-						tmpaddr += 4;
+						data.Add(Vector2.Read(file, ref tmpaddr, IOType.Short) / 256f);
 					}
 					break;
 				default:
@@ -182,13 +181,13 @@ namespace SonicRetro.SAModel.GC
 		/// </summary>
 		/// <param name="writer">The output stream</param>
 		/// <param name="imagebase">The imagebase</param>
-		public void WriteData(BinaryWriter writer)
+		public void WriteData(ByteWriter writer)
 		{
-			dataAddress = (uint)writer.BaseStream.Length;
+			dataAddress = writer.Position;
 
-			foreach(IOVtx vtx in data)
+			foreach(IDataStructOut vtx in data)
 			{
-				vtx.Write(writer, dataType, structType);
+				vtx.Write(writer, GCEnumConverter.GCToDataType(dataType));
 			}
 		}
 
@@ -198,7 +197,7 @@ namespace SonicRetro.SAModel.GC
 		/// </summary>
 		/// <param name="writer">The output stream</param>
 		/// <param name="imagebase">The imagebase</param>
-		public void WriteAttribute(BinaryWriter writer, uint imagebase)
+		public void WriteAttribute(ByteWriter writer, uint imagebase)
 		{
 			if (dataAddress == 0)
 				throw new Exception("Data has not been written yet!");

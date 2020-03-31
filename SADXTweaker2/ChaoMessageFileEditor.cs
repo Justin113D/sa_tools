@@ -47,7 +47,7 @@ namespace SADXTweaker2
 			int off = ReadInt32BE(file, 0);
 			while (off != -1)
 			{
-				Messages.Add(file.GetCString(off, HelperFunctions.GetEncoding((Languages)language.SelectedIndex)));
+				Messages.Add(file.GetCString((uint)off, HelperFunctions.GetEncoding((Languages)language.SelectedIndex)));
 				address += 4;
 				off = ReadInt32BE(file, address);
 			}

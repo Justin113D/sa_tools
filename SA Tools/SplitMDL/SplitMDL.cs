@@ -35,7 +35,7 @@ namespace SA_Tools.SplitMDL
 						break;
 					case null:
 						ByteConverter.BigEndian = false;
-						int addr = 0;
+						uint addr = 0;
 						short ile = ByteConverter.ToInt16(mdlfile, 0);
 						if (ile == 0)
 						{
@@ -60,28 +60,28 @@ namespace SA_Tools.SplitMDL
 				Directory.CreateDirectory(Path.GetFileNameWithoutExtension(mdlfilename));
 
 				// getting model pointers
-				int address = 0;
-				int i = ByteConverter.ToInt32(mdlfile, address);
-				SortedDictionary<int, int> modeladdrs = new SortedDictionary<int, int>();
-				while (i != -1)
+				uint address = 0;
+				uint i = ByteConverter.ToUInt32(mdlfile, address);
+				SortedDictionary<uint, uint> modeladdrs = new SortedDictionary<uint, uint>();
+				while (i != uint.MaxValue)
 				{
-					modeladdrs[i] = ByteConverter.ToInt32(mdlfile, address + 4);
+					modeladdrs[i] = ByteConverter.ToUInt32(mdlfile, address + 4);
 					address += 8;
-					i = ByteConverter.ToInt32(mdlfile, address);
+					i = ByteConverter.ToUInt32(mdlfile, address);
 				}
 
 				// load models from pointer list
-				Dictionary<int, NJS_OBJECT> models = new Dictionary<int, NJS_OBJECT>();
-				Dictionary<int, string> modelnames = new Dictionary<int, string>();
+				Dictionary<uint, NJS_OBJECT> models = new Dictionary<uint, NJS_OBJECT>();
+				Dictionary<uint, string> modelnames = new Dictionary<uint, string>();
 				List<string> partnames = new List<string>();
-				foreach (KeyValuePair<int, int> item in modeladdrs)
+				foreach (KeyValuePair<uint, uint> item in modeladdrs)
 				{
-					NJS_OBJECT obj = new NJS_OBJECT(mdlfile, item.Value, 0, ModelFormat.Chunk, new Dictionary<int, Attach>());
+					NJS_OBJECT obj = new NJS_OBJECT(mdlfile, item.Value, 0, ModelFormat.Chunk, new Dictionary<uint, Attach>());
 					modelnames[item.Key] = obj.Name;
 					if (!partnames.Contains(obj.Name))
 					{
 						List<string> names = new List<string>(obj.GetObjects().Select((o) => o.Name));
-						foreach (int idx in modelnames.Where(a => names.Contains(a.Value)).Select(a => a.Key))
+						foreach (uint idx in modelnames.Where(a => names.Contains(a.Value)).Select(a => a.Key))
 							models.Remove(idx);
 						models[item.Key] = obj;
 						partnames.AddRange(names);
@@ -89,37 +89,37 @@ namespace SA_Tools.SplitMDL
 				}
 
 				// load animations
-				Dictionary<int, string> animfns = new Dictionary<int, string>();
-				Dictionary<int, NJS_MOTION> anims = new Dictionary<int, NJS_MOTION>();
+				Dictionary<uint, string> animfns = new Dictionary<uint, string>();
+				Dictionary<uint, NJS_MOTION> anims = new Dictionary<uint, NJS_MOTION>();
 				foreach ((string anifilename, byte[] anifile) in animfiles)
 				{
-					Dictionary<int, int> processedanims = new Dictionary<int, int>();
+					Dictionary<uint, uint> processedanims = new Dictionary<uint, uint>();
 					MTNInfo ini = new MTNInfo() { BigEndian = ByteConverter.BigEndian };
 					Directory.CreateDirectory(anifilename);
 					address = 0;
-					i = ByteConverter.ToInt16(anifile, address);
-					while (i != -1)
+					i = ByteConverter.ToUInt16(anifile, address);
+					while (i != ushort.MaxValue)
 					{
-						int aniaddr = ByteConverter.ToInt32(anifile, address + 4);
+						uint aniaddr = ByteConverter.ToUInt32(anifile, address + 4);
 						if (!processedanims.ContainsKey(aniaddr))
 						{
-							anims[i] = new NJS_MOTION(anifile, ByteConverter.ToInt32(anifile, address + 4), 0, ByteConverter.ToInt16(anifile, address + 2));
+							anims[i] = new NJS_MOTION(anifile, ByteConverter.ToUInt32(anifile, address + 4), 0, ByteConverter.ToInt16(anifile, address + 2));
 							animfns[i] = Path.Combine(anifilename, i.ToString(NumberFormatInfo.InvariantInfo) + ".saanim");
 							anims[i].Save(animfns[i]);
 							processedanims[aniaddr] = i;
 						}
-						ini.Indexes[(short)i] = "animation_" + aniaddr.ToString("X8");
+						ini.Indexes[(ushort)i] = "animation_" + aniaddr.ToString("X8");
 						address += 8;
-						i = ByteConverter.ToInt16(anifile, address);
+						i = ByteConverter.ToUInt16(anifile, address);
 					}
 					IniSerializer.Serialize(ini, Path.Combine(anifilename, anifilename + ".ini"));
 				}
 
 				// save output model files
-				foreach (KeyValuePair<int, NJS_OBJECT> model in models)
+				foreach (KeyValuePair<uint, NJS_OBJECT> model in models)
 				{
 					List<string> animlist = new List<string>();
-					foreach (KeyValuePair<int, NJS_MOTION> anim in anims)
+					foreach (KeyValuePair<uint, NJS_MOTION> anim in anims)
 						if (model.Value.CountAnimated() == anim.Value.ModelParts)
 						{
 							string rel = animfns[anim.Key].Replace(outputFolder, string.Empty);
@@ -147,13 +147,13 @@ namespace SA_Tools.SplitMDL
 	{
 		public bool BigEndian { get; set; }
 		[IniCollection(IniCollectionMode.IndexOnly)]
-		public Dictionary<int, string> Indexes { get; set; } = new Dictionary<int, string>();
+		public Dictionary<uint, string> Indexes { get; set; } = new Dictionary<uint, string>();
 	}
 
 	public class MTNInfo
 	{
 		public bool BigEndian { get; set; }
 		[IniCollection(IniCollectionMode.IndexOnly)]
-		public Dictionary<short, string> Indexes { get; set; } = new Dictionary<short, string>();
+		public Dictionary<ushort, string> Indexes { get; set; } = new Dictionary<ushort, string>();
 	}
 }

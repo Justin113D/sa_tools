@@ -65,7 +65,7 @@ namespace buildMTN
 					imageBase = (uint)(mtninfo.Indexes.Count * 8) + 8 + (uint)animbytes.Count;
 				}
 				List<byte> mtnfile = new List<byte>();
-				foreach (KeyValuePair<short, string> item in mtninfo.Indexes)
+				foreach (KeyValuePair<ushort, string> item in mtninfo.Indexes)
 				{
 					mtnfile.AddRange(ByteConverter.GetBytes(item.Key));
 					mtnfile.AddRange(ByteConverter.GetBytes(animparts[item.Value]));

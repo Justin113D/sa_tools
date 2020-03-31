@@ -86,12 +86,12 @@ namespace SonicRetro.SAModel
 			}
 		}
 
-		public ChunkAttach(byte[] file, int address, uint imageBase)
-			: this(file, address, imageBase, new Dictionary<int, string>())
+		public ChunkAttach(byte[] file, uint address, uint imageBase)
+			: this(file, address, imageBase, new Dictionary<uint, string>())
 		{
 		}
 
-		public ChunkAttach(byte[] file, int address, uint imageBase, Dictionary<int, string> labels)
+		public ChunkAttach(byte[] file, uint address, uint imageBase, Dictionary<uint, string> labels)
 			: this()
 		{
 			if (labels.ContainsKey(address))
@@ -99,10 +99,10 @@ namespace SonicRetro.SAModel
 			else
 				Name = "attach_" + address.ToString("X8");
 			ChunkType ctype;
-			int tmpaddr = ByteConverter.ToInt32(file, address);
+			uint tmpaddr = ByteConverter.ToUInt32(file, address);
 			if (tmpaddr != 0)
 			{
-				tmpaddr = (int)unchecked((uint)tmpaddr - imageBase);
+				tmpaddr = tmpaddr - imageBase;
 				Vertex = new List<VertexChunk>();
 				if (labels.ContainsKey(tmpaddr))
 					VertexName = labels[tmpaddr];
@@ -113,14 +113,14 @@ namespace SonicRetro.SAModel
 				{
 					VertexChunk chunk = new VertexChunk(file, tmpaddr);
 					Vertex.Add(chunk);
-					tmpaddr += (chunk.Size * 4) + 4;
+					tmpaddr += (uint)(chunk.Size * 4) + 4;
 					ctype = (ChunkType)(ByteConverter.ToUInt32(file, tmpaddr) & 0xFF);
 				}
 			}
-			tmpaddr = ByteConverter.ToInt32(file, address + 4);
+			tmpaddr = ByteConverter.ToUInt32(file, address + 4);
 			if (tmpaddr != 0)
 			{
-				tmpaddr = (int)unchecked((uint)tmpaddr - imageBase);
+				tmpaddr = tmpaddr - imageBase;
 				Poly = new List<PolyChunk>();
 				if (labels.ContainsKey(tmpaddr))
 					PolyName = labels[tmpaddr];
@@ -205,7 +205,7 @@ namespace SonicRetro.SAModel
 				chunks.AddRange(new VertexChunk(ChunkType.End).GetBytes());
 				byte[] cb = chunks.ToArray();
 				List<string> s = new List<string>(cb.Length / 4);
-				for (int i = 0; i < cb.Length; i += 4)
+				for (uint i = 0; i < cb.Length; i += 4)
 				{
 					int it = ByteConverter.ToInt32(cb, i);
 					s.Add("0x" + it.ToString("X") + (it < 0 ? "u" : ""));
@@ -226,7 +226,7 @@ namespace SonicRetro.SAModel
 				chunks.AddRange(new PolyChunkEnd().GetBytes());
 				byte[] cb = chunks.ToArray();
 				List<string> s = new List<string>(cb.Length / 2);
-				for (int i = 0; i < cb.Length; i += 2)
+				for (uint i = 0; i < cb.Length; i += 2)
 				{
 					short sh = ByteConverter.ToInt16(cb, i);
 					s.Add("0x" + sh.ToString("X") + (sh < 0 ? "u" : ""));

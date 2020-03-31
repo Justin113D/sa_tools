@@ -22,9 +22,9 @@ namespace SonicRetro.SAModel
 			set { Header = (ushort)((Header & 0xFF) | (ushort)(value << 8)); }
 		}
 
-		public abstract int ByteSize { get; }
+		public abstract uint ByteSize { get; }
 
-		public static PolyChunk Load(byte[] file, int address)
+		public static PolyChunk Load(byte[] file, uint address)
 		{
 			ChunkType type = (ChunkType)(ByteConverter.ToUInt16(file, address) & 0xFF);
 			switch (type)
@@ -121,7 +121,7 @@ namespace SonicRetro.SAModel
 	[Serializable]
 	public abstract class PolyChunkBits : PolyChunk
 	{
-		public override int ByteSize
+		public override uint ByteSize
 		{
 			get { return 2; }
 		}
@@ -140,7 +140,7 @@ namespace SonicRetro.SAModel
 			Type = ChunkType.Null;
 		}
 
-		public PolyChunkNull(byte[] file, int address)
+		public PolyChunkNull(byte[] file, uint address)
 		{
 			Header = ByteConverter.ToUInt16(file, address);
 		}
@@ -154,7 +154,7 @@ namespace SonicRetro.SAModel
 			Type = ChunkType.End;
 		}
 
-		public PolyChunkEnd(byte[] file, int address)
+		public PolyChunkEnd(byte[] file, uint address)
 		{
 			Header = ByteConverter.ToUInt16(file, address);
 		}
@@ -180,7 +180,7 @@ namespace SonicRetro.SAModel
 			Type = ChunkType.Bits_BlendAlpha;
 		}
 
-		public PolyChunkBitsBlendAlpha(byte[] file, int address)
+		public PolyChunkBitsBlendAlpha(byte[] file, uint address)
 		{
 			Header = ByteConverter.ToUInt16(file, address);
 		}
@@ -203,7 +203,7 @@ namespace SonicRetro.SAModel
 			Type = ChunkType.Bits_MipmapDAdjust;
 		}
 
-		public PolyChunkBitsMipmapDAdjust(byte[] file, int address)
+		public PolyChunkBitsMipmapDAdjust(byte[] file, uint address)
 		{
 			Header = ByteConverter.ToUInt16(file, address);
 		}
@@ -223,7 +223,7 @@ namespace SonicRetro.SAModel
 			Type = ChunkType.Bits_SpecularExponent;
 		}
 
-		public PolyChunkBitsSpecularExponent(byte[] file, int address)
+		public PolyChunkBitsSpecularExponent(byte[] file, uint address)
 		{
 			Header = ByteConverter.ToUInt16(file, address);
 		}
@@ -243,7 +243,7 @@ namespace SonicRetro.SAModel
 			Type = ChunkType.Bits_CachePolygonList;
 		}
 
-		public PolyChunkBitsCachePolygonList(byte[] file, int address)
+		public PolyChunkBitsCachePolygonList(byte[] file, uint address)
 		{
 			Header = ByteConverter.ToUInt16(file, address);
 		}
@@ -263,7 +263,7 @@ namespace SonicRetro.SAModel
 			Type = ChunkType.Bits_DrawPolygonList;
 		}
 
-		public PolyChunkBitsDrawPolygonList(byte[] file, int address)
+		public PolyChunkBitsDrawPolygonList(byte[] file, uint address)
 		{
 			Header = ByteConverter.ToUInt16(file, address);
 		}
@@ -327,7 +327,7 @@ namespace SonicRetro.SAModel
 			set { Data = (ushort)((Data & ~0xC000) | ((ushort)value << 14)); }
 		}
 
-		public override int ByteSize
+		public override uint ByteSize
 		{
 			get { return 4; }
 		}
@@ -337,7 +337,7 @@ namespace SonicRetro.SAModel
 			Type = ChunkType.Tiny_TextureID;
 		}
 
-		public PolyChunkTinyTextureID(byte[] file, int address)
+		public PolyChunkTinyTextureID(byte[] file, uint address)
 		{
 			Header = ByteConverter.ToUInt16(file, address);
 			Second = Type == ChunkType.Tiny_TextureID2;
@@ -372,9 +372,9 @@ namespace SonicRetro.SAModel
 	{
 		public ushort Size { get; protected set; }
 
-		public override int ByteSize
+		public override uint ByteSize
 		{
-			get { return (Size * 2) + 4; }
+			get { return (uint)(Size * 2) + 4; }
 		}
 
 		public override byte[] GetBytes()
@@ -413,7 +413,7 @@ namespace SonicRetro.SAModel
 			Diffuse = Color.FromArgb(0xFF, 0xFF, 0xFF, 0xFF);
 		}
 
-		public PolyChunkMaterial(byte[] file, int address)
+		public PolyChunkMaterial(byte[] file, uint address)
 		{
 			Header = ByteConverter.ToUInt16(file, address);
 			address += sizeof(ushort);
@@ -543,7 +543,7 @@ namespace SonicRetro.SAModel
 			Size = 6;
 		}
 
-		public PolyChunkMaterialBump(byte[] file, int address)
+		public PolyChunkMaterialBump(byte[] file, uint address)
 		{
 			Header = ByteConverter.ToUInt16(file, address);
 			address += sizeof(ushort);
@@ -591,7 +591,7 @@ namespace SonicRetro.SAModel
 				Indexes = new ushort[3];
 			}
 
-			public Triangle(byte[] file, int address, byte userFlags)
+			public Triangle(byte[] file, uint address, byte userFlags)
 				: this()
 			{
 				Indexes[0] = ByteConverter.ToUInt16(file, address);
@@ -627,11 +627,11 @@ namespace SonicRetro.SAModel
 				return result.ToArray();
 			}
 
-			public override int Size
+			public override uint Size
 			{
 				get
 				{
-					int size = 6;
+					uint size = 6;
 					if (UserFlags1.HasValue)
 					{
 						size += 2;
@@ -659,7 +659,7 @@ namespace SonicRetro.SAModel
 				Indexes = new ushort[4];
 			}
 
-			public Quad(byte[] file, int address, byte userFlags)
+			public Quad(byte[] file, uint address, byte userFlags)
 				: this()
 			{
 				Indexes[0] = ByteConverter.ToUInt16(file, address);
@@ -696,11 +696,11 @@ namespace SonicRetro.SAModel
 				return result.ToArray();
 			}
 
-			public override int Size
+			public override uint Size
 			{
 				get
 				{
-					int size = 8;
+					uint size = 8;
 					if (UserFlags1.HasValue)
 					{
 						size += 2;
@@ -736,7 +736,7 @@ namespace SonicRetro.SAModel
 				Reversed = Reverse;
 			}
 
-			public Strip(byte[] file, int address, byte userFlags)
+			public Strip(byte[] file, uint address, byte userFlags)
 			{
 				Indexes = new ushort[ByteConverter.ToUInt16(file, address) & 0x7FFF];
 				Reversed = (ByteConverter.ToUInt16(file, address) & 0x8000) == 0x8000;
@@ -772,20 +772,20 @@ namespace SonicRetro.SAModel
 				}
 			}
 
-			public override int Size
+			public override uint Size
 			{
 				get
 				{
-					int size = 2;
-					size += Indexes.Length * 2;
+					uint size = 2;
+					size += (uint)Indexes.Length * 2;
 					if (UserFlags1 != null)
 					{
-						size += UserFlags1.Length * 2;
+						size += (uint)UserFlags1.Length * 2;
 						if (UserFlags2 != null)
 						{
-							size += UserFlags2.Length * 2;
+							size += (uint)UserFlags2.Length * 2;
 							if (UserFlags3 != null)
-								size += UserFlags3.Length * 2;
+								size += (uint)UserFlags3.Length * 2;
 						}
 					}
 					return size;
@@ -857,7 +857,7 @@ namespace SonicRetro.SAModel
 				throw new ArgumentException("Unknown poly type!", "type");
 			}
 
-			public static Poly CreatePoly(ChunkType type, byte[] file, int address, byte userFlags)
+			public static Poly CreatePoly(ChunkType type, byte[] file, uint address, byte userFlags)
 			{
 				switch (type)
 				{
@@ -871,7 +871,7 @@ namespace SonicRetro.SAModel
 				throw new ArgumentException("Unknown poly type!", "type");
 			}
 
-			public abstract int Size { get; }
+			public abstract uint Size { get; }
 
 			public abstract byte[] GetBytes();
 
@@ -901,7 +901,7 @@ namespace SonicRetro.SAModel
 
 		public List<Poly> Polys { get; private set; }
 
-		public PolyChunkVolume(byte[] file, int address)
+		public PolyChunkVolume(byte[] file, uint address)
 		{
 			Header = ByteConverter.ToUInt16(file, address);
 			address += sizeof(ushort);
@@ -964,7 +964,7 @@ namespace SonicRetro.SAModel
 				VColors = vcolors;
 			}
 
-			public Strip(byte[] file, int address, ChunkType type, byte userFlags)
+			public Strip(byte[] file, uint address, ChunkType type, byte userFlags)
 			{
 				Indexes = new ushort[Math.Abs(ByteConverter.ToInt16(file, address))];
 				Reversed = (ByteConverter.ToUInt16(file, address) & 0x8000) == 0x8000;
@@ -1089,24 +1089,24 @@ namespace SonicRetro.SAModel
 				return result.ToArray();
 			}
 
-			public int Size
+			public uint Size
 			{
 				get
 				{
-					int size = 2;
-					size += Indexes.Length * 2;
+					uint size = 2;
+					size += (uint)Indexes.Length * 2;
 					if (UVs != null)
-						size += UVs.Length * UV.Size;
+						size += (uint)UVs.Length * UV.Size;
 					if (VColors != null)
-						size += VColors.Length * VColor.Size(ColorType.ARGB8888_16);
+						size += (uint)VColors.Length * VColor.Size(ColorType.ARGB8888_16);
 					if (UserFlags1 != null)
 					{
-						size += UserFlags1.Length * 2;
+						size += (uint)UserFlags1.Length * 2;
 						if (UserFlags2 != null)
 						{
-							size += UserFlags2.Length * 2;
+							size += (uint)UserFlags2.Length * 2;
 							if (UserFlags3 != null)
-								size += UserFlags3.Length * 2;
+								size += (uint)UserFlags3.Length * 2;
 						}
 					}
 					return size;
@@ -1197,7 +1197,7 @@ namespace SonicRetro.SAModel
 			Strips = new List<Strip>();
 		}
 
-		public PolyChunkStrip(byte[] file, int address)
+		public PolyChunkStrip(byte[] file, uint address)
 		{
 			Header = ByteConverter.ToUInt16(file, address);
 			address += sizeof(ushort);

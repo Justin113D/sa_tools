@@ -117,7 +117,7 @@ namespace SA2CutsceneTextEditor
 			windows1252ToolStripMenuItem.Checked = !useSJIS;
 			Encoding encoding = useSJIS ? jpenc : euenc;
 			scenes.Clear();
-			int address = 0;
+			uint address = 0;
 			int id = ByteConverter.ToInt32(fc, 0);
 			while (id != -1)
 			{
@@ -401,14 +401,14 @@ namespace SA2CutsceneTextEditor
 		public int SceneNumber { get; set; }
 		public List<Message> Messages { get; set; } = new List<Message>();
 
-		public static int Size => 12;
+		public static uint Size => 12;
 
 		public Scene() { }
 
-		public Scene(byte[] file, int address, uint imageBase, Encoding encoding)
+		public Scene(byte[] file, uint address, uint imageBase, Encoding encoding)
 		{
 			SceneNumber = ByteConverter.ToInt32(file, address);
-			int ptr = (int)(ByteConverter.ToUInt32(file, address + 4) - imageBase);
+			uint ptr = ByteConverter.ToUInt32(file, address + 4) - imageBase;
 			int cnt = ByteConverter.ToInt32(file, address + 8);
 			Messages.Capacity = cnt;
 			for (int i = 0; i < cnt; i++)
@@ -430,14 +430,14 @@ namespace SA2CutsceneTextEditor
 		public bool Centered { get; set; } = true;
 		public string Text { get; set; } = string.Empty;
 
-		public static int Size => 8;
+		public static uint Size => 8;
 
 		public Message() { }
 
-		public Message(byte[] file, int address, uint imageBase, Encoding encoding)
+		public Message(byte[] file, uint address, uint imageBase, Encoding encoding)
 		{
 			Character = ByteConverter.ToInt32(file, address);
-			Text = file.GetCString((int)(ByteConverter.ToUInt32(file, address + 4) - imageBase), encoding);
+			Text = file.GetCString(ByteConverter.ToUInt32(file, address + 4) - imageBase, encoding);
 			if (Text.StartsWith("\a"))
 				Text = Text.TrimStart('\a');
 			else

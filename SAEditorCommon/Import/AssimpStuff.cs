@@ -506,7 +506,7 @@ namespace SonicRetro.SAModel.SAEditorCommon.Import
 			List<Vector3D> normals = new List<Vector3D>();
 			List<Vector3D> texcoords = new List<Vector3D>();
 			List<Color4D> colors = new List<Color4D>();
-			foreach (GC.GCParameter param in m.parameters)
+			foreach (GC.Parameter param in m.parameters)
 			{
 				if (param.type == GC.ParameterType.Texture)
 				{
@@ -540,10 +540,10 @@ namespace SonicRetro.SAModel.SAEditorCommon.Import
 				}
 			}
 
-			List<GC.IOVtx> gcPositions = gcAttach.vertexData.Find(x => x.attribute == GC.GCVertexAttribute.Position)?.data;
-			List<GC.IOVtx> gcNormals = gcAttach.vertexData.Find(x => x.attribute == GC.GCVertexAttribute.Normal)?.data;
-			List<GC.IOVtx> gcColors = gcAttach.vertexData.Find(x => x.attribute == GC.GCVertexAttribute.Color0)?.data;
-			List<GC.IOVtx> gcUVs = gcAttach.vertexData.Find(x => x.attribute == GC.GCVertexAttribute.Tex0)?.data;
+			List<Structs.IDataStructOut> gcPositions = gcAttach.vertexData.Find(x => x.attribute == GC.GCVertexAttribute.Position)?.data;
+			List<Structs.IDataStructOut> gcNormals = gcAttach.vertexData.Find(x => x.attribute == GC.GCVertexAttribute.Normal)?.data;
+			List<Structs.IDataStructOut> gcColors = gcAttach.vertexData.Find(x => x.attribute == GC.GCVertexAttribute.Color0)?.data;
+			List<Structs.IDataStructOut> gcUVs = gcAttach.vertexData.Find(x => x.attribute == GC.GCVertexAttribute.Tex0)?.data;
 
 			foreach (GC.GCPrimitive prim in m.primitives)
 			{
@@ -553,21 +553,21 @@ namespace SonicRetro.SAModel.SAEditorCommon.Import
 					newPoly.Indices.AddRange(new int[] { positions.Count + 2, positions.Count + 1, positions.Count });
 					for (int j = 0; j < 3; j++)
 					{
-						GC.Vector3 vertex = (GC.Vector3)gcPositions[prim.ToTriangles()[i + j].PositionIndex];
-						positions.Add(new Vector3D(vertex.x, vertex.y, vertex.z));
+						Structs.Vector3 vertex = (Structs.Vector3)gcPositions[prim.ToTriangles()[i + j].PositionIndex];
+						positions.Add(new Vector3D(vertex.X, vertex.Y, vertex.Z));
 						if (gcNormals != null)
 						{
-							GC.Vector3 normal = (GC.Vector3)gcNormals[prim.ToTriangles()[i + j].NormalIndex];
-							normals.Add(new Vector3D(normal.x, normal.y, normal.z));
+							Structs.Vector3 normal = (Structs.Vector3)gcNormals[prim.ToTriangles()[i + j].NormalIndex];
+							normals.Add(new Vector3D(normal.X, normal.Y, normal.Z));
 						}
 						if (gcUVs != null)
 						{
-							GC.UV uv = (GC.UV)gcUVs[prim.ToTriangles()[i + j].UV0Index];
-							texcoords.Add(new Vector3D(uv.x, uv.y, 1.0f));
+							Structs.Vector2 uv = (Structs.Vector2)gcUVs[prim.ToTriangles()[i + j].UV0Index];
+							texcoords.Add(new Vector3D(uv.X, uv.Y, 1.0f));
 						}
 						if (gcUVs != null)
 						{
-							GC.Color c = (GC.Color)gcColors[(int)prim.ToTriangles()[i + j].Color0Index];
+							Structs.Color c = (Structs.Color)gcColors[(int)prim.ToTriangles()[i + j].Color0Index];
 							colors.Add(new Color4D(c.AlphaF, c.BlueF, c.GreenF, c.RedF));//colors.Add( new Color4D(c.A,c.B,c.G,c.R));
 						}
 					}
@@ -575,7 +575,7 @@ namespace SonicRetro.SAModel.SAEditorCommon.Import
 
 					//VertexData.Positions[(int)prim.Vertices[i].PositionIndex],
 					//VertexData.Normals.Count > 0 ? VertexData.Normals[(int)prim.Vertices[i].NormalIndex] : new Vector3(0, 1, 0),
-					//hasVColor ? VertexData.Color_0[(int)prim.Vertices[i].Color0Index] : new GC.Color { R = 1, G = 1, B = 1, A = 1 },
+					//hasVColor ? VertexData.Color_0[(int)prim.Vertices[i].Color0Index] : new Structs.Color { R = 1, G = 1, B = 1, A = 1 },
 					//hasUV ? VertexData.TexCoord_0[(int)prim.Vertices[i].UVIndex] : new Vector2() { X = 0, Y = 0 }));
 					mesh.Faces.Add(newPoly);
 				}
@@ -1348,8 +1348,8 @@ namespace SonicRetro.SAModel.SAEditorCommon.Import
 			List<GC.GCMesh> gcmeshes = new List<GC.GCMesh>();
 			List<Vector3D> vertices = new List<Vector3D>();
 			List<Vector3D> normals = new List<Vector3D>();
-			List<GC.UV> texcoords = new List<GC.UV>();
-			List<GC.Color> colors = new List<GC.Color>();
+			List<Structs.Vector2> texcoords = new List<Structs.Vector2>();
+			List<Structs.Color> colors = new List<Structs.Color>();
 			List<GC.GCVertexSet> vertexAttribs = new List<GC.GCVertexSet>();
 			foreach (Assimp.Mesh m in meshes)
 			{
@@ -1360,7 +1360,7 @@ namespace SonicRetro.SAModel.SAEditorCommon.Import
 				}
 
 				List<GC.GCPrimitive> primitives = new List<GC.GCPrimitive>();
-				List<GC.GCParameter> parameters = new List<GC.GCParameter>();
+				List<GC.Parameter> parameters = new List<GC.Parameter>();
 
 				ushort vertStartIndex = (ushort)vertices.Count;
 				ushort normStartIndex = (ushort)normals.Count;
@@ -1374,12 +1374,12 @@ namespace SonicRetro.SAModel.SAEditorCommon.Import
 				if (m.HasTextureCoords(0))
 				{
 					foreach (Vector3D texcoord in m.TextureCoordinateChannels[0])
-						texcoords.Add(new GC.UV(texcoord.X, texcoord.Y));
+						texcoords.Add(new Structs.Vector2(texcoord.X, texcoord.Y));
 				}
 				if (m.HasVertexColors(0))
 				{
 					foreach (Color4D texcoord in m.VertexColorChannels[0])
-						colors.Add(new GC.Color(texcoord.A, texcoord.B, texcoord.G, texcoord.R));//colors.Add(new Color(texcoord.A * 255.0f, texcoord.B * 255.0f, texcoord.G * 255.0f, texcoord.R * 255.0f));
+						colors.Add(new Structs.Color(texcoord.A, texcoord.B, texcoord.G, texcoord.R));//colors.Add(new Color(texcoord.A * 255.0f, texcoord.B * 255.0f, texcoord.G * 255.0f, texcoord.R * 255.0f));
 																																  //colors.Add(new Color4D(c.A / 255.0f, c.B / 255.0f, c.G / 255.0f, c.R / 255.0f)); rgba
 				}
 
@@ -1494,36 +1494,36 @@ namespace SonicRetro.SAModel.SAEditorCommon.Import
 				gcmeshes.Add(new GC.GCMesh(parameters, primitives));
 			}
 
-			List<GC.Vector3> gcvertices = new List<GC.Vector3>();
+			List<Structs.Vector3> gcvertices = new List<Structs.Vector3>();
 			foreach (Vector3D aivert in vertices)
-				gcvertices.Add(new GC.Vector3(aivert.X, aivert.Y, aivert.Z));
+				gcvertices.Add(new Structs.Vector3(aivert.X, aivert.Y, aivert.Z));
 
-			List<GC.Vector3> gcnormals = new List<GC.Vector3>();
+			List<Structs.Vector3> gcnormals = new List<Structs.Vector3>();
 			foreach (Vector3D aivert in normals)
-				gcnormals.Add(new GC.Vector3(aivert.X, aivert.Y, aivert.Z));
+				gcnormals.Add(new Structs.Vector3(aivert.X, aivert.Y, aivert.Z));
 
 			//VertexAttribute stuff
 			GC.GCVertexSet vtxPositions = new GC.GCVertexSet(GC.GCVertexAttribute.Position);
-			vtxPositions.data.AddRange(gcvertices);
+			gcvertices.ForEach(x => vtxPositions.data.Add(x));
 			attach.vertexData.Add(vtxPositions);
 
 			if (texcoords.Count > 0)
 			{
 				GC.GCVertexSet vtxUV = new GC.GCVertexSet(GC.GCVertexAttribute.Tex0);
-				vtxUV.data.AddRange(texcoords);
+				texcoords.ForEach(x => vtxUV.data.Add(x));
 				attach.vertexData.Add(vtxUV);
 			}
 
 			if (colors.Count > 0)
 			{
 				GC.GCVertexSet vtxColors = new GC.GCVertexSet(GC.GCVertexAttribute.Color0);
-				vtxColors.data.AddRange(colors);
+				colors.ForEach(x => vtxColors.data.Add(x));
 				attach.vertexData.Add(vtxColors);
 			}
 			else
 			{
 				GC.GCVertexSet vtxNormals = new GC.GCVertexSet(GC.GCVertexAttribute.Normal);
-				vtxNormals.data.AddRange(gcnormals);
+				gcnormals.ForEach(x => vtxNormals.data.Add(x));
 				attach.vertexData.Add(vtxNormals);
 			}
 

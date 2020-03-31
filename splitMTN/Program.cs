@@ -45,14 +45,14 @@ namespace splitMTN
 				if (Path.GetExtension(filename).Equals(".prs", StringComparison.OrdinalIgnoreCase))
 					file = FraGag.Compression.Prs.Decompress(file);
 				Directory.CreateDirectory(Path.GetFileNameWithoutExtension(filename));
-				Dictionary<int, int> processedanims = new Dictionary<int, int>();
+				Dictionary<uint, uint> processedanims = new Dictionary<uint, uint>();
 				switch (be)
 				{
 					case true:
 						ByteConverter.BigEndian = true;
 						break;
 					case null:
-						int addr = 0;
+						uint addr = 0;
 						short ile = ByteConverter.ToInt16(file, 0);
 						if (ile == 0)
 						{
@@ -65,11 +65,11 @@ namespace splitMTN
 						break;
 				}
 				MTNInfo ini = new MTNInfo { BigEndian = ByteConverter.BigEndian };
-				int address = 0;
-				short i = ByteConverter.ToInt16(file, address);
-				while (i != -1)
+				uint address = 0;
+				ushort i = ByteConverter.ToUInt16(file, address);
+				while (i != ushort.MaxValue)
 				{
-					int aniaddr = ByteConverter.ToInt32(file, address + 4);
+					uint aniaddr = ByteConverter.ToUInt32(file, address + 4);
 					if (!processedanims.ContainsKey(aniaddr))
 					{
 						new NJS_MOTION(file, aniaddr, 0, ByteConverter.ToInt16(file, address + 2))
@@ -78,7 +78,7 @@ namespace splitMTN
 					}
 					ini.Indexes[i] = "animation_" + aniaddr.ToString("X8");
 					address += 8;
-					i = ByteConverter.ToInt16(file, address);
+					i = ByteConverter.ToUInt16(file, address);
 				}
 				IniSerializer.Serialize(ini, Path.Combine(Path.GetFileNameWithoutExtension(filename), Path.GetFileNameWithoutExtension(filename) + ".ini"));
 			}

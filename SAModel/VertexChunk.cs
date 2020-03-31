@@ -95,7 +95,7 @@ namespace SonicRetro.SAModel
 			}
 		}
 
-		public VertexChunk(byte[] file, int address)
+		public VertexChunk(byte[] file, uint address)
 			: this()
 		{
 			Header1 = ByteConverter.ToUInt32(file, address);

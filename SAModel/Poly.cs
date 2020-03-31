@@ -12,7 +12,7 @@ namespace SonicRetro.SAModel
 			Indexes = new ushort[3];
 		}
 
-		public Triangle(byte[] file, int address)
+		public Triangle(byte[] file, uint address)
 			: this()
 		{
 			Indexes[0] = ByteConverter.ToUInt16(file, address);
@@ -34,7 +34,7 @@ namespace SonicRetro.SAModel
 			Indexes = new ushort[4];
 		}
 
-		public Quad(byte[] file, int address)
+		public Quad(byte[] file, uint address)
 			: this()
 		{
 			Indexes[0] = ByteConverter.ToUInt16(file, address);
@@ -66,7 +66,7 @@ namespace SonicRetro.SAModel
 			Reversed = Reverse;
 		}
 
-		public Strip(byte[] file, int address)
+		public Strip(byte[] file, uint address)
 		{
 			Indexes = new ushort[ByteConverter.ToUInt16(file, address) & 0x7FFF];
 			Reversed = (ByteConverter.ToUInt16(file, address) & 0x8000) == 0x8000;
@@ -78,7 +78,7 @@ namespace SonicRetro.SAModel
 			}
 		}
 
-		public override int Size
+		public override uint Size
 		{
 			get { return base.Size + 2; }
 		}
@@ -117,9 +117,9 @@ namespace SonicRetro.SAModel
 		{
 		}
 
-		public virtual int Size
+		public virtual uint Size
 		{
-			get { return Indexes.Length * 2; }
+			get { return (uint)Indexes.Length * 2; }
 		}
 
 		public abstract Basic_PolyType PolyType { get; }
@@ -157,7 +157,7 @@ namespace SonicRetro.SAModel
 			throw new ArgumentException("Unknown poly type!", "type");
 		}
 
-		public static Poly CreatePoly(Basic_PolyType type, byte[] file, int address)
+		public static Poly CreatePoly(Basic_PolyType type, byte[] file, uint address)
 		{
 			switch (type)
 			{

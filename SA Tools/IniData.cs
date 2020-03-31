@@ -54,15 +54,15 @@ namespace SA_Tools
 		[IniName("type")]
 		public string Type { get; set; }
 		[IniName("address")]
-		[TypeConverter(typeof(Int32HexConverter))]
-		public int Address { get; set; }
+		[TypeConverter(typeof(UInt32HexConverter))]
+		public uint Address { get; set; }
 		[IniName("filename")]
 		public string Filename { get; set; }
 		[IniName("md5")]
 		public string MD5Hash { get; set; }
 		[IniName("pointer")]
-		[IniCollection(IniCollectionMode.SingleLine, Format = ",", ValueConverter = typeof(Int32HexConverter))]
-		public int[] PointerList { get; set; }
+		[IniCollection(IniCollectionMode.SingleLine, Format = ",", ValueConverter = typeof(UInt32HexConverter))]
+		public uint[] PointerList { get; set; }
 		[IniCollection(IniCollectionMode.IndexOnly)]
 		public Dictionary<string, string> CustomProperties { get; set; }
 	}
@@ -188,7 +188,7 @@ namespace SA_Tools
 				return IniSerializer.Deserialize<SA1ObjectListEntry[]>(filename);
 		}
 
-		public static ObjectListEntry[] Load(byte[] file, int address, uint imageBase, bool SA2)
+		public static ObjectListEntry[] Load(byte[] file, uint address, uint imageBase, bool SA2)
 		{
 			int numobjs = ByteConverter.ToInt32(file, address);
 			address = file.GetPointer(address + 4, imageBase);
@@ -266,7 +266,7 @@ namespace SA_Tools
 	{
 		public SA1ObjectListEntry() { CodeString = string.Empty; Name = string.Empty; }
 
-		public SA1ObjectListEntry(byte[] file, int address, uint imageBase)
+		public SA1ObjectListEntry(byte[] file, uint address, uint imageBase)
 		{
 			Arg1 = file[address++];
 			Arg2 = file[address++];
@@ -283,11 +283,11 @@ namespace SA_Tools
 
 		public int Unknown { get; set; }
 
-		public static int Size { get { return 0x14; } }
+		public static uint Size => 0x14;
 
 		public override byte[] GetBytes(Dictionary<string, uint> labels, uint nameAddress)
 		{
-			List<byte> result = new List<byte>(Size)
+			List<byte> result = new List<byte>((int)Size)
 			{
 				Arg1,
 				Arg2
@@ -328,7 +328,7 @@ namespace SA_Tools
 	{
 		public SA2ObjectListEntry() { CodeString = string.Empty; Name = string.Empty; }
 
-		public SA2ObjectListEntry(byte[] file, int address, uint imageBase)
+		public SA2ObjectListEntry(byte[] file, uint address, uint imageBase)
 		{
 			Arg1 = file[address++];
 			Arg2 = file[address++];
@@ -341,11 +341,11 @@ namespace SA_Tools
 			Name = file.GetCString(file.GetPointer(address, imageBase));
 		}
 
-		public static int Size { get { return 0x10; } }
+		public static uint Size => 0x10;
 
 		public override byte[] GetBytes(Dictionary<string, uint> labels, uint nameAddress)
 		{
-			List<byte> result = new List<byte>(Size)
+			List<byte> result = new List<byte>((int)Size)
 			{
 				Arg1,
 				Arg2
@@ -406,14 +406,14 @@ namespace SA_Tools
 
 	public static class SA1StartPosList
 	{
-		public static int Size { get { return SA1StartPosInfo.Size + 4;}}
+		public static uint Size => SA1StartPosInfo.Size + 4;
 
 		public static Dictionary<SA1LevelAct, SA1StartPosInfo> Load(string filename)
 		{
 			return IniSerializer.Deserialize<Dictionary<SA1LevelAct, SA1StartPosInfo>>(filename);
 		}
 
-		public static Dictionary<SA1LevelAct, SA1StartPosInfo> Load(byte[] file, int address)
+		public static Dictionary<SA1LevelAct, SA1StartPosInfo> Load(byte[] file, uint address)
 		{
 			Dictionary<SA1LevelAct, SA1StartPosInfo> result = new Dictionary<SA1LevelAct, SA1StartPosInfo>();
 			while (ByteConverter.ToUInt16(file, address) != (ushort)SA1LevelIDs.Invalid)
@@ -432,7 +432,7 @@ namespace SA_Tools
 
 		public static byte[] GetBytes(this Dictionary<SA1LevelAct, SA1StartPosInfo> startpos)
 		{
-			List<byte> result = new List<byte>(Size * (startpos.Count + 1));
+			List<byte> result = new List<byte>((int)Size * (startpos.Count + 1));
 			foreach (KeyValuePair<SA1LevelAct, SA1StartPosInfo> item in startpos)
 			{
 				result.AddRange(ByteConverter.GetBytes((ushort)item.Key.Level));
@@ -464,7 +464,7 @@ namespace SA_Tools
 	{
 		public SA1StartPosInfo() { Position = new Vertex(); }
 
-		public SA1StartPosInfo(byte[] file, int address)
+		public SA1StartPosInfo(byte[] file, uint address)
 		{
 			Position = new Vertex(file, address);
 			YRotation = ByteConverter.ToInt32(file, address + Vertex.Size);
@@ -474,11 +474,11 @@ namespace SA_Tools
 		[TypeConverter(typeof(Int32HexConverter))]
 		public int YRotation { get; set; }
 
-		public static int Size { get { return Vertex.Size + 4; } }
+		public static uint Size => Vertex.Size + 4;
 
 		public byte[] GetBytes()
 		{
-			List<byte> result = new List<byte>(Size);
+			List<byte> result = new List<byte>((int)Size);
 			result.AddRange(Position.GetBytes());
 			result.AddRange(ByteConverter.GetBytes(YRotation));
 			return result.ToArray();
@@ -487,14 +487,14 @@ namespace SA_Tools
 
 	public static class SA2StartPosList
 	{
-		public static int Size { get { return SA2StartPosInfo.Size + 2; } }
+		public static uint Size => SA2StartPosInfo.Size + 2;
 
 		public static Dictionary<SA2LevelIDs, SA2StartPosInfo> Load(string filename)
 		{
 			return IniSerializer.Deserialize<Dictionary<SA2LevelIDs, SA2StartPosInfo>>(filename);
 		}
 
-		public static Dictionary<SA2LevelIDs, SA2StartPosInfo> Load(byte[] file, int address)
+		public static Dictionary<SA2LevelIDs, SA2StartPosInfo> Load(byte[] file, uint address)
 		{
 			Dictionary<SA2LevelIDs, SA2StartPosInfo> result = new Dictionary<SA2LevelIDs, SA2StartPosInfo>();
 			while (ByteConverter.ToUInt16(file, address) != (ushort)SA2LevelIDs.Invalid)
@@ -513,7 +513,7 @@ namespace SA_Tools
 
 		public static byte[] GetBytes(this Dictionary<SA2LevelIDs, SA2StartPosInfo> startpos)
 		{
-			List<byte> result = new List<byte>(Size * (startpos.Count + 1));
+			List<byte> result = new List<byte>((int)Size * (startpos.Count + 1));
 			foreach (KeyValuePair<SA2LevelIDs, SA2StartPosInfo> item in startpos)
 			{
 				result.AddRange(ByteConverter.GetBytes((ushort)item.Key));
@@ -555,7 +555,7 @@ namespace SA_Tools
 			P2Position = new Vertex();
 		}
 
-		public SA2StartPosInfo(byte[] file, int address)
+		public SA2StartPosInfo(byte[] file, uint address)
 		{
 			YRotation = ByteConverter.ToUInt16(file, address);
 			address += sizeof(ushort);
@@ -581,11 +581,11 @@ namespace SA_Tools
 		public Vertex P1Position { get; set; }
 		public Vertex P2Position { get; set; }
 
-		public static int Size { get { return (Vertex.Size + sizeof(ushort)) * 3; } }
+		public static uint Size => (Vertex.Size + sizeof(ushort)) * 3;
 
 		public byte[] GetBytes()
 		{
-			List<byte> result = new List<byte>(Size);
+			List<byte> result = new List<byte>((int)Size);
 			result.AddRange(ByteConverter.GetBytes(YRotation));
 			result.AddRange(ByteConverter.GetBytes(P1YRotation));
 			result.AddRange(ByteConverter.GetBytes(P2YRotation));
@@ -603,7 +603,7 @@ namespace SA_Tools
 			return IniSerializer.Deserialize<TextureListEntry[]>(filename);
 		}
 
-		public static TextureListEntry[] Load(byte[] file, int address, uint imageBase)
+		public static TextureListEntry[] Load(byte[] file, uint address, uint imageBase)
 		{
 			List<TextureListEntry> objini = new List<TextureListEntry>();
 			while (ByteConverter.ToUInt64(file, address) != 0)
@@ -646,7 +646,7 @@ namespace SA_Tools
 	{
 		public LevelTextureList() { }
 
-		public LevelTextureList(byte[] file, int address, uint imageBase)
+		public LevelTextureList(byte[] file, uint address, uint imageBase)
 		{
 			Level = new SA1LevelAct(ByteConverter.ToUInt16(file, address));
 			ushort numobjs = ByteConverter.ToUInt16(file, address + 2);
@@ -704,13 +704,13 @@ namespace SA_Tools
 	public class TextureListEntry
 	{
 		public TextureListEntry() { Name = string.Empty; }
-		public TextureListEntry(byte[] file, int address, uint imageBase)
+		public TextureListEntry(byte[] file, uint address, uint imageBase)
 		{
 			uint nameAddress = ByteConverter.ToUInt32(file, address);
 			if (nameAddress == 0)
 				Name = string.Empty;
 			else
-				Name = file.GetCString((int)(nameAddress - imageBase));
+				Name = file.GetCString(nameAddress - imageBase);
 			Textures = ByteConverter.ToUInt32(file, address + 4);
 		}
 
@@ -718,11 +718,11 @@ namespace SA_Tools
 		[TypeConverter(typeof(UInt32HexConverter))]
 		public uint Textures { get; set; }
 
-		public static int Size { get { return 8; } }
+		public static uint Size => 8;
 
 		public byte[] GetBytes(uint nameAddress)
 		{
-			List<byte> result = new List<byte>(Size);
+			List<byte> result = new List<byte>((int)Size);
 			result.AddRange(ByteConverter.GetBytes(nameAddress));
 			result.AddRange(ByteConverter.GetBytes(Textures));
 			return result.ToArray();
@@ -760,7 +760,7 @@ namespace SA_Tools
 			return result.ToArray();
 		}
 
-		public static SA1LevelAct[] Load(byte[] file, int address, uint imageBase)
+		public static SA1LevelAct[] Load(byte[] file, uint address, uint imageBase)
 		{
 			uint lvlcnt = ByteConverter.ToUInt32(file, address + 4);
 			address = file.GetPointer(address, imageBase);
@@ -794,7 +794,7 @@ namespace SA_Tools
 			return result.ToArray();
 		}
 
-		public static SA1LevelAct[] Load(byte[] file, int address)
+		public static SA1LevelAct[] Load(byte[] file, uint address)
 		{
 			List<SA1LevelAct> result = new List<SA1LevelAct>();
 			while (ByteConverter.ToUInt16(file, address) != (ushort)SA1LevelIDs.Invalid)
@@ -829,14 +829,14 @@ namespace SA_Tools
 
 	public static class FieldStartPosList
 	{
-		public static int Size { get { return FieldStartPosInfo.Size + 2; } }
+		public static uint Size => FieldStartPosInfo.Size + 2;
 
 		public static Dictionary<SA1LevelIDs, FieldStartPosInfo> Load(string filename)
 		{
 			return IniSerializer.Deserialize<Dictionary<SA1LevelIDs, FieldStartPosInfo>>(filename);
 		}
 
-		public static Dictionary<SA1LevelIDs, FieldStartPosInfo> Load(byte[] file, int address)
+		public static Dictionary<SA1LevelIDs, FieldStartPosInfo> Load(byte[] file, uint address)
 		{
 			Dictionary<SA1LevelIDs, FieldStartPosInfo> result = new Dictionary<SA1LevelIDs, FieldStartPosInfo>();
 			while ((SA1LevelIDs)file[address] != SA1LevelIDs.Invalid)
@@ -855,7 +855,7 @@ namespace SA_Tools
 
 		public static byte[] GetBytes(this Dictionary<SA1LevelIDs, FieldStartPosInfo> FieldStartPos)
 		{
-			List<byte> result = new List<byte>(Size * (FieldStartPos.Count + 1));
+			List<byte> result = new List<byte>((int)Size * (FieldStartPos.Count + 1));
 			foreach (KeyValuePair<SA1LevelIDs, FieldStartPosInfo> item in FieldStartPos)
 			{
 				result.Add((byte)item.Key);
@@ -887,7 +887,7 @@ namespace SA_Tools
 	{
 		public FieldStartPosInfo() { Position = new Vertex(); }
 
-		public FieldStartPosInfo(byte[] file, int address)
+		public FieldStartPosInfo(byte[] file, uint address)
 		{
 			Field = (SA1LevelIDs)file[address];
 			address += 2;
@@ -902,11 +902,11 @@ namespace SA_Tools
 		[TypeConverter(typeof(Int32HexConverter))]
 		public int YRotation { get; set; }
 
-		public static int Size { get { return 0x12; } }
+		public static uint Size => 0x12;
 
 		public byte[] GetBytes()
 		{
-			List<byte> result = new List<byte>(Size)
+			List<byte> result = new List<byte>((int)Size)
 			{
 				(byte)Field,
 				0
@@ -924,7 +924,7 @@ namespace SA_Tools
 			return IniSerializer.Deserialize<SoundTestListEntry[]>(filename);
 		}
 
-		public static SoundTestListEntry[] Load(byte[] file, int address, uint imageBase)
+		public static SoundTestListEntry[] Load(byte[] file, uint address, uint imageBase)
 		{
 			int numobjs = ByteConverter.ToInt32(file, address + 4);
 			address = file.GetPointer(address, imageBase);
@@ -947,7 +947,7 @@ namespace SA_Tools
 	public class SoundTestListEntry
 	{
 		public SoundTestListEntry() { Title = string.Empty; }
-		public SoundTestListEntry(byte[] file, int address, uint imageBase)
+		public SoundTestListEntry(byte[] file, uint address, uint imageBase)
 		{
 			Title = file.GetCString(file.GetPointer(address, imageBase));
 			Track = ByteConverter.ToInt32(file, address + 4);
@@ -957,11 +957,11 @@ namespace SA_Tools
 		[IniAlwaysInclude]
 		public int Track { get; set; }
 
-		public static int Size { get { return 8; } }
+		public static uint Size => 8;
 
 		public byte[] GetBytes(uint titleAddress)
 		{
-			List<byte> result = new List<byte>(Size);
+			List<byte> result = new List<byte>((int)Size);
 			result.AddRange(ByteConverter.GetBytes(titleAddress));
 			result.AddRange(ByteConverter.GetBytes(Track));
 			return result.ToArray();
@@ -985,7 +985,7 @@ namespace SA_Tools
 			return IniSerializer.Deserialize<MusicListEntry[]>(filename);
 		}
 
-		public static MusicListEntry[] Load(byte[] file, int address, uint imageBase, int numsongs)
+		public static MusicListEntry[] Load(byte[] file, uint address, uint imageBase, int numsongs)
 		{
 			List<MusicListEntry> objini = new List<MusicListEntry>(numsongs);
 			for (int i = 0; i < numsongs; i++)
@@ -1006,7 +1006,7 @@ namespace SA_Tools
 	public class MusicListEntry
 	{
 		public MusicListEntry() { Filename = string.Empty; }
-		public MusicListEntry(byte[] file, int address, uint imageBase)
+		public MusicListEntry(byte[] file, uint address, uint imageBase)
 		{
 			Filename = file.GetCString(file.GetPointer(address, imageBase));
 			Loop = Convert.ToBoolean(ByteConverter.ToInt32(file, address + 4));
@@ -1015,11 +1015,11 @@ namespace SA_Tools
 		public string Filename { get; set; }
 		public bool Loop { get; set; }
 
-		public static int Size { get { return 8; } }
+		public static uint Size => 8;
 
 		public byte[] GetBytes(uint titleAddress)
 		{
-			List<byte> result = new List<byte>(Size);
+			List<byte> result = new List<byte>((int)Size);
 			result.AddRange(ByteConverter.GetBytes(titleAddress));
 			result.AddRange(ByteConverter.GetBytes(Convert.ToInt32(Loop)));
 			return result.ToArray();
@@ -1043,7 +1043,7 @@ namespace SA_Tools
 			return IniSerializer.Deserialize<SoundListEntry[]>(filename);
 		}
 
-		public static SoundListEntry[] Load(byte[] file, int address, uint imageBase)
+		public static SoundListEntry[] Load(byte[] file, uint address, uint imageBase)
 		{
 			int numobjs = ByteConverter.ToInt32(file, address);
 			address = file.GetPointer(address + 4, imageBase);
@@ -1066,7 +1066,7 @@ namespace SA_Tools
 	public class SoundListEntry
 	{
 		public SoundListEntry() { Filename = string.Empty; }
-		public SoundListEntry(byte[] file, int address, uint imageBase)
+		public SoundListEntry(byte[] file, uint address, uint imageBase)
 		{
 			Bank = ByteConverter.ToInt32(file, address);
 			Filename = file.GetCString(file.GetPointer(address + 4, imageBase));
@@ -1076,11 +1076,11 @@ namespace SA_Tools
 		public int Bank { get; set; }
 		public string Filename { get; set; }
 
-		public static int Size { get { return 8; } }
+		public static uint Size => 8;
 
 		public byte[] GetBytes(uint filenameAddress)
 		{
-			List<byte> result = new List<byte>(Size);
+			List<byte> result = new List<byte>((int)Size);
 			result.AddRange(ByteConverter.GetBytes(Bank));
 			result.AddRange(ByteConverter.GetBytes(filenameAddress));
 			return result.ToArray();
@@ -1107,17 +1107,17 @@ namespace SA_Tools
 			return result;
 		}
 
-		public static string[] Load(byte[] file, int address, uint imageBase, int length)
+		public static string[] Load(byte[] file, uint address, uint imageBase, int length)
 		{
 			return Load(file, address, imageBase, length, HelperFunctions.GetEncoding());
 		}
 
-		public static string[] Load(byte[] file, int address, uint imageBase, int length, Languages language)
+		public static string[] Load(byte[] file, uint address, uint imageBase, int length, Languages language)
 		{
 			return Load(file, address, imageBase, length, HelperFunctions.GetEncoding(language));
 		}
 
-		public static string[] Load(byte[] file, int address, uint imageBase, int length, Encoding encoding)
+		public static string[] Load(byte[] file, uint address, uint imageBase, int length, Encoding encoding)
 		{
 			string[] result = new string[length];
 			for (int i = 0; i < length; i++)
@@ -1126,7 +1126,7 @@ namespace SA_Tools
 				if (straddr == 0)
 					result[i] = string.Empty;
 				else
-					result[i] = file.GetCString((int)(straddr - imageBase), encoding);
+					result[i] = file.GetCString(straddr - imageBase, encoding);
 				address += 4;
 			}
 			return result;
@@ -1148,7 +1148,7 @@ namespace SA_Tools
 			return IniSerializer.Deserialize<NextLevelListEntry[]>(filename);
 		}
 
-		public static NextLevelListEntry[] Load(byte[] file, int address)
+		public static NextLevelListEntry[] Load(byte[] file, uint address)
 		{
 			List<NextLevelListEntry> result = new List<NextLevelListEntry>();
 			while (file[address + 1] != byte.MaxValue)
@@ -1178,7 +1178,7 @@ namespace SA_Tools
 	public class NextLevelListEntry
 	{
 		public NextLevelListEntry() { }
-		public NextLevelListEntry(byte[] file, int address)
+		public NextLevelListEntry(byte[] file, uint address)
 		{
 			CGMovie = file[address];
 			Level = (SA1LevelIDs)file[address + 1];
@@ -1207,7 +1207,7 @@ namespace SA_Tools
 		[IniAlwaysInclude]
 		public byte AltStartPos { get; set; }
 
-		public static int Size { get { return 8; } }
+		public static uint Size => 8;
 
 		public byte[] GetBytes()
 		{
@@ -1249,7 +1249,7 @@ namespace SA_Tools
 				Text[i] = StringArray.Load(Path.Combine(directory, ((Languages)i).ToString() + ".txt"));
 		}
 
-		public CutsceneText(byte[] file, int address, uint imageBase, int length)
+		public CutsceneText(byte[] file, uint address, uint imageBase, int length)
 			: this()
 		{
 			for (int i = 0; i < 5; i++)
@@ -1295,15 +1295,15 @@ namespace SA_Tools
 			return screens;
 		}
 
-		public static RecapScreen[][] Load(byte[] file, int address, uint imageBase, int length)
+		public static RecapScreen[][] Load(byte[] file, uint address, uint imageBase, int length)
 		{
 			RecapScreen[][] screens = new RecapScreen[length][];
-			for (int i = 0; i < length; i++)
+			for (uint i = 0; i < length; i++)
 			{
 				screens[i] = new RecapScreen[5];
-				for (int l = 0; l < 5; l++)
+				for (uint l = 0; l < 5; l++)
 				{
-					int tmpaddr = file.GetPointer(address + (l * 4), imageBase);
+					uint tmpaddr = file.GetPointer(address + (l * 4), imageBase);
 					tmpaddr += i * 0xC;
 					screens[i][l] = new RecapScreen(file, tmpaddr, imageBase, (Languages)l);
 				}
@@ -1342,10 +1342,10 @@ namespace SA_Tools
 			Text = string.Empty;
 		}
 
-		public RecapScreen(byte[] file, int address, uint imageBase, Languages language)
+		public RecapScreen(byte[] file, uint address, uint imageBase, Languages language)
 		{
 			Speed = ByteConverter.ToSingle(file, address);
-			Text = string.Join("\n", StringArray.Load(file, (int)(ByteConverter.ToUInt32(file, address + 8) - imageBase), imageBase, ByteConverter.ToInt32(file, address + 4), language));
+			Text = string.Join("\n", StringArray.Load(file, ByteConverter.ToUInt32(file, address + 8) - imageBase, imageBase, ByteConverter.ToInt32(file, address + 4), language));
 		}
 
 		[IniAlwaysInclude]
@@ -1368,15 +1368,15 @@ namespace SA_Tools
 			return screens;
 		}
 
-		public static NPCText[][] Load(byte[] file, int address, uint imageBase, int length)
+		public static NPCText[][] Load(byte[] file, uint address, uint imageBase, int length)
 		{
 			NPCText[][] screens = new NPCText[5][];
-			for (int l = 0; l < 5; l++)
+			for (uint l = 0; l < 5; l++)
 				screens[l] = Load(file, file.GetPointer(address + (l * 4), imageBase), imageBase, length, (Languages)l, true);
 			return screens;
 		}
 
-		public static NPCText[] Load(byte[] file, int address, uint imageBase, int length, Languages language, bool includeTime)
+		public static NPCText[] Load(byte[] file, uint address, uint imageBase, int length, Languages language, bool includeTime)
 		{
 			NPCText[] screen = new NPCText[length];
 			for (int i = 0; i < length; i++)
@@ -1418,13 +1418,13 @@ namespace SA_Tools
 			Groups = new List<NPCTextGroup>();
 		}
 
-		public NPCText(byte[] file, int address, uint imageBase, Languages language, bool includeTime)
+		public NPCText(byte[] file, uint address, uint imageBase, Languages language, bool includeTime)
 			: this()
 		{
 			NPCTextGroup group = new NPCTextGroup();
-			int add = includeTime ? 8 : 4;
+			uint add = includeTime ? 8u : 4u;
 			bool hasText = ByteConverter.ToUInt32(file, address + 4) != 0;
-			int textaddr = 0;
+			uint textaddr = 0;
 			if (hasText)
 				textaddr = file.GetPointer(address + 4, imageBase);
 			if (ByteConverter.ToUInt32(file, address) == 0)
@@ -1439,7 +1439,7 @@ namespace SA_Tools
 				Groups.Add(group);
 				return;
 			}
-			int controladdr = file.GetPointer(address, imageBase);
+			uint controladdr = file.GetPointer(address, imageBase);
 		newgroup:
 			if (hasText)
 			{
@@ -1571,7 +1571,7 @@ namespace SA_Tools
 			Line = string.Empty;
 		}
 
-		public NPCTextLine(byte[] file, int address, uint imageBase, Languages language, bool includeTime)
+		public NPCTextLine(byte[] file, uint address, uint imageBase, Languages language, bool includeTime)
 		{
 			Line = file.GetCString(file.GetPointer(address, imageBase), HelperFunctions.GetEncoding(language));
 			if (includeTime)
@@ -1603,7 +1603,7 @@ namespace SA_Tools
 			return result.ToArray();
 		}
 
-		public static LevelClearFlag[] Load(byte[] file, int address)
+		public static LevelClearFlag[] Load(byte[] file, uint address)
 		{
 			List<LevelClearFlag> result = new List<LevelClearFlag>();
 			while (ByteConverter.ToUInt16(file, address) != ushort.MaxValue)
@@ -1636,7 +1636,7 @@ namespace SA_Tools
 	{
 		public LevelClearFlag() { }
 
-		public LevelClearFlag(byte[] file, int address)
+		public LevelClearFlag(byte[] file, uint address)
 		{
 			Level = (SA1LevelIDs)ByteConverter.ToUInt16(file, address);
 			Flag = ByteConverter.ToUInt16(file, address + 2);
@@ -1654,11 +1654,11 @@ namespace SA_Tools
 		[IniAlwaysInclude]
 		public ushort Flag { get; set; }
 
-		public static int Size { get { return 4; } }
+		public static uint Size => 4;
 
 		public byte[] GetBytes()
 		{
-			List<byte> result = new List<byte>(Size);
+			List<byte> result = new List<byte>((int)Size);
 			result.AddRange(ByteConverter.GetBytes((ushort)Level));
 			result.AddRange(ByteConverter.GetBytes(Flag));
 			return result.ToArray();
@@ -1693,7 +1693,7 @@ namespace SA_Tools
 	{
 		public DeathZoneFlags() { }
 
-		public DeathZoneFlags(byte[] file, int address)
+		public DeathZoneFlags(byte[] file, uint address)
 		{
 			Flags = (SA1CharacterFlags)ByteConverter.ToInt32(file, address);
 		}
@@ -1701,7 +1701,7 @@ namespace SA_Tools
 		[IniAlwaysInclude]
 		public SA1CharacterFlags Flags { get; set; }
 
-		public static int Size { get { return 4; } }
+		public static uint Size => 4;
 
 		public byte[] GetBytes()
 		{
@@ -1716,7 +1716,7 @@ namespace SA_Tools
 			return IniSerializer.Deserialize<SkyboxScale[]>(filename);
 		}
 
-		public static SkyboxScale[] Load(byte[] file, int address, uint imageBase, int count)
+		public static SkyboxScale[] Load(byte[] file, uint address, uint imageBase, int count)
 		{
 			List<SkyboxScale> result = new List<SkyboxScale>(count);
 			for (int i = 0; i < count; i++)
@@ -1741,7 +1741,7 @@ namespace SA_Tools
 	{
 		public SkyboxScale() { }
 
-		public SkyboxScale(byte[] file, int address)
+		public SkyboxScale(byte[] file, uint address)
 		{
 			Far = new Vertex(file, address);
 			address += Vertex.Size;
@@ -1754,11 +1754,11 @@ namespace SA_Tools
 		public Vertex Normal { get; set; }
 		public Vertex Near { get; set; }
 
-		public static int Size { get { return Vertex.Size * 3; } }
+		public static uint Size => Vertex.Size * 3;
 
 		public byte[] GetBytes()
 		{
-			List<byte> result = new List<byte>(Size);
+			List<byte> result = new List<byte>((int)Size);
 			result.AddRange(Far.GetBytes());
 			result.AddRange(Normal.GetBytes());
 			result.AddRange(Near.GetBytes());
@@ -1778,7 +1778,7 @@ namespace SA_Tools
 			return IniSerializer.Deserialize<StageSelectLevel[]>(filename);
 		}
 
-		public static StageSelectLevel[] Load(byte[] file, int address, int count)
+		public static StageSelectLevel[] Load(byte[] file, uint address, int count)
 		{
 			StageSelectLevel[] result = new StageSelectLevel[count];
 			for (int i = 0; i < count; i++)
@@ -1807,11 +1807,11 @@ namespace SA_Tools
 		[IniAlwaysInclude]
 		public int Row { get; set; }
 
-		public static int Size { get { return 16; } }
+		public static uint Size => 16;
 
 		public StageSelectLevel() { }
 
-		public StageSelectLevel(byte[] file, int address)
+		public StageSelectLevel(byte[] file, uint address)
 		{
 			Level = (SA2LevelIDs)ByteConverter.ToInt32(file, address);
 			Character = (SA2Characters)ByteConverter.ToInt32(file, address + 4);
@@ -1821,7 +1821,7 @@ namespace SA_Tools
 
 		public byte[] GetBytes()
 		{
-			List<byte> result = new List<byte>(Size);
+			List<byte> result = new List<byte>((int)Size);
 			result.AddRange(ByteConverter.GetBytes((int)Level));
 			result.AddRange(ByteConverter.GetBytes((int)Character));
 			result.AddRange(ByteConverter.GetBytes(Column));
@@ -1837,14 +1837,14 @@ namespace SA_Tools
 
 	public static class LevelRankScoresList
 	{
-		public static int Size { get { return LevelRankScores.Size + 2; } }
+		public static uint Size => LevelRankScores.Size + 2;
 
 		public static Dictionary<SA2LevelIDs, LevelRankScores> Load(string filename)
 		{
 			return IniSerializer.Deserialize<Dictionary<SA2LevelIDs, LevelRankScores>>(filename);
 		}
 
-		public static Dictionary<SA2LevelIDs, LevelRankScores> Load(byte[] file, int address)
+		public static Dictionary<SA2LevelIDs, LevelRankScores> Load(byte[] file, uint address)
 		{
 			Dictionary<SA2LevelIDs, LevelRankScores> result = new Dictionary<SA2LevelIDs, LevelRankScores>();
 			while (ByteConverter.ToUInt16(file, address) != (ushort)SA2LevelIDs.Invalid)
@@ -1863,7 +1863,7 @@ namespace SA_Tools
 
 		public static byte[] GetBytes(this Dictionary<SA2LevelIDs, LevelRankScores> startpos)
 		{
-			List<byte> result = new List<byte>(Size * startpos.Count + 2);
+			List<byte> result = new List<byte>((int)Size * startpos.Count + 2);
 			foreach (KeyValuePair<SA2LevelIDs, LevelRankScores> item in startpos)
 			{
 				result.AddRange(ByteConverter.GetBytes((ushort)item.Key));
@@ -1885,7 +1885,7 @@ namespace SA_Tools
 	{
 		public LevelRankScores() { }
 
-		public LevelRankScores(byte[] file, int address)
+		public LevelRankScores(byte[] file, uint address)
 		{
 			DRank = ByteConverter.ToUInt16(file, address);
 			address += sizeof(ushort);
@@ -1901,11 +1901,11 @@ namespace SA_Tools
 		public ushort BRank { get; set; }
 		public ushort ARank { get; set; }
 
-		public static int Size { get { return sizeof(ushort) * 4; } }
+		public static uint Size => sizeof(ushort) * 4;
 
 		public byte[] GetBytes()
 		{
-			List<byte> result = new List<byte>(Size);
+			List<byte> result = new List<byte>((int)Size);
 			result.AddRange(ByteConverter.GetBytes(DRank));
 			result.AddRange(ByteConverter.GetBytes(CRank));
 			result.AddRange(ByteConverter.GetBytes(BRank));
@@ -1916,14 +1916,14 @@ namespace SA_Tools
 
 	public static class LevelRankTimesList
 	{
-		public static int Size { get { return LevelRankTimes.Size + 1; } }
+		public static uint Size => LevelRankTimes.Size + 1;
 
 		public static Dictionary<SA2LevelIDs, LevelRankTimes> Load(string filename)
 		{
 			return IniSerializer.Deserialize<Dictionary<SA2LevelIDs, LevelRankTimes>>(filename);
 		}
 
-		public static Dictionary<SA2LevelIDs, LevelRankTimes> Load(byte[] file, int address)
+		public static Dictionary<SA2LevelIDs, LevelRankTimes> Load(byte[] file, uint address)
 		{
 			Dictionary<SA2LevelIDs, LevelRankTimes> result = new Dictionary<SA2LevelIDs, LevelRankTimes>();
 			while (file[address] != (byte)SA2LevelIDs.Invalid)
@@ -1942,7 +1942,7 @@ namespace SA_Tools
 
 		public static byte[] GetBytes(this Dictionary<SA2LevelIDs, LevelRankTimes> startpos)
 		{
-			List<byte> result = new List<byte>(Size * startpos.Count + 1);
+			List<byte> result = new List<byte>((int)Size * startpos.Count + 1);
 			foreach (KeyValuePair<SA2LevelIDs, LevelRankTimes> item in startpos)
 			{
 				result.Add((byte)item.Key);
@@ -1970,7 +1970,7 @@ namespace SA_Tools
 			Second = second;
 		}
 
-		public MinSec(byte[] file, int address)
+		public MinSec(byte[] file, uint address)
 			: this()
 		{
 			Minute = file[address++];
@@ -1988,7 +1988,7 @@ namespace SA_Tools
 		public byte Minute { get; set; }
 		public byte Second { get; set; }
 
-		public static int Size { get { return 2; } }
+		public static uint Size => 2;
 
 		public byte[] GetBytes() { return new byte[] { Minute, Second }; }
 
@@ -2008,7 +2008,7 @@ namespace SA_Tools
 	{
 		public LevelRankTimes() { }
 
-		public LevelRankTimes(byte[] file, int address)
+		public LevelRankTimes(byte[] file, uint address)
 		{
 			DRank = new MinSec(file, address);
 			address += MinSec.Size;
@@ -2024,11 +2024,11 @@ namespace SA_Tools
 		public MinSec BRank { get; set; }
 		public MinSec ARank { get; set; }
 
-		public static int Size { get { return MinSec.Size * 4; } }
+		public static uint Size => MinSec.Size * 4;
 
 		public byte[] GetBytes()
 		{
-			List<byte> result = new List<byte>(Size);
+			List<byte> result = new List<byte>((int)Size);
 			result.AddRange(DRank.GetBytes());
 			result.AddRange(CRank.GetBytes());
 			result.AddRange(BRank.GetBytes());
@@ -2039,14 +2039,14 @@ namespace SA_Tools
 
 	public static class SA2EndPosList
 	{
-		public static int Size { get { return SA2EndPosInfo.Size + 2; } }
+		public static uint Size => SA2EndPosInfo.Size + 2;
 
 		public static Dictionary<SA2LevelIDs, SA2EndPosInfo> Load(string filename)
 		{
 			return IniSerializer.Deserialize<Dictionary<SA2LevelIDs, SA2EndPosInfo>>(filename);
 		}
 
-		public static Dictionary<SA2LevelIDs, SA2EndPosInfo> Load(byte[] file, int address)
+		public static Dictionary<SA2LevelIDs, SA2EndPosInfo> Load(byte[] file, uint address)
 		{
 			Dictionary<SA2LevelIDs, SA2EndPosInfo> result = new Dictionary<SA2LevelIDs, SA2EndPosInfo>();
 			while (ByteConverter.ToUInt16(file, address) != (ushort)SA2LevelIDs.Invalid)
@@ -2065,7 +2065,7 @@ namespace SA_Tools
 
 		public static byte[] GetBytes(this Dictionary<SA2LevelIDs, SA2EndPosInfo> EndPos)
 		{
-			List<byte> result = new List<byte>(Size * (EndPos.Count + 1));
+			List<byte> result = new List<byte>((int)Size * (EndPos.Count + 1));
 			foreach (KeyValuePair<SA2LevelIDs, SA2EndPosInfo> item in EndPos)
 			{
 				result.AddRange(ByteConverter.GetBytes((ushort)item.Key));
@@ -2093,7 +2093,7 @@ namespace SA_Tools
 			Mission3Position = new Vertex();
 		}
 
-		public SA2EndPosInfo(byte[] file, int address)
+		public SA2EndPosInfo(byte[] file, uint address)
 		{
 			Mission2YRotation = ByteConverter.ToUInt16(file, address);
 			address += sizeof(ushort);
@@ -2116,11 +2116,11 @@ namespace SA_Tools
 		public Vertex Mission2Position { get; set; }
 		public Vertex Mission3Position { get; set; }
 
-		public static int Size { get { return (sizeof(ushort) * 3) + (Vertex.Size * 2); } }
+		public static uint Size => (sizeof(ushort) * 3) + (Vertex.Size * 2);
 
 		public byte[] GetBytes()
 		{
-			List<byte> result = new List<byte>(Size);
+			List<byte> result = new List<byte>((int)Size);
 			result.AddRange(ByteConverter.GetBytes(Mission2YRotation));
 			result.AddRange(ByteConverter.GetBytes(Mission3YRotation));
 			result.AddRange(ByteConverter.GetBytes(Unknown));
@@ -2137,7 +2137,7 @@ namespace SA_Tools
 			return IniSerializer.Deserialize<SA2AnimationInfo[]>(filename);
 		}
 
-		public static SA2AnimationInfo[] Load(byte[] file, int address, int count)
+		public static SA2AnimationInfo[] Load(byte[] file, uint address, int count)
 		{
 			SA2AnimationInfo[] result = new SA2AnimationInfo[count];
 			for (int i = 0; i < count; i++)
@@ -2155,7 +2155,7 @@ namespace SA_Tools
 
 		public static byte[] GetBytes(this SA2AnimationInfo[] levellist)
 		{
-			List<byte> result = new List<byte>(SA2AnimationInfo.Size * levellist.Length);
+			List<byte> result = new List<byte>((int)SA2AnimationInfo.Size * levellist.Length);
 			foreach (SA2AnimationInfo item in levellist)
 				result.AddRange(item.GetBytes());
 			return result.ToArray();
@@ -2180,11 +2180,11 @@ namespace SA_Tools
 		[IniAlwaysInclude]
 		public float AnimationSpeed { get; set; }
 
-		public static int Size { get { return 16; } }
+		public static uint Size => 16;
 
 		public SA2AnimationInfo() { }
 
-		public SA2AnimationInfo(byte[] file, int address)
+		public SA2AnimationInfo(byte[] file, uint address)
 		{
 			Animation = ByteConverter.ToUInt16(file, address);
 			address += sizeof(ushort);
@@ -2202,7 +2202,7 @@ namespace SA_Tools
 
 		public byte[] GetBytes()
 		{
-			List<byte> result = new List<byte>(Size);
+			List<byte> result = new List<byte>((int)Size);
 			result.AddRange(ByteConverter.GetBytes(Animation));
 			result.AddRange(ByteConverter.GetBytes(Model));
 			result.AddRange(ByteConverter.GetBytes(Property));
@@ -2234,16 +2234,16 @@ namespace SA_Tools
 			return result;
 		}
 
-		public static List<PathData> Load(byte[] file, int address, uint imageBase)
+		public static List<PathData> Load(byte[] file, uint address, uint imageBase)
 		{
 			List<PathData> result = new List<PathData>();
-			int ptr = ByteConverter.ToInt32(file, address);
+			uint ptr = ByteConverter.ToUInt32(file, address);
 			address += 4;
 			while (ptr != 0)
 			{
-				ptr = (int)((uint)ptr - imageBase);
+				ptr = ptr - imageBase;
 				result.Add(new PathData(file, ptr, imageBase));
-				ptr = ByteConverter.ToInt32(file, address);
+				ptr = ByteConverter.ToUInt32(file, address);
 				address += 4;
 			}
 			return result;
@@ -2295,7 +2295,7 @@ namespace SA_Tools
 			return IniSerializer.Deserialize<PathData>(filename);
 		}
 
-		public PathData(byte[] file, int address, uint imageBase)
+		public PathData(byte[] file, uint address, uint imageBase)
 		{
 			Unknown = ByteConverter.ToInt16(file, address);
 			address += sizeof(short);
@@ -2304,11 +2304,11 @@ namespace SA_Tools
 			TotalDistance = ByteConverter.ToSingle(file, address);
 			address += sizeof(float);
 			Path = new List<PathDataEntry>();
-			int ptr = ByteConverter.ToInt32(file, address);
+			uint ptr = ByteConverter.ToUInt32(file, address);
 			address += sizeof(int);
 			if (ptr != 0)
 			{
-				ptr = (int)((uint)ptr - imageBase);
+				ptr = ptr - imageBase;
 				for (int i = 0; i < count; i++)
 				{
 					Path.Add(new PathDataEntry(file, ptr));
@@ -2325,7 +2325,7 @@ namespace SA_Tools
 
 		public byte[] GetBytes(uint imageBase, out uint dataaddr)
 		{
-			List<byte> result = new List<byte>(PathDataEntry.Size * Path.Count);
+			List<byte> result = new List<byte>((int)PathDataEntry.Size * Path.Count);
 			foreach (PathDataEntry entry in Path)
 				result.AddRange(entry.GetBytes());
 			dataaddr = imageBase + (uint)result.Count;
@@ -2350,7 +2350,7 @@ namespace SA_Tools
 		public float Distance { get; set; }
 		public Vertex Position { get; set; }
 
-		public static int Size { get { return (sizeof(ushort) * 2) + sizeof(float) + Vertex.Size; } }
+		public static uint Size => (sizeof(ushort) * 2) + sizeof(float) + Vertex.Size;
 
 		public PathDataEntry() { Position = new Vertex(); }
 
@@ -2359,7 +2359,7 @@ namespace SA_Tools
 			Position = new Vertex(x, y, z);
 		}
 
-		public PathDataEntry(byte[] file, int address)
+		public PathDataEntry(byte[] file, uint address)
 		{
 			XRotation = ByteConverter.ToUInt16(file, address);
 			address += sizeof(ushort);
@@ -2394,7 +2394,7 @@ namespace SA_Tools
 			return IniSerializer.Deserialize<List<SA1StageLightData>>(filename);
 		}
 
-		public static List<SA1StageLightData> Load(byte[] file, int address)
+		public static List<SA1StageLightData> Load(byte[] file, uint address)
 		{
 			List<SA1StageLightData> result = new List<SA1StageLightData>();
 			while (file[address] != 0xFF)
@@ -2412,7 +2412,7 @@ namespace SA_Tools
 
 		public static byte[] GetBytes(this List<SA1StageLightData> startpos)
 		{
-			List<byte> result = new List<byte>(SA1StageLightData.Size * (startpos.Count + 1));
+			List<byte> result = new List<byte>((int)SA1StageLightData.Size * (startpos.Count + 1));
 			foreach (SA1StageLightData item in startpos)
 				result.AddRange(item.GetBytes());
 			result.Add(0xFF);
@@ -2426,7 +2426,7 @@ namespace SA_Tools
 	{
 		public SA1StageLightData() { Direction = new Vertex(); }
 
-		public SA1StageLightData(byte[] file, int address)
+		public SA1StageLightData(byte[] file, uint address)
 		{
 			Level = (SA1LevelIDs)file[address++];
 			Act = file[address++];
@@ -2457,11 +2457,11 @@ namespace SA_Tools
 		public Vertex RGB { get; set; }
 		public Vertex AmbientRGB { get; set; }
 
-		public static int Size { get { return 0x30; } }
+		public static uint Size => 0x30;
 
 		public byte[] GetBytes()
 		{
-			List<byte> result = new List<byte>(Size)
+			List<byte> result = new List<byte>((int)Size)
 			{
 				(byte)Level,
 				Act,
@@ -2508,7 +2508,7 @@ namespace SA_Tools
 			return IniSerializer.Deserialize<List<WeldInfo>>(filename);
 		}
 
-		public static List<WeldInfo> Load(byte[] file, int address, uint imageBase)
+		public static List<WeldInfo> Load(byte[] file, uint address, uint imageBase)
 		{
 			List<WeldInfo> result = new List<WeldInfo>();
 			int ptr = ByteConverter.ToInt32(file, address);
@@ -2540,27 +2540,27 @@ namespace SA_Tools
 		public List<ushort> VertIndexes { get; set; }
 		public string VertIndexName { get; set; }
 
-		public static int Size { get { return 0x18; } }
+		public static uint Size => 0x18;
 
 		public WeldInfo() { }
 
-		public WeldInfo(byte[] file, int address, uint imageBase)
+		public WeldInfo(byte[] file, uint address, uint imageBase)
 		{
-			int ptr = ByteConverter.ToInt32(file, address);
+			uint ptr = ByteConverter.ToUInt32(file, address);
 			address += sizeof(int);
 			if (ptr != 0)
 				if (ptr >= imageBase && (ptr < file.Length + imageBase))
 					BaseModel = "object_" + ((uint)ptr - imageBase).ToString("X8");
 				else
 					BaseModel = ptr.ToCHex();
-			ptr = ByteConverter.ToInt32(file, address);
+			ptr = ByteConverter.ToUInt32(file, address);
 			address += sizeof(int);
 			if (ptr != 0)
 				if (ptr >= imageBase && (ptr < file.Length + imageBase))
 					ModelA = "object_" + ((uint)ptr - imageBase).ToString("X8");
 				else
 					ModelA = ptr.ToCHex();
-			ptr = ByteConverter.ToInt32(file, address);
+			ptr = ByteConverter.ToUInt32(file, address);
 			address += sizeof(int);
 			if (ptr != 0)
 				if (ptr >= imageBase && (ptr < file.Length + imageBase))
@@ -2572,10 +2572,10 @@ namespace SA_Tools
 			Unknown = ByteConverter.ToInt16(file, address);
 			address += sizeof(short);
 			address += sizeof(int);
-			ptr = ByteConverter.ToInt32(file, address);
+			ptr = ByteConverter.ToUInt32(file, address);
 			if (ptr != 0)
 			{
-				ptr = (int)((uint)ptr - imageBase);
+				ptr = ptr - imageBase;
 				VertIndexName = "vi_" + ptr.ToString("X8");
 				VertIndexes = new List<ushort>(cnt);
 				for (int i = 0; i < cnt; i++)
@@ -2622,16 +2622,16 @@ namespace SA_Tools
 			return IniSerializer.Deserialize<Dictionary<ChaoItemCategory, List<BlackMarketItemAttributes>>>(filename);
 		}
 
-		public static Dictionary<ChaoItemCategory, List<BlackMarketItemAttributes>> Load(byte[] file, int address, uint imageBase)
+		public static Dictionary<ChaoItemCategory, List<BlackMarketItemAttributes>> Load(byte[] file, uint address, uint imageBase)
 		{
 			Dictionary<ChaoItemCategory, List<BlackMarketItemAttributes>> result = new Dictionary<ChaoItemCategory, List<BlackMarketItemAttributes>>();
 			for (int i = 0; i < 11; i++)
 			{
-				int ptr = ByteConverter.ToInt32(file, address);
+				uint ptr = ByteConverter.ToUInt32(file, address);
 				address += sizeof(int);
 				if (ptr != 0)
 				{
-					ptr = (int)(ptr - imageBase);
+					ptr = ptr - imageBase;
 					int cnt = ByteConverter.ToInt32(file, address);
 					List<BlackMarketItemAttributes> attrs = new List<BlackMarketItemAttributes>();
 					for (int j = 0; j < cnt; j++)
@@ -2663,11 +2663,11 @@ namespace SA_Tools
 		public short DescriptionID;
 		public short Unknown;
 
-		public static int Size { get { return 0x10; } }
+		public static uint Size => 0x10;
 
 		public BlackMarketItemAttributes() { }
 
-		public BlackMarketItemAttributes(byte[] file, int address)
+		public BlackMarketItemAttributes(byte[] file, uint address)
 		{
 			PurchasePrice = ByteConverter.ToInt32(file, address);
 			address += sizeof(int);
@@ -2700,7 +2700,7 @@ namespace SA_Tools
 			return IniSerializer.Deserialize<CreditsTextListEntry[]>(filename);
 		}
 
-		public static CreditsTextListEntry[] Load(byte[] file, int address, uint imageBase)
+		public static CreditsTextListEntry[] Load(byte[] file, uint address, uint imageBase)
 		{
 			int numobjs = ByteConverter.ToInt32(file, address + 4);
 			address = file.GetPointer(address, imageBase);
@@ -2723,7 +2723,7 @@ namespace SA_Tools
 	public class CreditsTextListEntry
 	{
 		public CreditsTextListEntry() { Text = string.Empty; }
-		public CreditsTextListEntry(byte[] file, int address, uint imageBase)
+		public CreditsTextListEntry(byte[] file, uint address, uint imageBase)
 		{
 			Type = file[address++];
 			TexID = (sbyte)file[address++];
@@ -2740,7 +2740,7 @@ namespace SA_Tools
 		public byte Unknown2 { get; set; }
 		public string Text { get; set; }
 
-		public static int Size { get { return 8; } }
+		public static uint Size => 8;
 
 		public string ToStruct()
 		{
@@ -2755,7 +2755,7 @@ namespace SA_Tools
 			return IniSerializer.Deserialize<List<SA2StoryEntry>>(filename);
 		}
 
-		public static List<SA2StoryEntry> Load(byte[] file, int address)
+		public static List<SA2StoryEntry> Load(byte[] file, uint address)
 		{
 			List<SA2StoryEntry> result = new List<SA2StoryEntry>();
 			while (file[address] != 2)
@@ -2773,7 +2773,7 @@ namespace SA_Tools
 
 		public static byte[] GetBytes(this List<SA2StoryEntry> startpos)
 		{
-			List<byte> result = new List<byte>(SA2StoryEntry.Size * (startpos.Count + 1));
+			List<byte> result = new List<byte>((int)SA2StoryEntry.Size * (startpos.Count + 1));
 			foreach (SA2StoryEntry item in startpos)
 				result.AddRange(item.GetBytes());
 			result.Add(2);
@@ -2787,7 +2787,7 @@ namespace SA_Tools
 	{
 		public SA2StoryEntry() { }
 
-		public SA2StoryEntry(byte[] file, int address)
+		public SA2StoryEntry(byte[] file, uint address)
 		{
 			Type = (SA2StoryEntryType)file[address++];
 			Character = (SA2Characters)file[address++];
@@ -2814,11 +2814,11 @@ namespace SA_Tools
 		[IniCollection(IniCollectionMode.SingleLine, Format = ", ")]
 		public List<int> Events { get; set; }
 
-		public static int Size { get { return 0xC; } }
+		public static uint Size => 0xC;
 
 		public byte[] GetBytes()
 		{
-			List<byte> result = new List<byte>(Size)
+			List<byte> result = new List<byte>((int)Size)
 			{
 				(byte)Type,
 				(byte)Character

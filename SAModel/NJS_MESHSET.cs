@@ -21,23 +21,23 @@ namespace SonicRetro.SAModel
 		public UV[] UV { get; private set; }
 		public string UVName { get; set; }
 
-		public static int Size(bool DX)
+		public static uint Size(bool DX)
 		{
-			return DX ? 0x1C : 0x18;
+			return DX ? 0x1Cu : 0x18u;
 		}
 
-		public NJS_MESHSET(byte[] file, int address, uint imageBase)
-			: this(file, address, imageBase, new Dictionary<int, string>())
+		public NJS_MESHSET(byte[] file, uint address, uint imageBase)
+			: this(file, address, imageBase, new Dictionary<uint, string>())
 		{
 		}
 
-		public NJS_MESHSET(byte[] file, int address, uint imageBase, Dictionary<int, string> labels)
+		public NJS_MESHSET(byte[] file, uint address, uint imageBase, Dictionary<uint, string> labels)
 		{
 			MaterialID = ByteConverter.ToUInt16(file, address);
 			PolyType = (Basic_PolyType)(MaterialID >> 0xE);
 			MaterialID &= 0x3FFF;
 			Poly[] polys = new Poly[ByteConverter.ToInt16(file, address + 2)];
-			int tmpaddr = (int)(ByteConverter.ToUInt32(file, address + 4) - imageBase);
+			uint tmpaddr = ByteConverter.ToUInt32(file, address + 4) - imageBase;
 			if (labels.ContainsKey(tmpaddr))
 				PolyName = labels[tmpaddr];
 			else
@@ -51,10 +51,10 @@ namespace SonicRetro.SAModel
 			}
 			Poly = new ReadOnlyCollection<Poly>(polys);
 			PAttr = ByteConverter.ToInt32(file, address + 8);
-			tmpaddr = ByteConverter.ToInt32(file, address + 0xC);
+			tmpaddr = ByteConverter.ToUInt32(file, address + 0xC);
 			if (tmpaddr != 0)
 			{
-				tmpaddr = (int)unchecked((uint)tmpaddr - imageBase);
+				tmpaddr -= imageBase;
 				if (labels.ContainsKey(tmpaddr))
 					PolyNormalName = labels[tmpaddr];
 				else
@@ -68,10 +68,10 @@ namespace SonicRetro.SAModel
 			}
 			else
 				PolyNormalName = "polynormal_" + Extensions.GenerateIdentifier();
-			tmpaddr = ByteConverter.ToInt32(file, address + 0x10);
+			tmpaddr = ByteConverter.ToUInt32(file, address + 0x10);
 			if (tmpaddr != 0)
 			{
-				tmpaddr = (int)unchecked((uint)tmpaddr - imageBase);
+				tmpaddr -= imageBase;
 				if (labels.ContainsKey(tmpaddr))
 					VColorName = labels[tmpaddr];
 				else
@@ -85,10 +85,10 @@ namespace SonicRetro.SAModel
 			}
 			else
 				VColorName = "vcolor_" + Extensions.GenerateIdentifier();
-			tmpaddr = ByteConverter.ToInt32(file, address + 0x14);
+			tmpaddr = ByteConverter.ToUInt32(file, address + 0x14);
 			if (tmpaddr != 0)
 			{
-				tmpaddr = (int)unchecked((uint)tmpaddr - imageBase);
+				tmpaddr -=  imageBase;
 				if (labels.ContainsKey(tmpaddr))
 					UVName = labels[tmpaddr];
 				else

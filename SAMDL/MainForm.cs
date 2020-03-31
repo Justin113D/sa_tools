@@ -241,12 +241,12 @@ namespace SonicRetro.SAModel.SAMDL
 							ByteConverter.BigEndian = ftd.typSA2BMDL.Checked;
 							using (SA2MDLDialog dlg = new SA2MDLDialog())
 							{
-								int address = 0;
+								uint address = 0;
 								SortedDictionary<int, NJS_OBJECT> sa2models = new SortedDictionary<int, NJS_OBJECT>();
 								int i = ByteConverter.ToInt32(file, address);
 								while (i != -1)
 								{
-									sa2models.Add(i, new NJS_OBJECT(file, ByteConverter.ToInt32(file, address + 4), 0, fmt, null));
+									sa2models.Add(i, new NJS_OBJECT(file, ByteConverter.ToUInt32(file, address + 4), 0, fmt, null));
 									address += 8;
 									i = ByteConverter.ToInt32(file, address);
 								}
@@ -281,7 +281,7 @@ namespace SonicRetro.SAModel.SAMDL
 											i = ByteConverter.ToInt32(file, address);
 											while (i != -1)
 											{
-												anis.Add(i, new NJS_MOTION(file, ByteConverter.ToInt32(file, address + 4), 0, model.CountAnimated()));
+												anis.Add(i, new NJS_MOTION(file, ByteConverter.ToUInt32(file, address + 4), 0, model.CountAnimated()));
 												address += 8;
 												i = ByteConverter.ToInt32(file, address);
 											}
@@ -325,8 +325,8 @@ namespace SonicRetro.SAModel.SAMDL
 			modelinfo.ShowDialog(this);
 			ByteConverter.BigEndian = modelinfo.checkBox2.Checked;
 			if (modelinfo.checkBox1.Checked)
-				animations = new List<NJS_MOTION>() { NJS_MOTION.ReadHeader(file, (int)modelinfo.numericUpDown3.Value, (uint)modelinfo.numericUpDown2.Value, (ModelFormat)modelinfo.comboBox2.SelectedIndex, null) };
-			model = new NJS_OBJECT(file, (int)modelinfo.NumericUpDown1.Value, (uint)modelinfo.numericUpDown2.Value, (ModelFormat)modelinfo.comboBox2.SelectedIndex, null);
+				animations = new List<NJS_MOTION>() { NJS_MOTION.ReadHeader(file, (uint)modelinfo.numericUpDown3.Value, (uint)modelinfo.numericUpDown2.Value, (ModelFormat)modelinfo.comboBox2.SelectedIndex, null) };
+			model = new NJS_OBJECT(file, (uint)modelinfo.NumericUpDown1.Value, (uint)modelinfo.numericUpDown2.Value, (ModelFormat)modelinfo.comboBox2.SelectedIndex, null);
 			switch ((ModelFormat)modelinfo.comboBox2.SelectedIndex)
 			{
 				case ModelFormat.Basic:
@@ -807,8 +807,8 @@ namespace SonicRetro.SAModel.SAMDL
 						item.Delete();
 					selectedItems.Clear();*/
 					throw new System.NotImplementedException();
-					draw = true;
-					break;
+					//draw = true;
+					//break;
 
 				case ("Increase camera move speed"):
 					cam.MoveSpeed += 0.0625f;

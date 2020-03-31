@@ -86,15 +86,15 @@ namespace SonicRetro.SAModel
 			Children = new ReadOnlyCollection<NJS_OBJECT>(children);
 		}
 
-		public NJS_OBJECT(byte[] file, int address, uint imageBase, ModelFormat format, Dictionary<int, Attach> attaches)
-			: this(file, address, imageBase, format, new Dictionary<int, string>(), attaches)
+		public NJS_OBJECT(byte[] file, uint address, uint imageBase, ModelFormat format, Dictionary<uint, Attach> attaches)
+			: this(file, address, imageBase, format, new Dictionary<uint, string>(), attaches)
 		{ }
 
-		public NJS_OBJECT(byte[] file, int address, uint imageBase, ModelFormat format, Dictionary<int, string> labels, Dictionary<int, Attach> attaches)
+		public NJS_OBJECT(byte[] file, uint address, uint imageBase, ModelFormat format, Dictionary<uint, string> labels, Dictionary<uint, Attach> attaches)
 			: this(file, address, imageBase, format, null, labels, attaches)
 		{ }
 
-		private NJS_OBJECT(byte[] file, int address, uint imageBase, ModelFormat format, NJS_OBJECT parent, Dictionary<int, string> labels, Dictionary<int, Attach> attaches)
+		private NJS_OBJECT(byte[] file, uint address, uint imageBase, ModelFormat format, NJS_OBJECT parent, Dictionary<uint, string> labels, Dictionary<uint, Attach> attaches)
 		{
 			if (labels.ContainsKey(address))
 				Name = labels[address];
@@ -104,10 +104,10 @@ namespace SonicRetro.SAModel
 			RotateZYX = (flags & ObjectFlags.RotateZYX) == ObjectFlags.RotateZYX;
 			Animate = (flags & ObjectFlags.NoAnimate) == 0;
 			Morph = (flags & ObjectFlags.NoMorph) == 0;
-			int tmpaddr = ByteConverter.ToInt32(file, address + 4);
+			uint tmpaddr = ByteConverter.ToUInt32(file, address + 4);
 			if (tmpaddr != 0)
 			{
-				tmpaddr = (int)unchecked((uint)tmpaddr - imageBase);
+				tmpaddr -= imageBase;
 				if(attaches != null && attaches.ContainsKey(tmpaddr))
 				{
 					Attach = attaches[tmpaddr];
@@ -127,10 +127,10 @@ namespace SonicRetro.SAModel
 			children = new List<NJS_OBJECT>();
 			Children = new ReadOnlyCollection<NJS_OBJECT>(children);
 			NJS_OBJECT child = null;
-			tmpaddr = ByteConverter.ToInt32(file, address + 0x2C);
+			tmpaddr = ByteConverter.ToUInt32(file, address + 0x2C);
 			if (tmpaddr != 0)
 			{
-				tmpaddr = (int)unchecked((uint)tmpaddr - imageBase);
+				tmpaddr -= imageBase;
 				child = new NJS_OBJECT(file, tmpaddr, imageBase, format, this, labels, attaches);
 			}
 			while (child != null)
@@ -138,10 +138,10 @@ namespace SonicRetro.SAModel
 				children.Add(child);
 				child = child.Sibling;
 			}
-			tmpaddr = ByteConverter.ToInt32(file, address + 0x30);
+			tmpaddr = ByteConverter.ToUInt32(file, address + 0x30);
 			if (tmpaddr != 0)
 			{
-				tmpaddr = (int)unchecked((uint)tmpaddr - imageBase);
+				tmpaddr -= imageBase;
 				Sibling = new NJS_OBJECT(file, tmpaddr, imageBase, format, parent, labels, attaches);
 			}
 

@@ -1,4 +1,5 @@
-﻿using System;
+﻿using SonicRetro.SAModel.Structs;
+using System;
 using System.Collections.Generic;
 using System.Drawing;
 
@@ -69,7 +70,7 @@ namespace SonicRetro.SAModel
 	{
 		public Vertex Position;
 		public Vertex Normal;
-		public Color? Color;
+		public System.Drawing.Color? Color;
 		public UV UV;
 
 		public VertexData(Vertex position)
@@ -82,7 +83,7 @@ namespace SonicRetro.SAModel
 		{
 		}
 
-		public VertexData(Vertex position, Vertex normal, Color? color, UV uv)
+		public VertexData(Vertex position, Vertex normal, System.Drawing.Color? color, UV uv)
 		{
 			Position = position;
 			Normal = normal ?? Vertex.UpNormal;
@@ -90,19 +91,19 @@ namespace SonicRetro.SAModel
 			UV = uv;
 		}
 
-		public VertexData(GC.Vector3 position, GC.Vector3 normal, GC.Color color, GC.UV uv)
+		public VertexData(Vector3 position, Vector3 normal, Structs.Color color, Vector2 uv)
 		{
-			Position = new Vertex(position.x, position.y, position.z);
-			Normal = new Vertex(normal.x, normal.y, normal.z) ?? Vertex.UpNormal;
+			Position = new Vertex(position.X, position.Y, position.Z);
+			Normal = new Vertex(normal.X, normal.Y, normal.Z) ?? Vertex.UpNormal;
 
 			//why does this work, i fed R in as A
-			//Color = System.Drawing.Color.FromArgb((int)(color.R), (int)(color.G), (int)(color.B), (int)(color.A));
+			//System.Drawing.Color = System.Drawing.System.Drawing.Color.FromArgb((int)(color.R), (int)(color.G), (int)(color.B), (int)(color.A));
 
-			//Color = color.SystemCol;
-			Color = System.Drawing.Color.FromArgb(color.red, color.alpha, color.blue, color.green);
+			//System.Drawing.Color = color.SystemCol;
+			Color = System.Drawing.Color.FromArgb(color.R, color.A, color.B, color.G);
 
-			//Color = color;
-			UV = new UV() { U = uv.XF, V = uv.YF };
+			//System.Drawing.Color = color;
+			UV = new UV() { U = uv.X, V = uv.Y };
 		}
 
 		public override bool Equals(object obj)
