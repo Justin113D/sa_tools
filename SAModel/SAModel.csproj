@@ -106,7 +106,7 @@
     <Compile Include="ObjData\LandEntry.cs" />
     <Compile Include="ObjData\MetaData.cs" />
     <Compile Include="ObjData\ModelFile.cs" />
-    <Compile Include="ObjData\NjsObject.cs" />
+    <Compile Include="ObjData\NJObject.cs" />
     <Compile Include="Poly.cs" />
     <Compile Include="PolyChunk.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />

@@ -6,6 +6,7 @@ using OpenTK.Graphics.OpenGL4;
 using SonicRetro.SAModel.Graphics.OpenGL.Rendering;
 using SonicRetro.SAModel.ModelData.Buffer;
 using SonicRetro.SAModel.ObjData;
+using Color = SonicRetro.SAModel.Structs.Color;
 
 namespace SonicRetro.SAModel.Graphics.OpenGL
 {
@@ -40,7 +41,13 @@ namespace SonicRetro.SAModel.Graphics.OpenGL
 	public static class Extensions
 	{
 		private static readonly CachedVertex[] vertices = new CachedVertex[0xFFFF];
+		private static readonly float[] weights = new float[0xFFFF];
 		private static readonly Dictionary<BufferMesh, BufferMeshHandle> meshHandles = new Dictionary<BufferMesh, BufferMeshHandle>();
+
+		public static void ClearWeights()
+		{
+			Array.Clear(weights, 0, weights.Length);
+		}
 
 		static CachedVertex ToCache(this BufferVertex vtx)
 		{
@@ -72,7 +79,7 @@ namespace SonicRetro.SAModel.Graphics.OpenGL
 			return new Structs.Vector2(vec2.X, vec2.Y);
 		}
 
-		public static Matrix4 LocalMatrix(this NjsObject obj)
+		public static Matrix4 LocalMatrix(this NJObject obj)
 		{
 			Matrix4 rotMtx;
 			if(obj.RotateZYX)
@@ -112,7 +119,7 @@ namespace SonicRetro.SAModel.Graphics.OpenGL
 			return Matrix4.CreateScale(obj.Scale.ToGL()) * rotMtx * Matrix4.CreateTranslation(obj.Position.ToGL());
 		}
 
-		unsafe public static void Buffer(this ModelData.Attach atc, Matrix4? worldMtx)
+		unsafe public static void Buffer(this ModelData.Attach atc, Matrix4? worldMtx, bool active)
 		{
 			if (atc.MeshData == null) throw new InvalidOperationException("Attach \"" + atc.Name + "\" has not been buffered");
 			if (atc.MeshData.Length == 0) return;
@@ -140,6 +147,10 @@ namespace SonicRetro.SAModel.Graphics.OpenGL
 						{
 							Vector4 pos = (vtx.position.ToGL4() * worldMtx.Value) * vtx.weight;
 							Vector3 nrm = (vtx.normal.ToGL() * normalMtx) * vtx.weight;
+							if (active)
+								weights[vtx.index] = vtx.weight;
+							else if (weights[vtx.index] > 0 && !mesh.ContinueWeight) weights[vtx.index] = 0;
+
 							if (mesh.ContinueWeight)
 							{
 								vertices[vtx.index].position += pos;
@@ -174,7 +185,8 @@ namespace SonicRetro.SAModel.Graphics.OpenGL
 							writer.Write(vtx.normal.Y);
 							writer.Write(vtx.normal.Z);
 
-							writer.Write(c.color.ARGB);
+							Color col = worldMtx.HasValue ? GraphicsHelper.GetWeightColor(weights[c.vertexIndex]) : c.color;
+							writer.Write(new byte[] { col.R, col.G, col.B, col.A });
 
 							writer.Write(c.uv.X);
 							writer.Write(c.uv.Y);
@@ -257,14 +269,14 @@ namespace SonicRetro.SAModel.Graphics.OpenGL
 			}
 		}
 
-		public static void Render(this ModelData.Attach atc, Matrix4? weightMtx, bool transparent)
+		public static void Render(this ModelData.Attach atc, Matrix4? weightMtx, bool transparent, bool active)
 		{
 			if (atc.MeshData == null) throw new InvalidOperationException($"Attach {atc.Name} has no buffer meshes");
 
 			// rebuffer weighted models
 			if (weightMtx.HasValue && !transparent)
 			{
-				atc.Buffer(weightMtx);
+				atc.Buffer(weightMtx, active);
 			}
 
 			foreach (BufferMesh m in atc.MeshData)

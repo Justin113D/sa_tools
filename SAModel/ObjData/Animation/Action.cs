@@ -16,7 +16,7 @@ namespace SonicRetro.SAModel.ObjData.Animation
 		/// <summary>
 		/// Assigned model
 		/// </summary>
-		public NjsObject Model { get; }
+		public NJObject Model { get; }
 
 		/// <summary>
 		/// Animation of the model
@@ -28,7 +28,7 @@ namespace SonicRetro.SAModel.ObjData.Animation
 		/// </summary>
 		/// <param name="model"></param>
 		/// <param name="animation"></param>
-		public Action(NjsObject model, Motion animation)
+		public Action(NJObject model, Motion animation)
 		{
 			Model = model;
 			Animation = animation;
@@ -50,7 +50,7 @@ namespace SonicRetro.SAModel.ObjData.Animation
 			uint mdlAddress = ByteConverter.ToUInt32(source, address);
 			if (mdlAddress == 0) throw new FormatException($"Action at {address:X8} does not have a model!");
 			mdlAddress -= imagebase;
-			NjsObject mdl = NjsObject.Read(source, mdlAddress, imagebase, format, DX, labels, attaches);
+			NJObject mdl = NJObject.Read(source, mdlAddress, imagebase, format, DX, labels, attaches);
 
 			uint aniAddress = ByteConverter.ToUInt32(source, address + 4);
 			if(aniAddress == 0) throw new FormatException($"Action at {address:X8} does not have a model!");

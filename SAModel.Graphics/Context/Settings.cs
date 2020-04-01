@@ -87,6 +87,8 @@ namespace SonicRetro.SAModel.Graphics
 		public Key circleWireframe;
 		[SettingsKey("Swap Geometry", "Changes between rendering visual and collision geometry", Key.C)]
 		public Key swapGeometry;
+		[SettingsKey("Display Bounds", "Displays geometry bounds", Key.B)]
+		public Key displayBounds;
 		[SettingsKey("Circle Backwards", "Hold this button when using a hotkey for circling options to circle in the other direction", Key.LeftShift)]
 		public Key circleBackward;
 

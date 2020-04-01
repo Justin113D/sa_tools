@@ -12,7 +12,7 @@ namespace SonicRetro.SAModel.ObjData
 	/// Hierarchy object for every adventure game
 	/// </summary>
 	[Serializable]
-	public class NjsObject
+	public class NJObject
 	{
 		public const uint Size = 0x34;
 
@@ -44,12 +44,12 @@ namespace SonicRetro.SAModel.ObjData
 		/// <summary>
 		/// The objects parent in the hierarchy
 		/// </summary>
-		public NjsObject Parent { get; private set; }
+		public NJObject Parent { get; private set; }
 
 		/// <summary>
 		/// Returns the Sibling of this object. returns null if it has no sibling
 		/// </summary>
-		private NjsObject Sibling
+		private NJObject Sibling
 		{
 			get
 			{
@@ -63,7 +63,7 @@ namespace SonicRetro.SAModel.ObjData
 		/// <summary>
 		/// The objects children in the hierarchy
 		/// </summary>
-		private List<NjsObject> _children;
+		private List<NJObject> _children;
 
 		public int ChildCount => _children.Count;
 
@@ -90,7 +90,7 @@ namespace SonicRetro.SAModel.ObjData
 			get
 			{
 				if (Attach != null && Attach.HasWeight) return true;
-				foreach (NjsObject obj in _children)
+				foreach (NJObject obj in _children)
 					if(obj.HasWeight) return true;
 				return false;
 			}
@@ -123,15 +123,15 @@ namespace SonicRetro.SAModel.ObjData
 		/// </summary>
 		/// <param name="index">Child index</param>
 		/// <returns></returns>
-		public NjsObject this[int index] => _children[index];
+		public NJObject this[int index] => _children[index];
 
 		/// <summary>
 		/// Creates an emty object
 		/// </summary>
-		public NjsObject()
+		public NJObject()
 		{
 			Name = "object_" + Extensions.GenerateIdentifier();
-			_children = new List<NjsObject>();
+			_children = new List<NJObject>();
 			Scale = new Vector3(1, 1, 1);
 		}
 
@@ -139,7 +139,7 @@ namespace SonicRetro.SAModel.ObjData
 		/// Creates an empty object and sets its parent
 		/// </summary>
 		/// <param name="Parent"></param>
-		public NjsObject(NjsObject Parent) : this()
+		public NJObject(NJObject Parent) : this()
 		{
 			if (Parent == null) return;
 			this.Parent = Parent;
@@ -156,12 +156,12 @@ namespace SonicRetro.SAModel.ObjData
 		/// <param name="labels">C struct labels</param>
 		/// <param name="attaches">Already read attaches</param>
 		/// <returns></returns>
-		public static NjsObject Read(byte[] source, uint address, uint imageBase, AttachFormat format, bool DX, Dictionary<uint, string> labels, Dictionary<uint, ModelData.Attach> attaches)
+		public static NJObject Read(byte[] source, uint address, uint imageBase, AttachFormat format, bool DX, Dictionary<uint, string> labels, Dictionary<uint, ModelData.Attach> attaches)
 		{
 			return Read(source, address, imageBase, format, DX, null, labels, attaches);
 		}
 
-		private static NjsObject Read(byte[] source, uint address, uint imageBase, AttachFormat format, bool DX, NjsObject parent, Dictionary<uint, string> labels, Dictionary<uint, ModelData.Attach> attaches)
+		private static NJObject Read(byte[] source, uint address, uint imageBase, AttachFormat format, bool DX, NJObject parent, Dictionary<uint, string> labels, Dictionary<uint, ModelData.Attach> attaches)
 		{
 			string name = labels.ContainsKey(address) ? labels[address] : "object_" + address.ToString("X8");
 
@@ -192,7 +192,7 @@ namespace SonicRetro.SAModel.ObjData
 			Vector3 rotation = Vector3.Read(source, ref address, IOType.BAMS32);
 			Vector3 scale = Vector3.Read(source, ref address, IOType.Float);
 
-			NjsObject result = new NjsObject(parent)
+			NJObject result = new NJObject(parent)
 			{
 				Name = name,
 				Attach = atc,
@@ -236,7 +236,7 @@ namespace SonicRetro.SAModel.ObjData
 			Scale.Write(writer, IOType.Float);
 
 			writer.WriteUInt32(_children.Count == 0 ? 0 : labels.ContainsKey(_children[0].Name) ? labels[_children[0].Name] : throw new NullReferenceException($"Child \"{_children[0].Name}\" of \"{Name}\" has not been written yet / cannot be found in labels!"));
-			NjsObject sibling = Sibling;
+			NJObject sibling = Sibling;
 			writer.WriteUInt32(sibling == null ? 0 : labels.ContainsKey(sibling.Name) ? labels[sibling.Name] : throw new NullReferenceException($"Sibling \"{sibling.Name}\" of \"{Name}\" has not been written yet / cannot be found in labels!"));
 
 			labels.Add(Name, address);
@@ -256,7 +256,7 @@ namespace SonicRetro.SAModel.ObjData
 			// reserve object space
 			uint address = (uint)writer.Stream.Position + imageBase;
 
-			NjsObject[] models = GetObjects();
+			NJObject[] models = GetObjects();
 			writer.Write(new byte[models.Length * Size]);
 			uint modelsEnd = (uint)writer.Stream.Position;
 
@@ -319,7 +319,7 @@ namespace SonicRetro.SAModel.ObjData
 			writer.Write(ChildCount == 0 ? "NULL" : _children[0].Name);
 			writer.WriteLine(",");
 
-			NjsObject sibling = Sibling;
+			NJObject sibling = Sibling;
 			writer.Write("Sibling \t");
 			writer.WriteLine(sibling == null ? "NULL" : sibling.Name);
 
@@ -333,9 +333,9 @@ namespace SonicRetro.SAModel.ObjData
 		/// Returns an array of the entire NjsObject hierarchy starting at this object
 		/// </summary>
 		/// <returns></returns>
-		public NjsObject[] GetObjects()
+		public NJObject[] GetObjects()
 		{
-			List<NjsObject> result = new List<NjsObject>();
+			List<NJObject> result = new List<NJObject>();
 			GetObjects(result);
 			return result.ToArray();
 		}
@@ -347,7 +347,7 @@ namespace SonicRetro.SAModel.ObjData
 		public int Count()
 		{
 			int result = 1;
-			foreach (NjsObject item in _children)
+			foreach (NJObject item in _children)
 				result += item.Count();
 			return result;
 		}
@@ -359,7 +359,7 @@ namespace SonicRetro.SAModel.ObjData
 		public int CountAnimated()
 		{
 			int result = Animate ? 1 : 0;
-			foreach (NjsObject item in _children)
+			foreach (NJObject item in _children)
 				result += item.CountAnimated();
 			return result;
 		}
@@ -371,15 +371,15 @@ namespace SonicRetro.SAModel.ObjData
 		public int CountMorph()
 		{
 			int result = Morph ? 1 : 0;
-			foreach (NjsObject item in _children)
+			foreach (NJObject item in _children)
 				result += item.CountMorph();
 			return result;
 		}
 
-		private void GetObjects(List<NjsObject> result)
+		private void GetObjects(List<NJObject> result)
 		{
 			result.Add(this);
-			foreach (NjsObject item in _children)
+			foreach (NJObject item in _children)
 				result.AddRange(item.GetObjects());
 		}
 
@@ -387,7 +387,7 @@ namespace SonicRetro.SAModel.ObjData
 		/// Adds an object to the children
 		/// </summary>
 		/// <param name="child"></param>
-		public void AddChild(NjsObject child)
+		public void AddChild(NJObject child)
 		{
 			_children.Add(child);
 			child.Parent = this;
@@ -397,9 +397,9 @@ namespace SonicRetro.SAModel.ObjData
 		/// Adds a collection of objects to the children
 		/// </summary>
 		/// <param name="children"></param>
-		public void AddChildren(IEnumerable<NjsObject> children)
+		public void AddChildren(IEnumerable<NJObject> children)
 		{
-			foreach (NjsObject child in children)
+			foreach (NJObject child in children)
 				AddChild(child);
 		}
 
@@ -408,7 +408,7 @@ namespace SonicRetro.SAModel.ObjData
 		/// </summary>
 		/// <param name="index"></param>
 		/// <param name="child"></param>
-		public void InsertChild(int index, NjsObject child)
+		public void InsertChild(int index, NJObject child)
 		{
 			_children.Insert(index, child);
 			child.Parent = this;
@@ -418,7 +418,7 @@ namespace SonicRetro.SAModel.ObjData
 		/// Removes a child at a specific index
 		/// </summary>
 		/// <param name="child"></param>
-		public void RemoveChild(NjsObject child)
+		public void RemoveChild(NJObject child)
 		{
 			_children.Remove(child);
 			child.Parent = null;
@@ -430,7 +430,7 @@ namespace SonicRetro.SAModel.ObjData
 		/// <param name="index"></param>
 		public void RemoveChildAt(int index)
 		{
-			NjsObject child = _children[index];
+			NJObject child = _children[index];
 			_children.RemoveAt(index);
 			child.Parent = null;
 		}
@@ -440,18 +440,18 @@ namespace SonicRetro.SAModel.ObjData
 		/// </summary>
 		public void ClearChildren()
 		{
-			foreach (NjsObject child in _children)
+			foreach (NJObject child in _children)
 				child.Parent = null;
 			_children.Clear();
 		}
 
 		#endregion
 
-		public NjsObject Duplicate()
+		public NJObject Duplicate()
 		{
-			NjsObject result = (NjsObject)MemberwiseClone();
+			NJObject result = (NJObject)MemberwiseClone();
 			result.Name += "_Clone";
-			result._children = new List<NjsObject>();
+			result._children = new List<NJObject>();
 			Parent.AddChild(result);
 			return result;
 		}

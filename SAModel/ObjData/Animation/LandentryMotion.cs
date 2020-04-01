@@ -33,7 +33,7 @@ namespace SonicRetro.SAModel.ObjData.Animation
 		/// <summary>
 		/// Model that is being animated
 		/// </summary>
-		public NjsObject Model { get; set; }
+		public NJObject Model { get; set; }
 
 		/// <summary>
 		/// Animation
@@ -54,7 +54,7 @@ namespace SonicRetro.SAModel.ObjData.Animation
 		/// <param name="model"></param>
 		/// <param name="motion"></param>
 		/// <param name="texListPtr"></param>
-		public LandEntryMotion(float frame, float step, float maxFrame, NjsObject model, Motion motion, uint texListPtr)
+		public LandEntryMotion(float frame, float step, float maxFrame, NJObject model, Motion motion, uint texListPtr)
 		{
 			Frame = frame;
 			Step = step;
@@ -84,7 +84,7 @@ namespace SonicRetro.SAModel.ObjData.Animation
 			float maxFrame = ByteConverter.ToSingle(source, address + 8);
 
 			uint modelAddress = ByteConverter.ToUInt32(source, address + 0xC) - imageBase;
-			NjsObject model = NjsObject.Read(source, modelAddress, imageBase, format, DX, labels, attaches);
+			NJObject model = NJObject.Read(source, modelAddress, imageBase, format, DX, labels, attaches);
 			
 			uint motionAddress = ByteConverter.ToUInt32(source, address + 0x10) - imageBase;
 			Motion motion = Motion.Read(source, ref motionAddress, imageBase, (uint)model.Count(), labels);

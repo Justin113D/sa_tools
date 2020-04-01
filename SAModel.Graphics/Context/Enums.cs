@@ -55,12 +55,7 @@ namespace SonicRetro.SAModel.Graphics
 		/// <summary>
 		/// Replaces polygons with points
 		/// </summary>
-		ReplacePoint,
-
-		/// <summary>
-		/// Displays the bounding spheres of the models
-		/// </summary>
-		BoundingSphere
+		ReplacePoint
 	}
 
 	/// <summary>
@@ -101,7 +96,7 @@ namespace SonicRetro.SAModel.Graphics
 		/// <summary>
 		/// Renders vertex colors
 		/// </summary>
-		Colors = 0x06,
+		ColorsWeights = 0x06,
 
 		/// <summary>
 		/// Renders uv coordinates

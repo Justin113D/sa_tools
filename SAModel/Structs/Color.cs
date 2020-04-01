@@ -96,15 +96,15 @@ namespace SonicRetro.SAModel.Structs
 		/// <summary>
 		/// Returns the color as an RGBA integer
 		/// </summary>
-		public uint BGRA
+		public uint RGBA
 		{
-			get => (uint)(A | (R << 8) | (G << 16) | (B << 24));
+			get => (uint)(A | (B << 8) | (G << 16) | (R << 24));
 			set
 			{
 				A = (byte)(value & 0xFF);
-				R = (byte)((value >> 8) & 0xFF);
+				B = (byte)((value >> 8) & 0xFF);
 				G = (byte)((value >> 16) & 0xFF);
-				B = (byte)(value >> 24);
+				R = (byte)(value >> 24);
 			}
 		}
 
@@ -197,7 +197,7 @@ namespace SonicRetro.SAModel.Structs
 			RedF = r;
 			GreenF = g;
 			BlueF = b;
-			AlphaF = 0xFF;
+			A = 0xFF;
 		}
 
 		public Color(float r, float g, float b, float a) : this()
@@ -220,8 +220,8 @@ namespace SonicRetro.SAModel.Structs
 			float inverse = 1 - t;
 			return new Color(
 				b.RedF * t + a.RedF * inverse,
-				b.BlueF * t + a.BlueF * inverse,
 				b.GreenF * t + a.GreenF * inverse,
+				b.BlueF * t + a.BlueF * inverse,
 				b.AlphaF * t + a.AlphaF * inverse
 				);
 		}
@@ -238,8 +238,8 @@ namespace SonicRetro.SAModel.Structs
 			Color col = default;
 			switch (type)
 			{
-				case IOType.BGRA8:
-					col.BGRA = ByteConverter.ToUInt32(source, address);
+				case IOType.RGBA8:
+					col.RGBA = ByteConverter.ToUInt32(source, address);
 					address += 4;
 					break;
 				case IOType.ARGB8_32:
@@ -290,8 +290,8 @@ namespace SonicRetro.SAModel.Structs
 		{
 			switch (type)
 			{
-				case IOType.BGRA8:
-					writer.WriteUInt32(BGRA);
+				case IOType.RGBA8:
+					writer.WriteUInt32(RGBA);
 					break;
 				case IOType.ARGB8_32:
 					writer.WriteUInt32(ARGB);
@@ -312,8 +312,9 @@ namespace SonicRetro.SAModel.Structs
 			}
 		}
 
-		public override string ToString() => $"({RedF}, {GreenF}, {BlueF}, {AlphaF})";
+		//public override string ToString() => $"({Math.Round(RedF, 3)}, {Math.Round(GreenF, 3)}, {Math.Round(BlueF, 3)}, {Math.Round(AlphaF, 3)})";
 
+		public override string ToString() => $"#{R:X2}{G:X2}{B:X2}{A:X2}";
 
 		// arithmetic operators
 		public static Color operator +(Color l, Color r)

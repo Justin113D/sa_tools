@@ -382,13 +382,13 @@ namespace SonicRetro.SAModel.ModelData.GC
 			{
 				Color col = new Color()
 				{
-					BGRA = _data
+					RGBA = _data
 				};
 				return col;
 			}
 			set
 			{
-				_data = value.BGRA;
+				_data = value.RGBA;
 			}
 		}
 

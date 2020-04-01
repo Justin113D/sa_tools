@@ -162,7 +162,7 @@ namespace SonicRetro.SAModel.GC
 				case GCVertexAttribute.Color0:
 					for (int i = 0; i < count; i++)
 					{
-						data.Add(Color.Read(file, ref tmpaddr, IOType.BGRA8));
+						data.Add(Color.Read(file, ref tmpaddr, IOType.RGBA8));
 					}
 					break;
 				case GCVertexAttribute.Tex0:

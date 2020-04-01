@@ -70,7 +70,7 @@ namespace SonicRetro.SAModel.Structs
 		/// <summary>
 		/// BGRA Color; Each channel takes a byte
 		/// </summary>
-		BGRA8,
+		RGBA8,
 	}
 
 	public interface IDataStructOut

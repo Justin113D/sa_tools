@@ -14,9 +14,18 @@ namespace SonicRetro.SAModel.Graphics
 
 		public readonly List<GameTask> objects = new List<GameTask>();
 		public readonly List<LandEntry> geometry = new List<LandEntry>();
-		public readonly List<LandEntry> collision = new List<LandEntry>();
 		public readonly List<ModelData.Attach> attaches = new List<ModelData.Attach>();
 		public readonly List<ModelData.Attach> weightedAttaches = new List<ModelData.Attach>();
+
+		public LandEntry[] VisualGeometry
+		{
+			get => geometry.Where(x => x.SurfaceFlags.HasFlag(SurfaceFlags.Visible)).ToArray();
+		}
+
+		public LandEntry[] CollisionGeometry
+		{
+			get => geometry.Where(x => x.SurfaceFlags.IsCollision()).ToArray();
+		}
 
 		public Scene(Camera cam)
 		{
@@ -26,10 +35,10 @@ namespace SonicRetro.SAModel.Graphics
 		public void LoadModelFile(ObjData.ModelFile file)
 		{
 			objects.Add(new DisplayTask(file.Model));
-			NjsObject[] objs = file.Model.GetObjects();
+			NJObject[] objs = file.Model.GetObjects();
 			if(file.Model.HasWeight)
 			{
-				foreach (NjsObject obj in objs)
+				foreach (NJObject obj in objs)
 				{
 					if (obj.Attach == null) continue;
 					if (!weightedAttaches.Contains(obj.Attach))
@@ -38,7 +47,7 @@ namespace SonicRetro.SAModel.Graphics
 			}
 			else
 			{
-				foreach(NjsObject obj in objs)
+				foreach(NJObject obj in objs)
 				{
 					if (obj.Attach == null) continue;
 					if (!attaches.Contains(obj.Attach))
@@ -62,26 +71,11 @@ namespace SonicRetro.SAModel.Graphics
 
 		public void LoadLandtable(ObjData.LandTable table)
 		{
-			if(table.Format > LandtableFormat.SADX)
+			foreach (LandEntry le in table.Geometry)
 			{
-				foreach(LandEntry le in table.Geometry)
-				{
-					if (le.Attach.Format == ModelData.AttachFormat.BASIC)
-						collision.Add(le);
-					else geometry.Add(le);
-					if (!attaches.Contains(le.Attach))
-						attaches.Add(le.Attach);
-				}
-			}
-			else
-			{
-				foreach (LandEntry le in table.Geometry)
-				{
-					if (le.SurfaceFlags.IsCollision()) collision.Add(le);
-					if (le.SurfaceFlags.HasFlag(SurfaceFlags.Visible)) geometry.Add(le);
-					if (!attaches.Contains(le.Attach))
-						attaches.Add(le.Attach);
-				}
+				geometry.Add(le);
+				if (!attaches.Contains(le.Attach))
+					attaches.Add(le.Attach);
 			}
 		}
 

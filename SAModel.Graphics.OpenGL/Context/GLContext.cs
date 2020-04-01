@@ -20,14 +20,16 @@ namespace SonicRetro.SAModel.Graphics.OpenGL
 		public Matrix4 worldMtx;
 		public Matrix4 normalMtx;
 		public Matrix4 MVP;
+		public bool active;
 
-		public RenderMesh(ModelData.Attach attach, Matrix4? realWorldMtx, Matrix4 worldMtx, Matrix4 normalMtx, Matrix4 mVP)
+		public RenderMesh(ModelData.Attach attach, Matrix4? realWorldMtx, Matrix4 worldMtx, Matrix4 normalMtx, Matrix4 mVP, bool active)
 		{
 			this.attach = attach;
 			this.realWorldMtx = realWorldMtx;
 			this.worldMtx = worldMtx;
 			this.normalMtx = normalMtx;
 			MVP = mVP;
+			this.active = active;
 		}
 	}
 
@@ -114,7 +116,7 @@ namespace SonicRetro.SAModel.Graphics.OpenGL
 
 			// buffering the (unweightened) meshes
 
-			Sphere.Buffer(null);
+			Sphere.Buffer(null, false);
 
 			foreach (var atc in Scene.weightedAttaches)
 				atc.GenBufferMesh(false);
@@ -122,7 +124,7 @@ namespace SonicRetro.SAModel.Graphics.OpenGL
 			foreach (var atc in Scene.attaches)
 			{
 				atc.GenBufferMesh(false);
-				atc.Buffer(null);
+				atc.Buffer(null, false);
 			}
 
 			GL.BindVertexArray(0);
@@ -146,7 +148,6 @@ namespace SonicRetro.SAModel.Graphics.OpenGL
 			{
 				case WireFrameMode.None:
 				case WireFrameMode.Overlay:
-				case WireFrameMode.BoundingSphere:
 					GL.PolygonMode(MaterialFace.FrontAndBack, PolygonMode.Fill);
 					break;
 				case WireFrameMode.ReplaceLine:
@@ -163,6 +164,7 @@ namespace SonicRetro.SAModel.Graphics.OpenGL
 		public override void Render()
 		{
 			base.Render();
+			Extensions.ClearWeights();
 
 			// clear 
 			GL.Clear(ClearBufferMask.ColorBufferBit | ClearBufferMask.DepthBufferBit);
@@ -170,7 +172,7 @@ namespace SonicRetro.SAModel.Graphics.OpenGL
 			List<RenderMesh> renderMeshes = new List<RenderMesh>();
 			List<LandEntry> entries = new List<LandEntry>();
 
-			void PrepareModel(NjsObject obj, Matrix4? parentWorld, bool weighted)
+			void PrepareModel(NJObject obj, Matrix4? parentWorld, bool weighted)
 			{
 				Matrix4 world = obj.LocalMatrix();
 				if (parentWorld.HasValue)
@@ -181,13 +183,13 @@ namespace SonicRetro.SAModel.Graphics.OpenGL
 					// if a model is weighted, then the buffered vertex positions/normals will have to be set to world space, which means that world and normal matrix should be identities
 					if (weighted)
 					{
-						renderMeshes.Add(new RenderMesh(obj.Attach, world, Matrix4.Identity, Matrix4.Identity, GLCam.ViewMatrix * GLCam.Projectionmatrix));
+						renderMeshes.Add(new RenderMesh(obj.Attach, world, Matrix4.Identity, Matrix4.Identity, GLCam.ViewMatrix * GLCam.Projectionmatrix, obj == ActiveObj));
 					}
 					else
 					{
 						Matrix4 normalMtx = world.Inverted();
 						normalMtx.Transpose();
-						renderMeshes.Add(new RenderMesh(obj.Attach, null, world, normalMtx, world * GLCam.ViewMatrix * GLCam.Projectionmatrix));
+						renderMeshes.Add(new RenderMesh(obj.Attach, null, world, normalMtx, world * GLCam.ViewMatrix * GLCam.Projectionmatrix, obj == ActiveObj));
 					}
 				}
 
@@ -203,12 +205,12 @@ namespace SonicRetro.SAModel.Graphics.OpenGL
 				Matrix4 world = le.LocalMatrix();
 				Matrix4 normalMtx = world.Inverted();
 				normalMtx.Transpose();
-				renderMeshes.Add(new RenderMesh(le.Attach, null, world, normalMtx, world * GLCam.ViewMatrix * GLCam.Projectionmatrix));
+				renderMeshes.Add(new RenderMesh(le.Attach, null, world, normalMtx, world * GLCam.ViewMatrix * GLCam.Projectionmatrix, le == ActiveLE));
 			}
 
-			if (RenderVisual)
+			if (!_renderCollision)
 			{
-				foreach (LandEntry le in Scene.geometry)
+				foreach (LandEntry le in Scene.VisualGeometry)
 					PrepareLandentry(le);
 				foreach (GameTask tsk in Scene.objects)
 				{
@@ -216,8 +218,7 @@ namespace SonicRetro.SAModel.Graphics.OpenGL
 					PrepareModel(tsk.obj, null, tsk.obj.HasWeight);
 				}
 			}
-			if (RenderCollision)
-				foreach (LandEntry le in Scene.collision)
+			else foreach (LandEntry le in Scene.CollisionGeometry)
 					PrepareLandentry(le);
 
 			void RenderModels(bool transparent)
@@ -228,7 +229,7 @@ namespace SonicRetro.SAModel.Graphics.OpenGL
 					GL.UniformMatrix4(10, false, ref m.worldMtx);
 					GL.UniformMatrix4(11, false, ref m.normalMtx);
 					GL.UniformMatrix4(12, false, ref m.MVP);
-					m.attach.Render(m.realWorldMtx, transparent);
+					m.attach.Render(m.realWorldMtx, transparent, m.active);
 				}
 			}
 
@@ -257,7 +258,7 @@ namespace SonicRetro.SAModel.Graphics.OpenGL
 			}
 
 			Shader.Use();
-			if (RenderCollision) RenderMaterial.RenderMode = RenderMode.FullBright;
+			if (_renderCollision) RenderMaterial.RenderMode = RenderMode.FullBright;
 
 			// first the opaque meshes
 			RenderModels(false);
@@ -272,22 +273,20 @@ namespace SonicRetro.SAModel.Graphics.OpenGL
 			if (_wireFrameMode == WireFrameMode.Overlay)
 				RenderModelsWireframe(true);
 
-			if (_wireFrameMode == WireFrameMode.BoundingSphere)
+			if (_drawBounds && ActiveLE != null)
 			{
 				GL.Disable(EnableCap.DepthTest);
 				RenderMaterial.RenderMode = RenderMode.Falloff;
 				Matrix4 normal = Matrix4.Identity;
 				GL.UniformMatrix4(11, false, ref normal);
 
-				foreach (LandEntry le in entries)
-				{
-					Bounds b = le.ModelBounds;
-					Matrix4 world = Matrix4.CreateScale(b.Radius) * Matrix4.CreateTranslation(b.Position.ToGL());
-					GL.UniformMatrix4(10, false, ref world);
-					world = world * GLCam.ViewMatrix * GLCam.Projectionmatrix;
-					GL.UniformMatrix4(12, false, ref world);
-					Sphere.Render(null, true);
-				}
+				Bounds b = ActiveLE.ModelBounds;
+				Matrix4 world = Matrix4.CreateScale(b.Radius) * Matrix4.CreateTranslation(b.Position.ToGL());
+				GL.UniformMatrix4(10, false, ref world);
+				world = world * GLCam.ViewMatrix * GLCam.Projectionmatrix;
+				GL.UniformMatrix4(12, false, ref world);
+				Sphere.Render(null, true, false);
+				
 				GL.Enable(EnableCap.DepthTest);
 			}
 			GL.Disable(EnableCap.Blend);

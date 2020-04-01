@@ -50,6 +50,7 @@
     <Compile Include="Context\Context.cs" />
     <Compile Include="Context\Enums.cs" />
     <Compile Include="Context\GameTask.cs" />
+    <Compile Include="Context\GraphicsHelper.cs" />
     <Compile Include="Context\Input.cs" />
     <Compile Include="Context\Scene.cs" />
     <Compile Include="Context\Settings.cs" />

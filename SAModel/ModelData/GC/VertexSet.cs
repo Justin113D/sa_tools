@@ -129,7 +129,7 @@ namespace SonicRetro.SAModel.ModelData.GC
 				case VertexAttribute.Color0:
 					for (int i = 0; i < count; i++)
 					{
-						data.Add(Color.Read(source, ref tmpaddr, IOType.BGRA8));
+						data.Add(Color.Read(source, ref tmpaddr, IOType.RGBA8));
 					}
 					break;
 				case VertexAttribute.Tex0:

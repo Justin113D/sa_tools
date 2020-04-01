@@ -5,7 +5,7 @@ namespace SonicRetro.SAModel.Graphics
 {
 	public abstract class GameTask
 	{
-		public NjsObject obj;
+		public NJObject obj;
 		// texture list
 		public virtual void Start()
 		{
@@ -37,7 +37,7 @@ namespace SonicRetro.SAModel.Graphics
 		public Motion motion;
 		public float animSpeed;
 
-		public DisplayTask(NjsObject obj)
+		public DisplayTask(NJObject obj)
 		{
 			this.obj = obj;
 		}
@@ -48,12 +48,12 @@ namespace SonicRetro.SAModel.Graphics
 
 			float f = (float)(time % (motion.Frames - 1));
 
-			NjsObject[] models = obj.GetObjects();
+			NJObject[] models = obj.GetObjects();
 			for(int i = 0; i < models.Length; i++)
 			{
 				if(motion.Keyframes.ContainsKey(i))
 				{
-					NjsObject mdl = models[i];
+					NJObject mdl = models[i];
 					if (!mdl.Animate) continue;
 					Frame frame = motion.Keyframes[i].GetFrameAt(f);
 					if(frame.position.HasValue)

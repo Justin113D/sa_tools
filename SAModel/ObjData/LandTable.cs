@@ -419,8 +419,8 @@ namespace SonicRetro.SAModel.ObjData
 
 			foreach (LandEntryMotion lem in GeometryAnimations)
 			{
-				NjsObject[] models = lem.Model.GetObjects();
-				foreach(NjsObject mdl in models)
+				NJObject[] models = lem.Model.GetObjects();
+				foreach(NJObject mdl in models)
 				{
 					if (mdl.Attach != null) attaches.Add(mdl.Attach);
 				}

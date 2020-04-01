@@ -335,7 +335,7 @@ namespace SonicRetro.SAModel.ModelData.GC
 					return IOType.Float;
 				case DataType.RGBX8:
 				case DataType.RGBA8:
-					return IOType.BGRA8;
+					return IOType.RGBA8;
 				default:
 					throw new ArgumentException($"{typ} is not a valid type");
 			}

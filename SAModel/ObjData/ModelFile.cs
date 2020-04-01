@@ -82,7 +82,7 @@ namespace SonicRetro.SAModel.ObjData
 		/// <summary>
 		/// Hierarchy tip of the file
 		/// </summary>
-		public NjsObject Model { get; }
+		public NJObject Model { get; }
 
 		/// <summary>
 		/// Animations from files references in the meta data
@@ -94,7 +94,7 @@ namespace SonicRetro.SAModel.ObjData
 		/// </summary>
 		public MetaData MetaData { get; }
 
-		private ModelFile(AttachFormat format, NjsObject model, Motion[] animations, MetaData metaData, bool nj)
+		private ModelFile(AttachFormat format, NJObject model, Motion[] animations, MetaData metaData, bool nj)
 		{
 			Format = format;
 			Model = model;
@@ -123,7 +123,7 @@ namespace SonicRetro.SAModel.ObjData
 			ByteConverter.BigEndian = false;
 
 			AttachFormat? format = null;
-			NjsObject model;
+			NJObject model;
 			Dictionary<uint, ModelData.Attach> attaches = new Dictionary<uint, ModelData.Attach>();
 			List<Motion> Animations = new List<Motion>();
 			MetaData metaData = new MetaData();
@@ -145,7 +145,7 @@ namespace SonicRetro.SAModel.ObjData
 			{
 				// the addresses start 8 bytes ahead, and since we always subtract the image base from the addresses,
 				// we have to add them this time, so we invert the 8 to add 8 by subtracting
-				model = NjsObject.Read(source, 8, ~8u, format.Value, false, new Dictionary<uint, string>(), attaches);
+				model = NJObject.Read(source, 8, ~8u, format.Value, false, new Dictionary<uint, string>(), attaches);
 				nj = true;
 				goto readFile;
 			}
@@ -180,7 +180,7 @@ namespace SonicRetro.SAModel.ObjData
 			metaData = MetaData.Read(source, version, true);
 			Dictionary<uint, string> labels = new Dictionary<uint, string>(metaData.Labels);
 
-			model = NjsObject.Read(source, ByteConverter.ToUInt32(source, 8), 0, format.Value, false, labels, attaches);
+			model = NJObject.Read(source, ByteConverter.ToUInt32(source, 8), 0, format.Value, false, labels, attaches);
 
 			// reading animations
 			if (filename != null)
@@ -222,7 +222,7 @@ namespace SonicRetro.SAModel.ObjData
 		/// <param name="outputPath">The path of the file</param>
 		/// <param name="NJ">Whether to write an nj binary</param>
 		/// <param name="model">The root model to write to the file</param>
-		public static void WriteToFile(string outputPath, AttachFormat format, bool NJ, NjsObject model)
+		public static void WriteToFile(string outputPath, AttachFormat format, bool NJ, NJObject model)
 			=> WriteToFile(outputPath, format, NJ, model, new MetaData());
 
 		/// <summary>
@@ -236,7 +236,7 @@ namespace SonicRetro.SAModel.ObjData
 		/// <param name="description">Description of the files contents</param>
 		/// <param name="metadata">Other meta data</param>
 		/// <param name="animFiles">Animation file paths</param>
-		public static void WriteToFile(string outputPath, AttachFormat format, bool NJ, NjsObject model, MetaData metaData)
+		public static void WriteToFile(string outputPath, AttachFormat format, bool NJ, NJObject model, MetaData metaData)
 		{
 			File.WriteAllBytes(outputPath, Write(format, NJ, model, metaData));
 		}
@@ -247,7 +247,7 @@ namespace SonicRetro.SAModel.ObjData
 		/// <param name="format">Format of the file</param>
 		/// <param name="NJ">Whether to write an nj binary</param>
 		/// <param name="model">The root model to write to the file</param>
-		public static byte[] Write(AttachFormat format, bool NJ, NjsObject model) => Write(format, NJ, model, new MetaData());
+		public static byte[] Write(AttachFormat format, bool NJ, NJObject model) => Write(format, NJ, model, new MetaData());
 
 		/// <summary>
 		/// Writes a model hierarchy to stream and returns the contents
@@ -259,7 +259,7 @@ namespace SonicRetro.SAModel.ObjData
 		/// <param name="description">Description of the files contents</param>
 		/// <param name="metadata">Other meta data</param>
 		/// <param name="animFiles">Animation file paths</param>
-		public static byte[] Write(AttachFormat format, bool NJ, NjsObject model, MetaData metaData)
+		public static byte[] Write(AttachFormat format, bool NJ, NJObject model, MetaData metaData)
 		{
 			
 			using (ExtendedMemoryStream stream = new ExtendedMemoryStream())
@@ -330,9 +330,9 @@ namespace SonicRetro.SAModel.ObjData
 		/// <param name="DX">Whether the file is for SADX</param>
 		/// <param name="model">Top level object to write</param>
 		/// <param name="textures">Texture list</param>
-		public static void WriteNJA(string outputPath, bool DX, NjsObject model, string[] textures = null)
+		public static void WriteNJA(string outputPath, bool DX, NJObject model, string[] textures = null)
 		{
-			NjsObject[] objects = model.GetObjects();
+			NJObject[] objects = model.GetObjects();
 			ModelData.Attach[] attaches = objects.Select(x => x.Attach).Distinct().ToArray();
 
 			AttachFormat fmt = AttachFormat.Buffer;
@@ -356,7 +356,7 @@ namespace SonicRetro.SAModel.ObjData
 				writer.WriteLine("OBJECT_START");
 				writer.WriteLine();
 
-				foreach(NjsObject obj in objects.Reverse())
+				foreach(NJObject obj in objects.Reverse())
 				{
 					obj.WriteNJA(writer, labels);
 				}

@@ -1,11 +1,14 @@
-﻿using System.Drawing;
+﻿using System.Linq;
+using System.Drawing;
 using System.Drawing.Imaging;
 using System.Drawing.Text;
 using System.Drawing.Drawing2D;
-using SonicRetro.SAModel.ModelData.Buffer;
 using System.Windows.Input;
-using SonicRetro.SAModel.Structs;
 using System.IO;
+using SonicRetro.SAModel.ModelData.Buffer;
+using SonicRetro.SAModel.Structs;
+using SonicRetro.SAModel.ObjData;
+using Color = SonicRetro.SAModel.Structs.Color;
 
 namespace SonicRetro.SAModel.Graphics
 {
@@ -44,6 +47,11 @@ namespace SonicRetro.SAModel.Graphics
 		/// Currently active debug overlay
 		/// </summary>
 		protected DebugMenu _currentDebug;
+
+		/// <summary>
+		/// Whether to draw bounds
+		/// </summary>
+		protected bool _drawBounds;
 
 		/// <summary>
 		/// Used for rendering the bounding spheres
@@ -107,15 +115,19 @@ namespace SonicRetro.SAModel.Graphics
 		public Scene Scene { get; }
 
 		/// <summary>
-		/// Whether to render Visual models
-		/// </summary>
-		public bool RenderVisual { get; set; } = true;
-
-		/// <summary>
 		/// Whether to render collision models
 		/// </summary>
-		public bool RenderCollision { get; set; } = false;
+		public bool _renderCollision { get; set; } = false;
 
+		/// <summary>
+		/// Active NJ Object
+		/// </summary>
+		protected NJObject ActiveObj { get; set; }
+
+		/// <summary>
+		/// Active geometry object
+		/// </summary>
+		protected LandEntry ActiveLE { get; set; }
 
 		/// <summary>
 		/// Creates a new render context
@@ -144,7 +156,7 @@ namespace SonicRetro.SAModel.Graphics
 			mat.Culling = true;
 			mat.SourceBlendMode = ModelData.BlendMode.SrcAlpha;
 			mat.DestinationBlendmode = ModelData.BlendMode.SrcAlphaInverted;
-			mat.Ambient = new Structs.Color(128, 64, 64, 32);
+			mat.Ambient = new Color(128, 128, 128, 64);
 
 			if (File.Exists("Settings.json"))
 				Settings.Load("Settings.json");
@@ -190,7 +202,7 @@ namespace SonicRetro.SAModel.Graphics
 			switch (_wireFrameMode)
 			{
 				case WireFrameMode.None:
-					_wireFrameMode = back ? WireFrameMode.BoundingSphere : WireFrameMode.Overlay;
+					_wireFrameMode = back ? WireFrameMode.ReplacePoint : WireFrameMode.Overlay;
 					break;
 				case WireFrameMode.Overlay:
 					_wireFrameMode = back ? WireFrameMode.None : WireFrameMode.ReplaceLine;
@@ -199,10 +211,7 @@ namespace SonicRetro.SAModel.Graphics
 					_wireFrameMode = back ? WireFrameMode.Overlay : WireFrameMode.ReplacePoint;
 					break;
 				case WireFrameMode.ReplacePoint:
-					_wireFrameMode = back ? WireFrameMode.ReplaceLine : WireFrameMode.BoundingSphere;
-					break;
-				case WireFrameMode.BoundingSphere:
-					_wireFrameMode = back ? WireFrameMode.ReplacePoint : WireFrameMode.None;
+					_wireFrameMode = back ? WireFrameMode.ReplaceLine : WireFrameMode.None;
 					break;
 			}
 		}
@@ -221,13 +230,13 @@ namespace SonicRetro.SAModel.Graphics
 					_renderMode = back ? RenderMode.Smooth : RenderMode.Normals;
 					break;
 				case RenderMode.Normals:
-					_renderMode = back ? RenderMode.Falloff : RenderMode.Colors;
+					_renderMode = back ? RenderMode.Falloff : RenderMode.ColorsWeights;
 					break;
-				case RenderMode.Colors:
+				case RenderMode.ColorsWeights:
 					_renderMode = back ? RenderMode.Normals : RenderMode.Texcoords;
 					break;
 				case RenderMode.Texcoords:
-					_renderMode = back ? RenderMode.Colors : RenderMode.CullSide;
+					_renderMode = back ? RenderMode.ColorsWeights : RenderMode.CullSide;
 					break;
 				case RenderMode.CullSide:
 					_renderMode = back ? RenderMode.Texcoords : RenderMode.Default;
@@ -240,6 +249,26 @@ namespace SonicRetro.SAModel.Graphics
 			_currentDebug = _currentDebug == menu ? DebugMenu.Disabled : menu;
 		}
 
+		/// <summary>
+		/// Sets the active (seleted) model
+		/// </summary>
+		public void SelectActive(NJObject njobj)
+		{
+			if (njobj == null) return;
+			ActiveObj = njobj;
+			ActiveLE = null;
+		}
+
+		/// <summary>
+		/// Sets the active (seleted) model
+		/// </summary>
+		public void SelectActive(LandEntry le)
+		{
+			if (le == null) return;
+			ActiveObj = null;
+			ActiveLE = le;
+		}
+
 		public virtual void Update(float delta, bool focused)
 		{
 			if(focused || _wasFocused)
@@ -249,7 +278,9 @@ namespace SonicRetro.SAModel.Graphics
 			if(focused)
 			{
 				Settings s = Settings.Global;
-				if(!Camera.Orbiting) // if in fps mode
+				bool backWard = Input.IsKeyDown(s.circleBackward);
+
+				if (!Camera.Orbiting) // if in fps mode
 				{
 					if (!_wasFocused || Input.IsKeyDown(Key.Escape))
 						Camera.Orbiting = true;
@@ -265,22 +296,38 @@ namespace SonicRetro.SAModel.Graphics
 					if(Input.KeyPressed(s.focusObj))
 					{
 						// todo
+
+						// temporary
+						if(Scene.geometry.Count == 0)
+						{
+							if (ActiveObj == null) ActiveObj = Scene.objects[0].obj;
+							else
+							{
+								NJObject[] objects = Scene.objects[0].obj.GetObjects();
+								for(int i = 0; i < objects.Length; i++)
+								{
+									if(objects[i] == ActiveObj)
+									{
+										i += backWard ? -1 : 1;
+										if (i == -1) i = objects.Length - 1;
+										else if (i == objects.Length) i = 0;
+										ActiveObj = objects[i];
+										break;
+									}
+								}
+							}
+						}
 					}
 				}
 
 				Camera.Move(delta);
 
-				bool backWard = Input.IsKeyDown(s.circleBackward);
 				if (Input.KeyPressed(s.circleLighting)) CircleRenderMode(backWard);
 				if (Input.KeyPressed(s.circleWireframe)) CircleWireframeMode(backWard);
-				if(Input.KeyPressed(s.swapGeometry))
-				{
-					RenderCollision = RenderVisual;
-					RenderVisual = !RenderVisual;
-				}
+				if (Input.KeyPressed(s.swapGeometry)) _renderCollision = !_renderCollision;
+				if (Input.KeyPressed(s.displayBounds)) _drawBounds = !_drawBounds;
 
-				if (Input.KeyPressed(s.DebugHelp)) 
-					SetDebugMenu(DebugMenu.Help);
+				if (Input.KeyPressed(s.DebugHelp)) SetDebugMenu(DebugMenu.Help);
 				else if (Input.KeyPressed(s.DebugCamera)) SetDebugMenu(DebugMenu.Camera);
 				else if (Input.KeyPressed(s.DebugRender)) SetDebugMenu(DebugMenu.RenderInfo);
 			}
@@ -300,7 +347,7 @@ namespace SonicRetro.SAModel.Graphics
 		/// <summary>
 		/// Renders the debug texture
 		/// </summary>
-		protected virtual void RenderDebug(uint modelsDrawn)
+		protected virtual void RenderDebug(uint meshesDrawn)
 		{
 			using (System.Drawing.Graphics g = System.Drawing.Graphics.FromImage(_debugTexture))
 			{
@@ -348,16 +395,21 @@ namespace SonicRetro.SAModel.Graphics
 						text($"Mouse speed: {Camera.MouseSensitivity}", 10);
 						break;
 					case DebugMenu.RenderInfo:
-						g.FillRectangle(bg, 0, 0, 350, 230);
+						g.FillRectangle(bg, 0, 0, 350, 225);
 						textBold("== Renderinfo == ", 60);
 						text($"View Pos.: {RenderMaterial.ViewPos.Rounded(2)}", 10);
 						text($"Lighting Dir.: {RenderMaterial.LightDir.Rounded(2)}", 10);
-						text($"Models Drawn: {modelsDrawn}", 10);
+						text($"Meshes Drawn: {meshesDrawn}", 10);
 						text($"Render Mode: {_renderMode}", 10);
 						text($"Wireframe Mode: {_wireFrameMode}", 10);
-						text("Display:", 10);
-						text($"Visual: {RenderVisual}", 20);
-						text($"Collision: {RenderCollision}", 20);
+						text($"Display: {(_renderCollision ? "Collision" : "Visual")}", 10);
+						text($"Display Bounds: {_drawBounds}", 10);
+						if (ActiveObj != null) text($"Active object: {ActiveObj.Name}", 10);
+						else if (ActiveLE != null)
+						{
+							text($"Active object: LandEntry {Scene.geometry.IndexOf(ActiveLE)}", 10);
+						}
+						else text($"Active object: NULL", 10);
 						break;
 				}
 

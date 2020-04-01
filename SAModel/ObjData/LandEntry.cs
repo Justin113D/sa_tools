@@ -14,7 +14,7 @@ namespace SonicRetro.SAModel.ObjData
 		/// <summary>
 		/// Model for the geometry
 		/// </summary>
-		private NjsObject _model;
+		private NJObject _model;
 
 		/// <summary>
 		/// World space bounds
@@ -102,7 +102,7 @@ namespace SonicRetro.SAModel.ObjData
 		public LandEntry(ModelData.Attach attach)
 		{
 			if (attach == null) throw new ArgumentNullException("attach", "Attach cant be null!");
-			_model = new NjsObject()
+			_model = new NJObject()
 			{
 				Attach = attach,
 				Name = "col_" + Extensions.GenerateIdentifier()
@@ -110,7 +110,7 @@ namespace SonicRetro.SAModel.ObjData
 			ModelBounds = attach.MeshBounds;
 		}
 
-		private LandEntry(NjsObject model, SurfaceFlags flags, uint blockbit, uint unknown, Bounds modelBounds)
+		private LandEntry(NJObject model, SurfaceFlags flags, uint blockbit, uint unknown, Bounds modelBounds)
 		{
 			_model = model;
 			SurfaceFlags = flags;
@@ -137,7 +137,7 @@ namespace SonicRetro.SAModel.ObjData
 
 			uint modelAddr = ByteConverter.ToUInt32(source, address);
 			if (modelAddr == 0) throw new InvalidOperationException("Landentry model address is null!");
-			NjsObject model = NjsObject.Read(source, modelAddr - imageBase, imageBase, format, ltblFormat == LandtableFormat.SADX, labels, attaches);
+			NJObject model = NJObject.Read(source, modelAddr - imageBase, imageBase, format, ltblFormat == LandtableFormat.SADX, labels, attaches);
 
 			uint blockBit = ByteConverter.ToUInt32(source, address + 4); // lets just assume that sa2 also uses blockbits, not like its used anyway
 			uint unknown = 0;
