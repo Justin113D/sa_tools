@@ -9,6 +9,8 @@ using SonicRetro.SAModel.ModelData.Buffer;
 using SonicRetro.SAModel.Structs;
 using SonicRetro.SAModel.ObjData;
 using Color = SonicRetro.SAModel.Structs.Color;
+using System;
+using System.Windows.Interop;
 
 namespace SonicRetro.SAModel.Graphics
 {
@@ -52,6 +54,8 @@ namespace SonicRetro.SAModel.Graphics
 		/// Whether to draw bounds
 		/// </summary>
 		protected bool _drawBounds;
+
+		public Color BackgroundColor { get; protected set; }
 
 		/// <summary>
 		/// Used for rendering the bounding spheres
@@ -117,7 +121,7 @@ namespace SonicRetro.SAModel.Graphics
 		/// <summary>
 		/// Whether to render collision models
 		/// </summary>
-		public bool _renderCollision { get; set; } = false;
+		public bool _renderCollision = false;
 
 		/// <summary>
 		/// Active NJ Object
@@ -128,6 +132,11 @@ namespace SonicRetro.SAModel.Graphics
 		/// Active geometry object
 		/// </summary>
 		protected LandEntry ActiveLE { get; set; }
+
+		/// <summary>
+		/// Whether the context is focused
+		/// </summary>
+		public bool Focused { get; set; }
 
 		/// <summary>
 		/// Creates a new render context
@@ -143,6 +152,7 @@ namespace SonicRetro.SAModel.Graphics
 			_fonts.AddFontFile("debugFont.ttf");
 			_debugFont = new Font(_fonts.Families[0], 12);
 			_debugFontBold = new Font(_fonts.Families[0], 15, FontStyle.Bold);
+			BackgroundColor = new Color(0x40,0x40,0x40);
 
 			byte[] sphere = File.ReadAllBytes("Sphere.bufmdl");
 			uint addr = 0;
@@ -173,7 +183,12 @@ namespace SonicRetro.SAModel.Graphics
 			_currentDebug = DebugMenu.Disabled;
 		}
 
+		/// <summary>
+		/// Starts the context as an independent window
+		/// </summary>
 		public abstract void AsWindow();
+
+		public abstract System.Windows.FrameworkElement AsControl(HwndSource windowSource);
 
 		/// <summary>
 		/// Called after loading the graphics engine
@@ -269,13 +284,13 @@ namespace SonicRetro.SAModel.Graphics
 			ActiveLE = le;
 		}
 
-		public virtual void Update(float delta, bool focused)
+		public virtual void Update(double delta)
 		{
-			if(focused || _wasFocused)
+			if(Focused || _wasFocused)
 			{
 				Input.Update(_wasFocused);
 			}
-			if(focused)
+			if(Focused)
 			{
 				Settings s = Settings.Global;
 				bool backWard = Input.IsKeyDown(s.circleBackward);
@@ -320,7 +335,7 @@ namespace SonicRetro.SAModel.Graphics
 					}
 				}
 
-				Camera.Move(delta);
+				Camera.Move((float)delta);
 
 				if (Input.KeyPressed(s.circleLighting)) CircleRenderMode(backWard);
 				if (Input.KeyPressed(s.circleWireframe)) CircleWireframeMode(backWard);
@@ -331,7 +346,7 @@ namespace SonicRetro.SAModel.Graphics
 				else if (Input.KeyPressed(s.DebugCamera)) SetDebugMenu(DebugMenu.Camera);
 				else if (Input.KeyPressed(s.DebugRender)) SetDebugMenu(DebugMenu.RenderInfo);
 			}
-			_wasFocused = focused;
+			_wasFocused = Focused;
 
 			Scene.Update(delta);
 		}
@@ -343,6 +358,8 @@ namespace SonicRetro.SAModel.Graphics
 			RenderMaterial.ViewDir = Camera.Orthographic ? Camera.ViewDir : default;
 			RenderMaterial.RenderMode = _renderMode;
 		}
+
+		byte value = 0;
 
 		/// <summary>
 		/// Renders the debug texture
@@ -356,10 +373,13 @@ namespace SonicRetro.SAModel.Graphics
 				g.PixelOffsetMode = PixelOffsetMode.HighSpeed;
 				g.TextRenderingHint = TextRenderingHint.AntiAliasGridFit;
 
-				int yOffset = 45;
+				int yOffset = 5;
 				int lineHeight = _debugFont.Height;
 				Brush br = Brushes.White;
-				Brush bg = new SolidBrush(System.Drawing.Color.FromArgb(0x80, 0, 0, 0));
+				Brush bg = new SolidBrush(System.Drawing.Color.FromArgb(value, 0, 0, 0));
+				if (value == 0xFF) value = 0;
+				else value++;
+				
 
 				void text(string str, int xOffset)
 				{
@@ -372,18 +392,18 @@ namespace SonicRetro.SAModel.Graphics
 					yOffset += lineHeight;
 				}
 
-				g.Clear(System.Drawing.Color.Transparent);
+				g.Clear(System.Drawing.Color.FromArgb(0));
 				switch (_currentDebug)
 				{
 					case DebugMenu.Help:
-						g.FillRectangle(bg, 0, 0, 200, 150);
+						g.FillRectangle(bg, 0, 0, 200, 105);
 						textBold("== Debug == ", 30);
 						text("Debug      - F1", 10);
 						text("Camera     - F2", 10);
 						text("Renderinfo - F3", 10);
 						break;
 					case DebugMenu.Camera:
-						g.FillRectangle(bg, 0, 0, 350, 225);
+						g.FillRectangle(bg, 0, 0, 350, 180);
 						textBold("== Camera == ", 90);
 						text($"Location: {Camera.Position.Rounded(2)}", 10);
 						text($"Rotation: {Camera.Rotation.Rounded(2)}", 10);
@@ -395,7 +415,7 @@ namespace SonicRetro.SAModel.Graphics
 						text($"Mouse speed: {Camera.MouseSensitivity}", 10);
 						break;
 					case DebugMenu.RenderInfo:
-						g.FillRectangle(bg, 0, 0, 350, 225);
+						g.FillRectangle(bg, 0, 0, 350, 180);
 						textBold("== Renderinfo == ", 60);
 						text($"View Pos.: {RenderMaterial.ViewPos.Rounded(2)}", 10);
 						text($"Lighting Dir.: {RenderMaterial.LightDir.Rounded(2)}", 10);

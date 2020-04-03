@@ -4,9 +4,75 @@
         xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
         xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
         xmlns:local="clr-namespace:SonicRetro.SA3D.WPF"
+        xmlns:vm="clr-namespace:SonicRetro.SA3D.WPF.ViewModel"
         mc:Ignorable="d"
-        Title="MainWindow" Height="450" Width="800">
+        Title="SA3D" Height="720" Width="1280"
+        Icon="/SA3D;component/Icons/logo.ico"
+        MouseDown="Window_MouseDown">
+
+    <Window.DataContext>
+        <vm:MainViewModel/>
+    </Window.DataContext>
+    
+    <Window.Resources>
+        <Image x:Key="ico_Export" Source="/SA3D;component/Icons/Export_16x.png" x:Shared="false"/>
+        <Image x:Key="ico_Import" Source="/SA3D;component/Icons/Import_16x.png" x:Shared="false"/>
+        <Image x:Key="ico_NewFile" Source="/SA3D;component/Icons/NewFile_16x.png" x:Shared="false"/>
+        <Image x:Key="ico_OpenFile" Source="/SA3D;component/Icons/OpenFile_16x.png" x:Shared="false"/>
+        <Image x:Key="ico_Save" Source="/SA3D;component/Icons/Save_16x.png" x:Shared="false"/>
+        <Image x:Key="ico_SaveAs" Source="/SA3D;component/Icons/SaveAs_16x.png" x:Shared="false"/>
+    </Window.Resources> 
+   
     <Grid>
+        <Grid.RowDefinitions>
+            <RowDefinition Height="auto"/>
+            <RowDefinition Height="auto"/>
+            <RowDefinition Height="*"/>
+        </Grid.RowDefinitions>
+
+        <Menu Grid.Row="0" Margin="5,2,5,2" Background="Transparent">
+            <MenuItem Header="File">
+                <MenuItem Header="New" InputGestureText="Ctrl+N" Icon="{StaticResource ico_NewFile}">
+                    <MenuItem Header="Model"/>
+                    <MenuItem Header="Level"/>
+                    <MenuItem Header="Project">
+                        <MenuItem Header="SA1/SADX" IsEnabled="false"/>
+                        <MenuItem Header="SA2" IsEnabled="false"/>
+                    </MenuItem>
+                </MenuItem>
+                <MenuItem Header="Open" InputGestureText="Ctrl+O" Icon="{StaticResource ico_OpenFile}" Command="{Binding OpenFileRC}"/>
+                <MenuItem Header="Save" InputGestureText="Ctrl+S" Icon="{StaticResource ico_Save}"/>
+                <MenuItem Header="Save as..." InputGestureText="Ctrl+Shift+S" Icon="{StaticResource ico_SaveAs}" />
+                <Separator/>
+                <MenuItem Header="Import" InputGestureText="Ctrl+I" Icon="{StaticResource ico_Import}">
+                    <MenuItem Header="Buffer" IsEnabled="false"/>
+                    <MenuItem Header="GLTF" IsEnabled="False"/>
+                    <MenuItem Header="Model file" IsEnabled="false"/>
+                </MenuItem>
+                <MenuItem Header="Export" InputGestureText="Ctrl+E" Icon="{StaticResource ico_Export}">
+                    <MenuItem Header="Buffer" IsEnabled="false"/>
+                    <MenuItem Header="GLTF" IsEnabled="False"/>
+                    <MenuItem Header="Model file" IsEnabled="false"/>
+                </MenuItem>
+                <Separator/>
+                <MenuItem Header="Load Animation" Icon="{StaticResource ico_OpenFile}"/>
+                <MenuItem Header="Load Texture file" Icon="{StaticResource ico_OpenFile}"/>
+            </MenuItem>
+            <MenuItem Header="Edit">
+                <MenuItem Header="File info"/>
+                <MenuItem Header="Relabel"/>
+                <MenuItem Header="Recalculate Bounds"/>
+                <MenuItem Header="Clear objects"/>
+                <Separator/>
+                <MenuItem Header="Settings"/>
+            </MenuItem>
+            <MenuItem Header="Help">
+                <MenuItem Header="Wiki"/>
+            </MenuItem>
+        </Menu>
         
+        <Separator Grid.Row="1"/>
+
+        <UserControl Grid.Row="2" Content="{Binding MainControl}"/>
     </Grid>
 </Window>

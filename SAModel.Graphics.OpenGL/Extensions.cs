@@ -283,15 +283,14 @@ namespace SonicRetro.SAModel.Graphics.OpenGL
 			{
 				if (m.Material == null || m.Material.UseAlpha != transparent) continue;
 
-				if (meshHandles.TryGetValue(m, out var handle))
+				if(!meshHandles.TryGetValue(m, out var handle))
 				{
-					GLMaterial.Buffer(m.Material);
-					GL.BindVertexArray(handle.vao);
-					if (handle.eao == 0)
-						GL.DrawArrays(PrimitiveType.Triangles, 0, handle.vertexCount);
-					else GL.DrawElements(BeginMode.Triangles, handle.vertexCount, DrawElementsType.UnsignedInt, 0);
+					atc.Buffer(null, active);
+					handle = meshHandles[m];
 				}
-				else throw new InvalidOperationException($"Mesh in {atc.Name} not buffered");
+				GLMaterial.Buffer(m.Material);
+				GL.BindVertexArray(handle.vao);
+				GL.DrawElements(BeginMode.Triangles, handle.vertexCount, DrawElementsType.UnsignedInt, 0);
 			}
 		}
 

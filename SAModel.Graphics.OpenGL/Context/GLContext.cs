@@ -9,7 +9,9 @@ using System;
 using System.Collections.Generic;
 using System.Drawing;
 using System.Drawing.Imaging;
-using System.Linq;
+using OpenTK.Wpf;
+using OpenTK.Platform;
+using System.Windows.Interop;
 
 namespace SonicRetro.SAModel.Graphics.OpenGL
 {
@@ -59,6 +61,36 @@ namespace SonicRetro.SAModel.Graphics.OpenGL
 			wnd.Run(60, 60);
 		}
 
+		public override System.Windows.FrameworkElement AsControl(HwndSource windowSource)
+		{
+			GLWpfControl control = new GLWpfControl();
+			control.Ready += GraphicsInit;
+			
+			control.Render += (time) =>
+			{
+				Update(time.TotalSeconds);
+
+				Render();
+			};
+
+			IWindowInfo window = Utilities.CreateWindowsWindowInfo(windowSource.Handle);
+			GraphicsContext grContext = new GraphicsContext(new GraphicsMode(ColorFormat.Empty, 24, 0, 4), window);
+
+			grContext.LoadAll();
+			grContext.MakeCurrent(window);
+
+			GLWpfControlSettings settings = new GLWpfControlSettings()
+			{
+				ContextToUse = grContext,
+				GraphicsContextFlags = GraphicsContextFlags.ForwardCompatible,
+				MajorVersion = 4,
+				MinorVersion = 0,
+			};
+
+			control.Start(settings);
+			return control;
+		}
+
 		unsafe private void BufferNearPlane()
 		{
 			// buffering the nearplane 
@@ -93,7 +125,7 @@ namespace SonicRetro.SAModel.Graphics.OpenGL
 		public override void GraphicsInit()
 		{
 			GL.Viewport(default, _screen.Size);
-			GL.ClearColor(System.Drawing.Color.FromArgb(0x10, 0x10, 0x10));
+			GL.ClearColor(BackgroundColor.SystemCol);
 			GL.Enable(EnableCap.DepthTest);
 			GL.Enable(EnableCap.FramebufferSrgb);
 			GL.Uniform1(13, 0f); // setting normal offset for wireframe
@@ -117,15 +149,6 @@ namespace SonicRetro.SAModel.Graphics.OpenGL
 			// buffering the (unweightened) meshes
 
 			Sphere.Buffer(null, false);
-
-			foreach (var atc in Scene.weightedAttaches)
-				atc.GenBufferMesh(false);
-
-			foreach (var atc in Scene.attaches)
-			{
-				atc.GenBufferMesh(false);
-				atc.Buffer(null, false);
-			}
 
 			GL.BindVertexArray(0);
 			GL.BindBuffer(BufferTarget.ArrayBuffer, 0);
@@ -163,6 +186,7 @@ namespace SonicRetro.SAModel.Graphics.OpenGL
 
 		public override void Render()
 		{
+			if (Shader == null) return;
 			base.Render();
 			Extensions.ClearWeights();
 
@@ -313,9 +337,7 @@ namespace SonicRetro.SAModel.Graphics.OpenGL
 			GL.TexParameter(TextureTarget.Texture2D, TextureParameterName.TextureWrapT, (int)TextureWrapMode.ClampToBorder);
 
 			// drawing the texture onto the screen
-			if (_wireFrameMode != WireFrameMode.None && _wireFrameMode != WireFrameMode.Overlay)
-				GL.PolygonMode(MaterialFace.FrontAndBack, PolygonMode.Fill);
-
+			GL.PolygonMode(MaterialFace.FrontAndBack, PolygonMode.Fill);
 			GL.Enable(EnableCap.Blend);
 			GL.BindVertexArray(_nearPlaneHandle);
 			_debugShader.Use();
@@ -333,6 +355,7 @@ namespace SonicRetro.SAModel.Graphics.OpenGL
 					break;
 			}
 		}
+
 	}
 
 	public class GLContextWindow : GameWindow
@@ -378,7 +401,8 @@ namespace SonicRetro.SAModel.Graphics.OpenGL
 		protected override void OnUpdateFrame(FrameEventArgs e)
 		{
 			base.OnUpdateFrame(e);
-			_context.Update((float)e.Time, Focused);
+			_context.Focused = Focused;
+			_context.Update((float)e.Time);
 			if (_showedCursor == _context.Camera.Orbiting)
 			{
 				CursorVisible = _context.Camera.Orbiting;

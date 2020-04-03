@@ -42,7 +42,10 @@ namespace SonicRetro.SAModel.Graphics
 				{
 					if (obj.Attach == null) continue;
 					if (!weightedAttaches.Contains(obj.Attach))
+					{
 						weightedAttaches.Add(obj.Attach);
+						obj.Attach.GenBufferMesh(true);
+					}
 				}
 			}
 			else
@@ -51,7 +54,10 @@ namespace SonicRetro.SAModel.Graphics
 				{
 					if (obj.Attach == null) continue;
 					if (!attaches.Contains(obj.Attach))
+					{
 						attaches.Add(obj.Attach);
+						obj.Attach.GenBufferMesh(true);
+					}
 				}
 			}
 
@@ -75,11 +81,14 @@ namespace SonicRetro.SAModel.Graphics
 			{
 				geometry.Add(le);
 				if (!attaches.Contains(le.Attach))
+				{
 					attaches.Add(le.Attach);
+					le.Attach.GenBufferMesh(true);
+				}
 			}
 		}
 
-		public void Update(float delta)
+		public void Update(double delta)
 		{
 			time += delta;
 			foreach(GameTask tsk in objects)
