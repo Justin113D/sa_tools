@@ -396,6 +396,7 @@ namespace SonicRetro.SAModel.Graphics
 				int lineHeight = _debugFont.Height;
 				Brush br = Brushes.White;
 				Brush bg = new SolidBrush(System.Drawing.Color.FromArgb(0x60, 0x60, 0x60, 0x60));
+				//Brush bg = new SolidBrush(System.Drawing.Color.FromArgb(value, 0,0,0));
 				//if (value == 0xFF) value = 0;
 				//else value++;
 				

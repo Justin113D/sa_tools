@@ -94,7 +94,7 @@ namespace SonicRetro.SAModel
 					try
 					{
 						foreach (string item in animationFiles)
-							anims.Add(NJS_MOTION.Load(Path.Combine(path, item), Model.CountAnimated()));
+							anims.Add(NJS_MOTION.Load(Path.Combine(path, item), (int)Model.CountAnimated()));
 					}
 					catch
 					{
@@ -245,7 +245,7 @@ namespace SonicRetro.SAModel
 								}
 							}
 							else
-								anims.Add(NJS_MOTION.Load(Path.Combine(path, item), Model.CountAnimated()));
+								anims.Add(NJS_MOTION.Load(Path.Combine(path, item), (int)Model.CountAnimated()));
 						}
 					}
 					catch

@@ -57,12 +57,12 @@ namespace SonicRetro.SAModel
 			Metadata = new Dictionary<uint, byte[]>();
 		}
 
-		public LandTable(byte[] file, int address, uint imageBase, LandTableFormat format)
-			: this(file, address, imageBase, format, new Dictionary<int, string>())
+		public LandTable(byte[] file, uint address, uint imageBase, LandTableFormat format)
+			: this(file, address, imageBase, format, new Dictionary<uint, string>())
 		{
 		}
 
-		public LandTable(byte[] file, int address, uint imageBase, LandTableFormat format, Dictionary<int, string> labels)
+		public LandTable(byte[] file, uint address, uint imageBase, LandTableFormat format, Dictionary<uint, string> labels)
 		{
 			Format = format;
 			if (labels.ContainsKey(address))
@@ -70,7 +70,7 @@ namespace SonicRetro.SAModel
 			else
 				Name = "landtable_" + address.ToString("X8");
 			short colcnt = ByteConverter.ToInt16(file, address);
-			Dictionary<int, Attach> attaches = new Dictionary<int, Attach>();
+			Dictionary<uint, Attach> attaches = new Dictionary<uint, Attach>();
 			switch (format)
 			{
 				case LandTableFormat.SA1:
@@ -80,10 +80,10 @@ namespace SonicRetro.SAModel
 					Flags = ByteConverter.ToInt16(file, address + 6);
 					FarClipping = ByteConverter.ToSingle(file, address + 8);
 					COL = new List<COL>();
-					int tmpaddr = ByteConverter.ToInt32(file, address + 0xC);
+					uint tmpaddr = ByteConverter.ToUInt32(file, address + 0xC);
 					if (tmpaddr != 0)
 					{
-						tmpaddr = (int)unchecked((uint)tmpaddr - imageBase);
+						tmpaddr = tmpaddr - imageBase;
 						if (labels.ContainsKey(tmpaddr))
 							COLName = labels[tmpaddr];
 						else
@@ -97,10 +97,10 @@ namespace SonicRetro.SAModel
 					else
 						COLName = "collist_" + Extensions.GenerateIdentifier();
 					Anim = new List<GeoAnimData>();
-					tmpaddr = ByteConverter.ToInt32(file, address + 0x10);
+					tmpaddr = ByteConverter.ToUInt32(file, address + 0x10);
 					if (tmpaddr != 0)
 					{
-						tmpaddr = (int)unchecked((uint)tmpaddr - imageBase);
+						tmpaddr = tmpaddr - imageBase;
 						if (labels.ContainsKey(tmpaddr))
 							AnimName = labels[tmpaddr];
 						else
@@ -113,10 +113,10 @@ namespace SonicRetro.SAModel
 					}
 					else
 						AnimName = "animlist_" + Extensions.GenerateIdentifier();
-					tmpaddr = ByteConverter.ToInt32(file, address + 0x14);
+					tmpaddr = ByteConverter.ToUInt32(file, address + 0x14);
 					if (tmpaddr != 0)
 					{
-						tmpaddr = (int)unchecked((uint)tmpaddr - imageBase);
+						tmpaddr = tmpaddr - imageBase;
 						TextureFileName = file.GetCString(tmpaddr, Encoding.ASCII);
 					}
 					TextureList = ByteConverter.ToUInt32(file, address + 0x18);
@@ -128,10 +128,10 @@ namespace SonicRetro.SAModel
 					short cnkcnt = ByteConverter.ToInt16(file, address + 2);
 					FarClipping = ByteConverter.ToSingle(file, address + 0xC);
 					COL = new List<COL>();
-					tmpaddr = ByteConverter.ToInt32(file, address + 0x10);
+					tmpaddr = ByteConverter.ToUInt32(file, address + 0x10);
 					if (tmpaddr != 0)
 					{
-						tmpaddr = (int)unchecked((uint)tmpaddr - imageBase);
+						tmpaddr = tmpaddr - imageBase;
 						if (labels.ContainsKey(tmpaddr))
 							COLName = labels[tmpaddr];
 						else
@@ -146,10 +146,10 @@ namespace SonicRetro.SAModel
 						COLName = "collist_" + Extensions.GenerateIdentifier();
 					Anim = new List<GeoAnimData>();
 					AnimName = "animlist_" + Extensions.GenerateIdentifier();
-					tmpaddr = ByteConverter.ToInt32(file, address + 0x18);
+					tmpaddr = ByteConverter.ToUInt32(file, address + 0x18);
 					if (tmpaddr != 0)
 					{
-						tmpaddr = (int)unchecked((uint)tmpaddr - imageBase);
+						tmpaddr = tmpaddr - imageBase;
 						TextureFileName = file.GetCString(tmpaddr, Encoding.ASCII);
 					}
 					TextureList = ByteConverter.ToUInt32(file, address + 0x1C);
@@ -167,37 +167,37 @@ namespace SonicRetro.SAModel
 			byte version = file[7];
 			if (version > CurrentVersion)
 				throw new FormatException("Not a valid SA1LVL/SA2LVL file.");
-			Dictionary<int, string> labels = new Dictionary<int, string>();
+			Dictionary<uint, string> labels = new Dictionary<uint, string>();
 			string author = null, description = null;
 			Dictionary<uint, byte[]> meta = new Dictionary<uint, byte[]>();
 			if (version < 2)
 			{
 				if (version == 1)
 				{
-					int tmpaddr = ByteConverter.ToInt32(file, 0xC);
+					uint tmpaddr = ByteConverter.ToUInt32(file, 0xC);
 					if (tmpaddr != 0)
 					{
-						int addr = ByteConverter.ToInt32(file, tmpaddr);
-						while (addr != -1)
+						uint addr = ByteConverter.ToUInt32(file, tmpaddr);
+						while (addr != uint.MaxValue)
 						{
-							labels.Add(addr, file.GetCString(ByteConverter.ToInt32(file, tmpaddr + 4)));
+							labels.Add(addr, file.GetCString(ByteConverter.ToUInt32(file, tmpaddr + 4)));
 							tmpaddr += 8;
-							addr = ByteConverter.ToInt32(file, tmpaddr);
+							addr = ByteConverter.ToUInt32(file, tmpaddr);
 						}
 					}
 				}
 			}
 			else
 			{
-				int tmpaddr = ByteConverter.ToInt32(file, 0xC);
+				uint tmpaddr = ByteConverter.ToUInt32(file, 0xC);
 				if (tmpaddr != 0)
 				{
 					bool finished = false;
 					while (!finished)
 					{
 						ChunkTypes type = (ChunkTypes)ByteConverter.ToUInt32(file, tmpaddr);
-						int chunksz = ByteConverter.ToInt32(file, tmpaddr + 4);
-						int nextchunk = tmpaddr + 8 + chunksz;
+						uint chunksz = ByteConverter.ToUInt32(file, tmpaddr + 4);
+						uint nextchunk = tmpaddr + 8 + chunksz;
 						tmpaddr += 8;
 						if (version == 2)
 						{
@@ -206,7 +206,7 @@ namespace SonicRetro.SAModel
 								case ChunkTypes.Label:
 									while (ByteConverter.ToInt64(file, tmpaddr) != -1)
 									{
-										labels.Add(ByteConverter.ToInt32(file, tmpaddr), file.GetCString(ByteConverter.ToInt32(file, tmpaddr + 4)));
+										labels.Add(ByteConverter.ToUInt32(file, tmpaddr), file.GetCString(ByteConverter.ToUInt32(file, tmpaddr + 4)));
 										tmpaddr += 8;
 									}
 									break;
@@ -227,14 +227,14 @@ namespace SonicRetro.SAModel
 						{
 							byte[] chunk = new byte[chunksz];
 							Array.Copy(file, tmpaddr, chunk, 0, chunksz);
-							int chunkaddr = 0;
+							uint chunkaddr = 0;
 							switch (type)
 							{
 								case ChunkTypes.Label:
 									while (ByteConverter.ToInt64(chunk, chunkaddr) != -1)
 									{
-										labels.Add(ByteConverter.ToInt32(chunk, chunkaddr),
-											chunk.GetCString(ByteConverter.ToInt32(chunk, chunkaddr + 4)));
+										labels.Add(ByteConverter.ToUInt32(chunk, chunkaddr),
+											chunk.GetCString(ByteConverter.ToUInt32(chunk, chunkaddr + 4)));
 										chunkaddr += 8;
 									}
 									break;
@@ -260,7 +260,7 @@ namespace SonicRetro.SAModel
 			}
 			if (magic == SA1LVL)
 			{
-				LandTable table = new LandTable(file, ByteConverter.ToInt32(file, 8), 0, LandTableFormat.SA1, labels)
+				LandTable table = new LandTable(file, ByteConverter.ToUInt32(file, 8), 0, LandTableFormat.SA1, labels)
 				{
 					Author = author,
 					Description = description,
@@ -271,7 +271,7 @@ namespace SonicRetro.SAModel
 			}
 			if (magic == SA2LVL)
 			{
-				LandTable table = new LandTable(file, ByteConverter.ToInt32(file, 8), 0, LandTableFormat.SA2, labels)
+				LandTable table = new LandTable(file, ByteConverter.ToUInt32(file, 8), 0, LandTableFormat.SA2, labels)
 				{
 					Author = author,
 					Description = description,
@@ -282,7 +282,7 @@ namespace SonicRetro.SAModel
 			}
 			if (magic == SA2BLVL)
 			{
-				LandTable table = new LandTable(file, ByteConverter.ToInt32(file, 8), 0, LandTableFormat.SA2B, labels)
+				LandTable table = new LandTable(file, ByteConverter.ToUInt32(file, 8), 0, LandTableFormat.SA2B, labels)
 				{
 					Author = author,
 					Description = description,

@@ -12,12 +12,12 @@ namespace SonicRetro.SAModel
 		public NJS_OBJECT Model { get; private set; }
 		public NJS_MOTION Animation { get; private set; }
 
-		public NJS_ACTION(byte[] file, int address, uint imageBase, ModelFormat format, Dictionary<int, Attach> attaches)
-			: this(file, address, imageBase, format, new Dictionary<int, string>(), attaches)
+		public NJS_ACTION(byte[] file, uint address, uint imageBase, ModelFormat format, Dictionary<uint, Attach> attaches)
+			: this(file, address, imageBase, format, new Dictionary<uint, string>(), attaches)
 		{
 		}
 
-		public NJS_ACTION(byte[] file, int address, uint imageBase, ModelFormat format, Dictionary<int, string> labels, Dictionary<int, Attach> attaches)
+		public NJS_ACTION(byte[] file, uint address, uint imageBase, ModelFormat format, Dictionary<uint, string> labels, Dictionary<uint, Attach> attaches)
 		{
 			if (labels != null && labels.ContainsKey(address))
 				Name = labels[address];
@@ -30,7 +30,7 @@ namespace SonicRetro.SAModel
 			}
 			else
 			{
-				int objaddr = (int)(ByteConverter.ToUInt32(file, address) - imageBase);
+				uint objaddr = ByteConverter.ToUInt32(file, address) - imageBase;
 				if (objaddr > file.Length - 4)
 				{
 					Model = new NJS_OBJECT();
@@ -45,7 +45,7 @@ namespace SonicRetro.SAModel
 				return;
 			}
 			else
-				Animation = new NJS_MOTION(file, (int)(ByteConverter.ToUInt32(file, address + 4) - imageBase), imageBase,
+				Animation = new NJS_MOTION(file, ByteConverter.ToUInt32(file, address + 4) - imageBase, imageBase,
 					Model.CountAnimated(), labels);
 		}
 		public NJS_ACTION(NJS_OBJECT model, NJS_MOTION animation)
@@ -88,7 +88,7 @@ namespace SonicRetro.SAModel
 		public int Frames { get; set; }
 		public string Name { get; set; }
 		public string MdataName { get; set; }
-		public int ModelParts { get; set; }
+		public uint ModelParts { get; set; }
 		public InterpolationMode InterpolationMode { get; set; }
 		public bool ShortRot { get; set; }
 
@@ -100,7 +100,7 @@ namespace SonicRetro.SAModel
 			MdataName = Name + "_mdat";
 		}
 
-		public NJS_MOTION(byte[] file, int address, uint imageBase, int nummodels, Dictionary<int, string> labels = null, bool shortrot = false)
+		public NJS_MOTION(byte[] file, uint address, uint imageBase, uint nummodels, Dictionary<uint, string> labels = null, bool shortrot = false)
 		{
 			if (labels != null && labels.ContainsKey(address))
 				Name = labels[address];
@@ -124,7 +124,7 @@ namespace SonicRetro.SAModel
 			}
 			ShortRot = shortrot;
 			int framesize = (tmp & 0xF) * 8;
-			address = (int)(ByteConverter.ToUInt32(file, address) - imageBase);
+			address = ByteConverter.ToUInt32(file, address) - imageBase;
 			if (labels != null && labels.ContainsKey(address))
 				MdataName = labels[address];
 			else
@@ -238,14 +238,14 @@ namespace SonicRetro.SAModel
 						pntoff -= imageBase;
 					address += 4;
 				}
-				int tmpaddr;
+				uint tmpaddr;
 				if (animtype.HasFlag(AnimFlags.Position))
 				{
 					int frames = ByteConverter.ToInt32(file, address);
 					if (posoff != 0 && frames > 0)
 					{
 						hasdata = true;
-						tmpaddr = (int)posoff;
+						tmpaddr = posoff;
 						if (labels != null && labels.ContainsKey(tmpaddr))
 							data.PositionName = labels[tmpaddr];
 						else data.PositionName = Name + "_mkey_" + i.ToString() + "_pos_" + tmpaddr.ToString("X8");
@@ -263,7 +263,7 @@ namespace SonicRetro.SAModel
 					if (rotoff != 0 && frames > 0)
 					{
 						hasdata = true;
-						tmpaddr = (int)rotoff;
+						tmpaddr = rotoff;
 						if (labels != null && labels.ContainsKey(tmpaddr))
 							data.RotationName = labels[tmpaddr];
 						else data.RotationName = Name + "_mkey_" + i.ToString() + "_rot_" + tmpaddr.ToString("X8");
@@ -289,7 +289,7 @@ namespace SonicRetro.SAModel
 					if (scloff != 0 && frames > 0)
 					{
 						hasdata = true;
-						tmpaddr = (int)scloff;
+						tmpaddr = scloff;
 						if (labels != null && labels.ContainsKey(tmpaddr))
 							data.ScaleName = labels[tmpaddr];
 						else data.ScaleName = Name + "_mkey_" + i.ToString() + "_scl_" + tmpaddr.ToString("X8");
@@ -307,7 +307,7 @@ namespace SonicRetro.SAModel
 					if (vecoff != 0 && frames > 0)
 					{
 						hasdata = true;
-						tmpaddr = (int)vecoff;
+						tmpaddr = vecoff;
 						if (labels != null && labels.ContainsKey(tmpaddr))
 							data.VectorName = labels[tmpaddr];
 						else data.VectorName = Name + "_mkey_" + i.ToString() + "_vec_" + tmpaddr.ToString("X8");
@@ -326,7 +326,7 @@ namespace SonicRetro.SAModel
 					if (vertoff != 0 && frames > 0)
 					{
 						hasdata = true;
-						tmpaddr = (int)vertoff;
+						tmpaddr = vertoff;
 						if (labels != null && labels.ContainsKey(tmpaddr))
 							data.VertexName = labels[tmpaddr];
 						else data.VertexName = Name + "_mkey_" + i.ToString() + "_vert_" + tmpaddr.ToString("X8");
@@ -335,7 +335,7 @@ namespace SonicRetro.SAModel
 						for (int j = 0; j < frames; j++)
 						{
 							ptrs.AddUnique((int)(ByteConverter.ToUInt32(file, tmpaddr + 4) - imageBase));
-							int itemaddr = (int)(ByteConverter.ToUInt32(file, tmpaddr + 4) - imageBase);
+							uint itemaddr = ByteConverter.ToUInt32(file, tmpaddr + 4) - imageBase;
 							if (labels != null && labels.ContainsKey(itemaddr))
 								data.VertexItemName[j] = labels[itemaddr];
 							else data.VertexItemName[j] = Name + "_" + i.ToString() + "_vtx_" + j.ToString() + "_" + itemaddr.ToString("X8");
@@ -344,15 +344,15 @@ namespace SonicRetro.SAModel
 						if (ptrs.Count > 1)
 						{
 							ptrs.Sort();
-							vtxcount = (ptrs[1] - ptrs[0]) / Vertex.Size;
+							vtxcount = (int)((ptrs[1] - ptrs[0]) / Vertex.Size);
 						}
 						else
-							vtxcount = ((int)vertoff - ptrs[0]) / Vertex.Size;
-						tmpaddr = (int)vertoff;
+							vtxcount = (int)((vertoff - ptrs[0]) / Vertex.Size);
+						tmpaddr = vertoff;
 						for (int j = 0; j < frames; j++)
 						{
 							Vertex[] verts = new Vertex[vtxcount];
-							int newaddr = (int)(ByteConverter.ToUInt32(file, tmpaddr + 4) - imageBase);
+							uint newaddr = ByteConverter.ToUInt32(file, tmpaddr + 4) - imageBase;
 							for (int k = 0; k < verts.Length; k++)
 							{
 								verts[k] = new Vertex(file, newaddr);
@@ -373,7 +373,7 @@ namespace SonicRetro.SAModel
 						data.NormalItemName = new string[frames];
 						if (vtxcount < 0)
 						{
-							tmpaddr = (int)normoff;
+							tmpaddr = normoff;
 							List<int> ptrs = new List<int>();
 							for (int j = 0; j < frames; j++)
 							{
@@ -383,19 +383,19 @@ namespace SonicRetro.SAModel
 							if (ptrs.Count > 1)
 							{
 								ptrs.Sort();
-								vtxcount = (ptrs[1] - ptrs[0]) / Vertex.Size;
+								vtxcount = (int)((ptrs[1] - ptrs[0]) / Vertex.Size);
 							}
 							else
-								vtxcount = ((int)normoff - ptrs[0]) / Vertex.Size;
+								vtxcount = (int)((normoff - ptrs[0]) / Vertex.Size);
 						}
-						tmpaddr = (int)normoff;
+						tmpaddr = normoff;
 						if (labels != null && labels.ContainsKey(tmpaddr))
 							data.NormalName = labels[tmpaddr];
 						else data.NormalName = Name + "_mkey_" + i.ToString() + "_norm_" + tmpaddr.ToString("X8");
 						for (int j = 0; j < frames; j++)
 						{
 							Vertex[] verts = new Vertex[vtxcount];
-							int newaddr = (int)(ByteConverter.ToUInt32(file, tmpaddr + 4) - imageBase);
+							uint newaddr = ByteConverter.ToUInt32(file, tmpaddr + 4) - imageBase;
 							if (labels != null && labels.ContainsKey(newaddr))
 								data.NormalItemName[j] = labels[newaddr];
 							else data.NormalItemName[j] = Name + "_" + i.ToString() + "_nrm_" + j.ToString() + "_" + newaddr.ToString("X8");
@@ -416,7 +416,7 @@ namespace SonicRetro.SAModel
 					if (targoff != 0 && frames > 0)
 					{
 						hasdata = true;
-						tmpaddr = (int)targoff;
+						tmpaddr = targoff;
 						if (labels != null && labels.ContainsKey(tmpaddr))
 							data.TargetName = labels[tmpaddr];
 						else data.TargetName = Name + "_mkey_" + i.ToString() + "_target_" + tmpaddr.ToString("X8");
@@ -434,7 +434,7 @@ namespace SonicRetro.SAModel
 					if (rolloff != 0 && frames > 0)
 					{
 						hasdata = true;
-						tmpaddr = (int)rolloff;
+						tmpaddr = rolloff;
 						if (labels != null && labels.ContainsKey(tmpaddr))
 							data.RollName = labels[tmpaddr];
 						else data.RollName = Name + "_mkey_" + i.ToString() + "_roll_" + tmpaddr.ToString("X8");
@@ -452,7 +452,7 @@ namespace SonicRetro.SAModel
 					if (angoff != 0 && frames > 0)
 					{
 						hasdata = true;
-						tmpaddr = (int)angoff;
+						tmpaddr = angoff;
 						if (labels != null && labels.ContainsKey(tmpaddr))
 							data.AngleName = labels[tmpaddr];
 						else data.AngleName = Name + "_mkey_" + i.ToString() + "_ang_" + tmpaddr.ToString("X8");
@@ -470,7 +470,7 @@ namespace SonicRetro.SAModel
 					if (coloff != 0 && frames > 0)
 					{
 						hasdata = true;
-						tmpaddr = (int)coloff;
+						tmpaddr = coloff;
 						if (labels != null && labels.ContainsKey(tmpaddr))
 							data.ColorName = labels[tmpaddr];
 						else data.ColorName = Name + "_mkey_" + i.ToString() + "_col_" + tmpaddr.ToString("X8");
@@ -488,7 +488,7 @@ namespace SonicRetro.SAModel
 					if (intoff != 0 && frames > 0)
 					{
 						hasdata = true;
-						tmpaddr = (int)intoff;
+						tmpaddr = intoff;
 						if (labels != null && labels.ContainsKey(tmpaddr))
 							data.IntensityName = labels[tmpaddr];
 						else data.IntensityName = Name + "_mkey_" + i.ToString() + "_int_" + tmpaddr.ToString("X8");
@@ -506,7 +506,7 @@ namespace SonicRetro.SAModel
 					if (spotoff != 0 && frames > 0)
 					{
 						hasdata = true;
-						tmpaddr = (int)spotoff;
+						tmpaddr = spotoff;
 						if (labels != null && labels.ContainsKey(tmpaddr))
 							data.SpotName = labels[tmpaddr];
 						else data.SpotName = Name + "_mkey_" + i.ToString() + "_spot_" + tmpaddr.ToString("X8");
@@ -524,7 +524,7 @@ namespace SonicRetro.SAModel
 					if (pntoff != 0 && frames > 0)
 					{
 						hasdata = true;
-						tmpaddr = (int)pntoff;
+						tmpaddr = pntoff;
 						if (labels != null && labels.ContainsKey(tmpaddr))
 							data.PointName = labels[tmpaddr];
 						else data.PointName = Name + "_mkey_" + i.ToString() + "_point_" + tmpaddr.ToString("X8");
@@ -544,26 +544,26 @@ namespace SonicRetro.SAModel
 			ModelParts = nummodels;
 		}
 
-		public static NJS_MOTION ReadHeader(byte[] file, int address, uint imageBase, ModelFormat format, Dictionary<int, Attach> attaches)
+		public static NJS_MOTION ReadHeader(byte[] file, uint address, uint imageBase, ModelFormat format, Dictionary<uint, Attach> attaches)
 		{
-			return ReadHeader(file, address, imageBase, format, new Dictionary<int, string>(), attaches);
+			return ReadHeader(file, address, imageBase, format, new Dictionary<uint, string>(), attaches);
 		}
 
-		public static NJS_MOTION ReadHeader(byte[] file, int address, uint imageBase, ModelFormat format,
-			Dictionary<int, string> labels, Dictionary<int, Attach> attaches)
+		public static NJS_MOTION ReadHeader(byte[] file, uint address, uint imageBase, ModelFormat format,
+			Dictionary<uint, string> labels, Dictionary<uint, Attach> attaches)
 		{
-			NJS_OBJECT Model = new NJS_OBJECT(file, (int)(ByteConverter.ToUInt32(file, address) - imageBase), imageBase, format, attaches);
-			return new NJS_MOTION(file, (int)(ByteConverter.ToUInt32(file, address + 4) - imageBase), imageBase,
+			NJS_OBJECT Model = new NJS_OBJECT(file, ByteConverter.ToUInt32(file, address) - imageBase, imageBase, format, attaches);
+			return new NJS_MOTION(file, ByteConverter.ToUInt32(file, address + 4) - imageBase, imageBase,
 				Model.CountAnimated(), labels);
 		}
 
-		public static NJS_MOTION ReadDirect(byte[] file, int count, int motionaddress, uint imageBase, ModelFormat format, Dictionary<int, Attach> attaches)
+		public static NJS_MOTION ReadDirect(byte[] file, uint count, uint motionaddress, uint imageBase, ModelFormat format, Dictionary<uint, Attach> attaches)
 		{
-			return ReadDirect(file, count, motionaddress, imageBase, format, new Dictionary<int, string>(), attaches);
+			return ReadDirect(file, count, motionaddress, imageBase, format, new Dictionary<uint, string>(), attaches);
 		}
 
-		public static NJS_MOTION ReadDirect(byte[] file, int count, int motionaddress, uint imageBase, ModelFormat format,
-			Dictionary<int, string> labels, Dictionary<int, Attach> attaches)
+		public static NJS_MOTION ReadDirect(byte[] file, uint count, uint motionaddress, uint imageBase, ModelFormat format,
+			Dictionary<uint, string> labels, Dictionary<uint, Attach> attaches)
 		{
 			return new NJS_MOTION(file, motionaddress, imageBase,
 				count, labels);
@@ -583,9 +583,9 @@ namespace SonicRetro.SAModel
 					ByteConverter.BigEndian = be;
 					throw new FormatException("Not a valid SAANIM file.");
 				}
-				int aniaddr = ByteConverter.ToInt32(file, 8);
-				Dictionary<int, string> labels = new Dictionary<int, string>();
-				int tmpaddr = BitConverter.ToInt32(file, 0xC);
+				uint aniaddr = ByteConverter.ToUInt32(file, 8);
+				Dictionary<uint, string> labels = new Dictionary<uint, string>();
+				uint tmpaddr = BitConverter.ToUInt32(file, 0xC);
 				if (version >= 2)
 				{
 					if (tmpaddr != 0)
@@ -594,19 +594,19 @@ namespace SonicRetro.SAModel
 						while (!finished)
 						{
 							ChunkTypes type = (ChunkTypes)ByteConverter.ToUInt32(file, tmpaddr);
-							int chunksz = ByteConverter.ToInt32(file, tmpaddr + 4);
-							int nextchunk = tmpaddr + 8 + chunksz;
+							uint chunksz = ByteConverter.ToUInt32(file, tmpaddr + 4);
+							uint nextchunk = tmpaddr + 8 + chunksz;
 							tmpaddr += 8;
 							byte[] chunk = new byte[chunksz];
 							Array.Copy(file, tmpaddr, chunk, 0, chunksz);
-							int chunkaddr = 0;
+							uint chunkaddr = 0;
 							switch (type)
 							{
 								case ChunkTypes.Label:
 									while (ByteConverter.ToInt64(chunk, chunkaddr) != -1)
 									{
-										labels.Add(ByteConverter.ToInt32(chunk, chunkaddr),
-											chunk.GetCString(ByteConverter.ToInt32(chunk, chunkaddr + 4)));
+										labels.Add(ByteConverter.ToUInt32(chunk, chunkaddr),
+											chunk.GetCString(ByteConverter.ToUInt32(chunk, chunkaddr + 4)));
 										chunkaddr += 8;
 									}
 									break;
@@ -630,7 +630,7 @@ namespace SonicRetro.SAModel
 					ByteConverter.BigEndian = be;
 					throw new NotImplementedException("Cannot open version 0 animations without a model!");
 				}
-				NJS_MOTION anim = new NJS_MOTION(file, aniaddr, 0, nummodels & int.MaxValue, labels, nummodels < 0);
+				NJS_MOTION anim = new NJS_MOTION(file, aniaddr, 0, (uint)(nummodels & int.MaxValue), labels, nummodels < 0);
 				ByteConverter.BigEndian = be;
 				return anim;
 			}
@@ -1771,7 +1771,7 @@ namespace SonicRetro.SAModel
 				writer.Write(" ");
 				writer.Write(MdataName);
 				writer.WriteLine("[] = {");
-				List<string> mdats = new List<string>(ModelParts);
+				List<string> mdats = new List<string>((int)ModelParts);
 				for (int i = 0; i < ModelParts; i++)
 				{
 					List<string> elems = new List<string>(numpairs * 2);
@@ -2369,7 +2369,7 @@ namespace SonicRetro.SAModel
 
 		public Spotlight() { }
 
-		public Spotlight(byte[] file, int address)
+		public Spotlight(byte[] file, uint address)
 		{
 			Near = ByteConverter.ToSingle(file, address);
 			Far = ByteConverter.ToSingle(file, address + 4);

@@ -54,7 +54,6 @@
     <Compile Include="BasicAttach.cs" />
     <Compile Include="Attach.cs" />
     <Compile Include="BoundingSphere.cs" />
-    <Compile Include="ByteConverter.cs" />
     <Compile Include="POF0Helper.cs" />
     <Compile Include="COL.cs" />
     <Compile Include="Extensions.cs" />

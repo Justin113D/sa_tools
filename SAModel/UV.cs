@@ -12,7 +12,7 @@ namespace SonicRetro.SAModel
 		public float U { get; set; }
 		public float V { get; set; }
 
-		public static int Size
+		public static uint Size
 		{
 			get { return 4; }
 		}
@@ -21,12 +21,12 @@ namespace SonicRetro.SAModel
 		{
 		}
 
-		public UV(byte[] file, int address)
+		public UV(byte[] file, uint address)
 			: this(file, address, false)
 		{
 		}
 
-		public UV(byte[] file, int address, bool UVH, bool chunk = false)
+		public UV(byte[] file, uint address, bool UVH, bool chunk = false)
 		{
 			//"Reverse" is for the order used in SADX Gamecube
 			if (ByteConverter.Reverse || !ByteConverter.BigEndian || chunk)

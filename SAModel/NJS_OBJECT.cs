@@ -278,9 +278,9 @@ namespace SonicRetro.SAModel
 			return result.ToArray();
 		}
 
-		public int CountAnimated()
+		public uint CountAnimated()
 		{
-			int result = Animate ? 1 : 0;
+			uint result = Animate ? 1u : 0u;
 			foreach (NJS_OBJECT item in Children)
 				result += item.CountAnimated();
 			if (Parent == null && Sibling != null)
