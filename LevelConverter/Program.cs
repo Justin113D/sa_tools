@@ -19,7 +19,7 @@ namespace LevelConverter
 			else
 			{
 				Console.Write("File: ");
-				filename = Console.ReadLine();
+				filename = Console.ReadLine().Trim('"');
 			}
 			LandTable level = LandTable.LoadFromFile(filename);
 			Dictionary<string, Attach> visitedAttaches = new Dictionary<string, Attach>();
@@ -65,7 +65,7 @@ namespace LevelConverter
 					foreach (COL col in level.COL.Where((col) => col.Model != null && col.Model.Attach is ChunkAttach))
 						col.Model.Attach = col.Model.Attach.ToBasic();
 					level.Anim = new List<GeoAnimData>();
-					level.Flags = 8; // set LandTable to use PVM/GVM
+					level.Attributes = 8; // set LandTable to use PVM/GVM
 					level.SaveToFile(System.IO.Path.ChangeExtension(filename, "sa1lvl"), LandTableFormat.SA1);
 					break;
 			}

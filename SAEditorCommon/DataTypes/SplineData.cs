@@ -283,7 +283,7 @@ namespace SonicRetro.SAModel.SAEditorCommon.DataTypes
 			return mesh.CheckHit(Near, Far, Viewport, Projection, View, transform);
 		}
 
-		public override List<RenderInfo> Render(Device dev, EditorCamera camera, MatrixStack transform)
+		public override List<RenderInfo> Render(Device dev, EditorCamera camera, MatrixStack transform, bool ignorematcolors = false)
 		{
 			if (!camera.SphereInFrustum(Bounds))
 				return EmptyRenderInfo;
@@ -330,8 +330,9 @@ namespace SonicRetro.SAModel.SAEditorCommon.DataTypes
 			return result;
 		}
 
-		public override void Delete()
+		protected override void DeleteInternal(EditorItemSelection selectionManager)
 		{
+			selectionManager.SelectionChanged -= selectionManager_SelectionChanged;
 			LevelData.LevelSplines.Remove(this);
 		}
 

@@ -51,8 +51,16 @@ namespace SonicRetro.SAModel.SAEditorCommon.DataTypes
 			: base(selectionManager)
 		{
 			Model = model;
+			if (model.Attach is BasicAttach)
+			{
+				BasicAttach attach = (BasicAttach)model.Attach;
+				if (attach.Material.Count == 0) attach.Material.Add(new NJS_MATERIAL());
+				attach.Material[0].DiffuseColor = System.Drawing.Color.FromArgb(96, 255, 0, 0);
+				attach.Material[0].Flags = 0x96102400;
+			}
 			model.ProcessVertexData();
 			Flags = flags;
+			
 			Mesh = Model.Attach.CreateD3DMesh();
 
 			rotateZYX = Model.RotateZYX;
@@ -75,12 +83,19 @@ namespace SonicRetro.SAModel.SAEditorCommon.DataTypes
 			return Model.CheckHit(Near, Far, Viewport, Projection, View, Mesh);
 		}
 
-		public override List<RenderInfo> Render(Device dev, EditorCamera camera, MatrixStack transform)
+		public override List<RenderInfo> Render(Device dev, EditorCamera camera, MatrixStack transform, bool ignorematcolors = false)
 		{
 			List<RenderInfo> result = new List<RenderInfo>();
-			result.AddRange(Model.DrawModel(dev.GetRenderState<FillMode>(RenderState.FillMode), transform, LevelData.Textures[LevelData.leveltexs], Mesh, false));
+			if (LevelData.Textures != null && LevelData.leveltexs != null && LevelData.Textures.Count > 0)
+			{
+				result.AddRange(Model.DrawModel(dev.GetRenderState<FillMode>(RenderState.FillMode), transform, LevelData.Textures[LevelData.leveltexs], Mesh, true));
+			}
+			else
+			{
+				result.AddRange(Model.DrawModel(dev.GetRenderState<FillMode>(RenderState.FillMode), transform, null, Mesh, true));
+			}
 			if (Selected)
-				result.AddRange(Model.DrawModelInvert(transform, Mesh, false));
+				result.AddRange(Model.DrawModelInvert(transform, Mesh, true));
 			return result;
 		}
 
@@ -90,7 +105,7 @@ namespace SonicRetro.SAModel.SAEditorCommon.DataTypes
 				LevelData.DeathZones.Add(this);
 		}
 
-		public override void Delete()
+		protected override void DeleteInternal(EditorItemSelection selectionManager)
 		{
 			LevelData.DeathZones.Remove(this);
 		}
@@ -99,11 +114,23 @@ namespace SonicRetro.SAModel.SAEditorCommon.DataTypes
 		[DisplayName("Import Model")]
 		public void ImportModel()
 		{
-			OpenFileDialog dlg = new OpenFileDialog() { DefaultExt = "obj", Filter = "OBJ Files|*.obj;*.objf", RestoreDirectory = true };
+			OpenFileDialog dlg = new OpenFileDialog() { DefaultExt = "sa1mdl", Filter = "Model Files|*.sa1mdl;*.obj;*.objf", RestoreDirectory = true };
 			if (dlg.ShowDialog() == DialogResult.OK)
 			{
-				Model.Attach = Direct3D.Extensions.obj2nj(dlg.FileName, LevelData.TextureBitmaps[LevelData.leveltexs].Select(a => a.Name).ToArray());
-				Mesh = Model.Attach.CreateD3DMesh();
+				switch (Path.GetExtension(dlg.FileName).ToLowerInvariant())
+				{
+					case ".obj":
+					case ".objf":
+						Model.Attach = Direct3D.Extensions.obj2nj(dlg.FileName, LevelData.TextureBitmaps[LevelData.leveltexs].Select(a => a.Name).ToArray());
+						Mesh = Model.Attach.CreateD3DMesh();
+						break;
+					case ".sa1mdl":
+						ModelFile mf = new ModelFile(dlg.FileName);
+						Model.Attach = mf.Model.Attach;
+						Model.ProcessVertexData();
+						Mesh = Model.Attach.CreateD3DMesh();
+						break;
+				}
 			}
 		}
 

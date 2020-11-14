@@ -14,12 +14,31 @@ namespace SADXsndSharp
 			InitializeComponent();
 		}
 
+		private ListViewColumnSorter lvwColumnSorter;
 		string filename;
 		bool is2010;
+		bool unsaved;
+		bool descending;
 		private List<FENTRY> files;
+		View mainView = View.Details;
+
+		private void Form1_FormClosing(object sender, FormClosingEventArgs e)
+		{
+			if (unsaved)
+			{
+				DialogResult result = ShowSaveChangesDialog();
+				if (result == DialogResult.Yes) SaveFile();
+				else if (result == DialogResult.Cancel)
+				{
+					e.Cancel = true;
+					return;
+				}
+			}
+		}
 
 		private void Form1_Load(object sender, EventArgs e)
 		{
+			this.FormClosing += Form1_FormClosing;
 			string[] args = Environment.GetCommandLineArgs();
 			if (args.Length == 1)
 				files = new List<FENTRY>();
@@ -31,6 +50,8 @@ namespace SADXsndSharp
 		{
 			this.filename = Path.GetFullPath(filename);
 			byte[] file = File.ReadAllBytes(filename);
+			Text = "SADXsndSharp - Loading file, please wait...";
+			this.Enabled = false;
 			switch (System.Text.Encoding.ASCII.GetString(file, 0, 0x10))
 			{
 				case "archive  V2.2\0\0\0":
@@ -41,27 +62,31 @@ namespace SADXsndSharp
 					break;
 				default:
 					MessageBox.Show("Error: Unknown archive version/type");
+					this.Enabled = true;
 					return;
 			}
 			int count = BitConverter.ToInt32(file, 0x10);
 			files = new List<FENTRY>(count);
-			listView1.Items.Clear();
-			imageList1.Images.Clear();
-			listView1.BeginUpdate();
 			for (int i = 0; i < count; i++)
 			{
+				Text = $"SADXsndSharp - Loading file " + i.ToString() + " of " + count.ToString() + ", please wait...";
 				files.Add(new FENTRY(file, 0x14 + (i * 0xC)));
-				imageList1.Images.Add(GetIcon(files[i].name));
-				ListViewItem it = listView1.Items.Add(files[i].name, i);
-				it.ForeColor = Compress.isFileCompressed(files[i].file) ? Color.Blue : Color.Black;
 			}
-			listView1.EndUpdate();
+			RefreshListView(mainView);
 			Text = "SADXsndSharp - " + Path.GetFileName(filename);
+			this.Enabled = true;
 			saveToolStripMenuItem.Enabled = true;
+			unsaved = false;
 		}
 
 		private void openToolStripMenuItem_Click(object sender, EventArgs e)
 		{
+			if (unsaved)
+			{
+				DialogResult result = ShowSaveChangesDialog();
+				if (result == DialogResult.Yes) SaveFile();
+				else if (result == DialogResult.Cancel) return;
+			}
 			using (OpenFileDialog a = new OpenFileDialog()
 			{
 				DefaultExt = "dat",
@@ -73,23 +98,34 @@ namespace SADXsndSharp
 
 		private void extractAllToolStripMenuItem_Click(object sender, EventArgs e)
 		{
-			using (FolderBrowserDialog a = new FolderBrowserDialog() { ShowNewFolderButton = true })
+			using (SaveFileDialog a = new SaveFileDialog() { DefaultExt = "", Filter = "", FileName = "soundpack" })
 			{
 				if (filename != null)
-					a.SelectedPath = Path.GetDirectoryName(filename);
+				{
+					a.InitialDirectory = Path.GetDirectoryName(filename);
+					a.FileName = Path.GetFileNameWithoutExtension(filename);
+				}
+
 				if (a.ShowDialog(this) == DialogResult.OK)
-					using (StreamWriter sw = File.CreateText(Path.Combine(a.SelectedPath, "index.txt")))
+				{
+					Directory.CreateDirectory(a.FileName);
+					string dir = Path.Combine(Path.GetDirectoryName(a.FileName), Path.GetFileName(a.FileName));
+					using (StreamWriter sw = File.CreateText(Path.Combine(dir, "index.txt")))
 					{
 						List<FENTRY> list = new List<FENTRY>(files);
 						list.Sort((f1, f2) => StringComparer.OrdinalIgnoreCase.Compare(f1.name, f2.name));
 						foreach (FENTRY item in list)
 						{
+							Text = $"SADXsndSharp - Saving item " + list.IndexOf(item) + " of " + files.Count.ToString() + ", please wait...";
 							sw.WriteLine(item.name);
-							File.WriteAllBytes(Path.Combine(a.SelectedPath, item.name), Compress.ProcessBuffer(item.file));
+							File.WriteAllBytes(Path.Combine(dir, item.name), Compress.ProcessBuffer(item.file));
 						}
 						sw.Flush();
 						sw.Close();
 					}
+					Text = "SADXsndSharp - " + Path.GetFileName(filename);
+				}
+				else return;
 			}
 		}
 
@@ -120,11 +156,10 @@ namespace SADXsndSharp
 					foreach (string item in a.FileNames)
 					{
 						files.Add(new FENTRY(item));
-						imageList1.Images.Add(GetIcon(files[i].name));
-						ListViewItem it = listView1.Items.Add(files[i].name, i);
-						it.ForeColor = Compress.isFileCompressed(files[i].file) ? Color.Blue : Color.Black;
 						i++;
 					}
+					RefreshListView(mainView);
+					unsaved = true;
 				}
 		}
 
@@ -138,13 +173,13 @@ namespace SADXsndSharp
 				FileName = selectedItem.Text
 			})
 				if (a.ShowDialog() == DialogResult.OK)
-					File.WriteAllBytes(a.FileName, Compress.ProcessBuffer(files[listView1.Items.IndexOf(selectedItem)].file));
+					File.WriteAllBytes(a.FileName, Compress.ProcessBuffer(files[int.Parse(selectedItem.SubItems[2].Text)].file));
 		}
 
 		private void replaceToolStripMenuItem_Click(object sender, EventArgs e)
 		{
 			if (selectedItem == null) return;
-			int i = listView1.Items.IndexOf(selectedItem);
+			int i = int.Parse(selectedItem.SubItems[2].Text);
 			string fn = files[i].name;
 			using (OpenFileDialog a = new OpenFileDialog()
 			{
@@ -155,8 +190,14 @@ namespace SADXsndSharp
 				if (a.ShowDialog() == DialogResult.OK)
 				{
 					files[i] = new FENTRY(a.FileName);
-					files[i].name = fn;
+					if (files[i].name != fn)
+					{
+						DialogResult mb = MessageBox.Show("Keep original filename " + fn + "?", "Keep filename?", MessageBoxButtons.YesNo, MessageBoxIcon.Question);
+						if (mb == DialogResult.Yes) files[i].name = fn;
+					}
 					selectedItem.ForeColor = Compress.isFileCompressed(files[i].file) ? Color.Blue : Color.Black;
+					unsaved = true;
+					RefreshListView(mainView);
 				}
 		}
 
@@ -171,32 +212,24 @@ namespace SADXsndSharp
 			})
 				if (a.ShowDialog() == DialogResult.OK)
 				{
-					int i = listView1.Items.IndexOf(selectedItem);
+					int i = int.Parse(selectedItem.SubItems[2].Text);
 					foreach (string item in a.FileNames)
 					{
 						files.Insert(i, new FENTRY(item));
 						i++;
 					}
-					listView1.Items.Clear();
-					imageList1.Images.Clear();
-					listView1.BeginUpdate();
-					for (int j = 0; j < files.Count; j++)
-					{
-						imageList1.Images.Add(GetIcon(files[j].name));
-						ListViewItem it = listView1.Items.Add(files[j].name, j);
-						it.ForeColor = Compress.isFileCompressed(files[j].file) ? Color.Blue : Color.Black;
-					}
-					listView1.EndUpdate();
+					RefreshListView(mainView);
+					unsaved = true;
 				}
 		}
 
 		private void deleteToolStripMenuItem_Click(object sender, EventArgs e)
 		{
 			if (selectedItem == null) return;
-			int i = listView1.Items.IndexOf(selectedItem);
+			int i = int.Parse(selectedItem.SubItems[2].Text);
 			files.RemoveAt(i);
-			listView1.Items.RemoveAt(i);
-			imageList1.Images.RemoveAt(i);
+			RefreshListView(mainView);
+			unsaved = true;
 		}
 
 		private string oldName;
@@ -223,25 +256,32 @@ namespace SADXsndSharp
 				MessageBox.Show("This name contains invalid characters.");
 				return;
 			}
-			files[e.Item].name = e.Label;
-			imageList1.Images[e.Item] = GetIcon(e.Label).ToBitmap();
+			files[int.Parse(listView1.Items[e.Item].SubItems[2].Text)].name = e.Label;
+			RefreshListView(mainView);
+			unsaved = true;
 		}
 
 		private void listView1_ItemActivate(object sender, EventArgs e)
 		{
-			string fp = Path.Combine(Path.GetTempPath(), files[listView1.SelectedIndices[0]].name);
-			File.WriteAllBytes(fp, Compress.ProcessBuffer(files[listView1.SelectedIndices[0]].file));
+			string fp = Path.Combine(Path.GetTempPath(), files[int.Parse(listView1.SelectedItems[0].SubItems[2].Text)].name);
+			File.WriteAllBytes(fp, Compress.ProcessBuffer(files[int.Parse(listView1.SelectedItems[0].SubItems[2].Text)].file));
 			System.Diagnostics.Process.Start(fp);
 		}
 
 		private void newToolStripMenuItem_Click(object sender, EventArgs e)
 		{
+			if (unsaved)
+			{
+				DialogResult result = ShowSaveChangesDialog();
+				if (result == DialogResult.Yes) SaveFile();
+				else if (result == DialogResult.Cancel) return;
+			}
 			filename = null;
 			Text = "SADXsndSharp";
 			files = new List<FENTRY>();
-			listView1.Items.Clear();
-			imageList1.Images.Clear();
+			RefreshListView(mainView);
 			saveToolStripMenuItem.Enabled = false;
+			unsaved = false;
 		}
 
 		private void listView1_DragEnter(object sender, DragEventArgs e)
@@ -258,19 +298,19 @@ namespace SADXsndSharp
 				foreach (string item in dropfiles)
 				{
 					files.Add(new FENTRY(item));
-					imageList1.Images.Add(GetIcon(files[i].name));
-					ListViewItem it = listView1.Items.Add(files[i].name, i);
-					it.ForeColor = Compress.isFileCompressed(files[i].file) ? Color.Blue : Color.Black;
 					i++;
 				}
+				RefreshListView(mainView);
+				unsaved = true;
 			}
 		}
 
 		private void listView1_ItemDrag(object sender, ItemDragEventArgs e)
 		{
-			string fn = Path.Combine(Path.GetTempPath(), files[listView1.SelectedIndices[0]].name);
-			File.WriteAllBytes(fn, Compress.ProcessBuffer(files[listView1.SelectedIndices[0]].file));
+			string fn = Path.Combine(Path.GetTempPath(), files[int.Parse(listView1.SelectedItems[0].SubItems[2].Text)].name);
+			File.WriteAllBytes(fn, Compress.ProcessBuffer(files[int.Parse(listView1.SelectedItems[0].SubItems[2].Text)].file));
 			DoDragDrop(new DataObject(DataFormats.FileDrop, new string[] { fn }), DragDropEffects.All);
+			unsaved = true;
 		}
 
 		private void saveToolStripMenuItem_Click(object sender, EventArgs e)
@@ -332,185 +372,316 @@ namespace SADXsndSharp
 				hloc += 4;
 			}
 			File.WriteAllBytes(filename, file);
+			unsaved = false;
 		}
 
-		[System.Runtime.InteropServices.DllImport("shell32.dll")]
-		private static extern IntPtr ExtractIconA(int hInst, string lpszExeFileName, int nIconIndex);
-
-		private Icon GetIcon(string file)
+		private Icon GetIcon(string file, bool smol)
 		{
-			string iconpath = "C:\\Windows\\system32\\shell32.dll,0";
-			Microsoft.Win32.RegistryKey k = Microsoft.Win32.Registry.ClassesRoot.OpenSubKey(file.IndexOf('.') > -1 ? file.Substring(file.LastIndexOf('.')) : file);
-			if (k == null)
-				k = Microsoft.Win32.Registry.ClassesRoot.OpenSubKey("*");
-			k = Microsoft.Win32.Registry.ClassesRoot.OpenSubKey((string)k.GetValue("", "*"));
-			if (k != null)
+			if (smol) return IconTools.GetIconForExtension(Path.GetExtension(file), ShellIconSize.SmallIcon);
+			else return IconTools.GetIconForExtension(Path.GetExtension(file), ShellIconSize.LargeIcon);
+		}
+
+		private void quitToolStripMenuItem_Click(object sender, EventArgs e)
+		{
+			if (unsaved)
 			{
-				k = k.OpenSubKey("DefaultIcon");
-				if (k != null)
-					iconpath = (string)k.GetValue("", "C:\\Windows\\system32\\shell32.dll,0");
+				DialogResult result = ShowSaveChangesDialog();
+				if (result == DialogResult.Yes) SaveFile();
+				else if (result == DialogResult.Cancel) return;
 			}
-			int iconind = 0;
-			if (iconpath.LastIndexOf(',') > iconpath.LastIndexOf('.'))
+			Close();
+		}
+
+		private DialogResult ShowSaveChangesDialog()
+		{
+			return MessageBox.Show("There are unsaved changes. Would you like to save the file?", "Save changes?", MessageBoxButtons.YesNoCancel, MessageBoxIcon.Question);
+		}
+
+		private void RefreshListView(View view)
+		{
+			listView1.Items.Clear();
+			imageList1.Images.Clear();
+			imageList2.Images.Clear();
+			listView1.BeginUpdate();
+			for (int j = 0; j < files.Count; j++)
 			{
-				iconind = int.Parse(iconpath.Substring(iconpath.LastIndexOf(',') + 1));
-				iconpath = iconpath.Remove(iconpath.LastIndexOf(','));
+				Text = $"SADXsndSharp - Loading item " + j.ToString() + " of " + files.Count.ToString() + ", please wait...";
+				if (view == View.LargeIcon || view == View.Tile) imageList1.Images.Add(GetIcon(files[j].name, false));
+				else imageList2.Images.Add(GetIcon(files[j].name, true));
+				ListViewItem it = listView1.Items.Add(files[j].name, j);
+				it.SubItems.Add(files[j].file.Length.ToString());
+				it.SubItems.Add(j.ToString());
+				it.ForeColor = Compress.isFileCompressed(files[j].file) ? Color.Blue : Color.Black;
 			}
-			try
+			listView1.View = view;
+			listView1.EndUpdate();
+			Text = "SADXsndSharp - " + Path.GetFileName(filename);
+		}
+
+		private void largeIconsToolStripMenuItem_Click(object sender, EventArgs e)
+		{
+			largeIconsToolStripMenuItem.Checked = true;
+			detailsToolStripMenuItem.Checked = false;
+			tilesToolStripMenuItem.Checked = false;
+			smallIconsToolStripMenuItem.Checked = false;
+			mainView = View.LargeIcon;
+			RefreshListView(mainView);
+		}
+
+		private void smallIconsToolStripMenuItem_Click(object sender, EventArgs e)
+		{
+			smallIconsToolStripMenuItem.Checked = true;
+			largeIconsToolStripMenuItem.Checked = false;
+			detailsToolStripMenuItem.Checked = false;
+			tilesToolStripMenuItem.Checked = false;
+			mainView = View.SmallIcon;
+			RefreshListView(mainView);
+		}
+
+		private void tilesToolStripMenuItem_Click(object sender, EventArgs e)
+		{
+			tilesToolStripMenuItem.Checked = true;
+			largeIconsToolStripMenuItem.Checked = false;
+			detailsToolStripMenuItem.Checked = false;
+			smallIconsToolStripMenuItem.Checked = false;
+			tilesToolStripMenuItem.Checked = true;
+			mainView = View.Tile;
+			RefreshListView(mainView);
+		}
+
+		private void detailsToolStripMenuItem_Click(object sender, EventArgs e)
+		{
+			detailsToolStripMenuItem.Checked = true;
+			largeIconsToolStripMenuItem.Checked = false;
+			tilesToolStripMenuItem.Checked = false;
+			smallIconsToolStripMenuItem.Checked = false;
+			mainView = View.Details;
+			RefreshListView(mainView);
+		}
+
+		private void listView1_ColumnClick(object sender, ColumnClickEventArgs e)
+		{
+			lvwColumnSorter = new ListViewColumnSorter();
+			this.listView1.ListViewItemSorter = lvwColumnSorter;
+			// Set the column number that is to be sorted; default to ascending.
+			lvwColumnSorter.SortColumn = e.Column;
+			if (descending) lvwColumnSorter.Order = SortOrder.Descending; else lvwColumnSorter.Order = SortOrder.Ascending;
+			// Perform the sort with these new sort options.
+			this.listView1.Sort();
+			this.listView1.ListViewItemSorter = null;
+		}
+
+		internal class FENTRY
+		{
+			public string name;
+			public byte[] file;
+
+			public FENTRY()
 			{
-				return Icon.FromHandle(ExtractIconA(0, iconpath.Replace("%1", file), iconind));
+				name = string.Empty;
 			}
-			catch (Exception)
+
+			public FENTRY(string fileName)
 			{
-				return Icon.FromHandle(ExtractIconA(0, "C:\\Windows\\system32\\shell32.dll", 0));
+				name = Path.GetFileName(fileName);
+				file = File.ReadAllBytes(fileName);
+			}
+
+			public FENTRY(byte[] file, int address)
+			{
+				name = GetCString(file, BitConverter.ToInt32(file, address));
+				this.file = new byte[BitConverter.ToInt32(file, address + 8)];
+				Array.Copy(file, BitConverter.ToInt32(file, address + 4), this.file, 0, this.file.Length);
+			}
+
+			private string GetCString(byte[] file, int address)
+			{
+				int textsize = 0;
+				while (file[address + textsize] > 0)
+					textsize += 1;
+				return System.Text.Encoding.ASCII.GetString(file, address, textsize);
 			}
 		}
-	}
 
-	internal class FENTRY
-	{
-		public string name;
-		public byte[] file;
-
-		public FENTRY()
+		internal static class Compress
 		{
-			name = string.Empty;
-		}
+			const uint SLIDING_LEN = 0x1000;
+			const uint SLIDING_MASK = 0xFFF;
 
-		public FENTRY(string fileName)
-		{
-			name = Path.GetFileName(fileName);
-			file = File.ReadAllBytes(fileName);
-		}
+			const byte NIBBLE_HIGH = 0xF0;
+			const byte NIBBLE_LOW = 0x0F;
 
-		public FENTRY(byte[] file, int address)
-		{
-			name = GetCString(file, BitConverter.ToInt32(file, address));
-			this.file = new byte[BitConverter.ToInt32(file, address + 8)];
-			Array.Copy(file, BitConverter.ToInt32(file, address + 4), this.file, 0, this.file.Length);
-		}
-
-		private string GetCString(byte[] file, int address)
-		{
-			int textsize = 0;
-			while (file[address + textsize] > 0)
-				textsize += 1;
-			return System.Text.Encoding.ASCII.GetString(file, address, textsize);
-		}
-	}
-
-	internal static class Compress
-	{
-		private static void DecompressBuffer(ref byte[] DecompressedBuffer, byte[] CompressedBuffer /*Starting at + 20*/)
-		{
-			int CompressedBufferPointer = 0;
-			int DecompressedBufferPointer = 0;
-
-			//Create sliding dictionary buffer and clear first 4078 bytes of dictionary buffer to 0
-			byte[] SlidingDictionary = new byte[4096];
-
-			//Set an offset to the dictionary insertion point
-			uint DictionaryInsertionOffset = 4078;
-
-			//Decompression command
-			byte CommandCounter = 0;
-			byte DecompressCommand = 0;
-
-			while (DecompressedBufferPointer < DecompressedBuffer.Length)
+			//TODO: Documentation
+			struct OffsetLengthPair
 			{
-				//Is the decompress counter zero? Load the command
-				if (CommandCounter == 0)
+				public byte highByte, lowByte;
+
+				//TODO: Set
+				public int Offset
 				{
-					CommandCounter = 8; //Each command has 8 sub commands, one bit per command
-					DecompressCommand = CompressedBuffer[CompressedBufferPointer];
-					CompressedBufferPointer++;
-				}
-
-				//Each command is a byte and is actually composed of 8 sub commands
-				//A bit of 1 means to copy the byte exactly as it is, and add it to the dictionary
-				//A bit of 0 means to load a special encoded format describing a repetition.
-				if ((DecompressCommand & 1) == 1)
-				{
-					//Copy the byte exactly over
-					byte RawByte = CompressedBuffer[CompressedBufferPointer];
-					CompressedBufferPointer++;
-					DecompressedBuffer[DecompressedBufferPointer] = RawByte;
-					DecompressedBufferPointer++;
-
-					//Add the byte to the dictionary
-					SlidingDictionary[DictionaryInsertionOffset] = RawByte;
-					DictionaryInsertionOffset = (DictionaryInsertionOffset + 1) & 0xFFF; //Slide the dictionary
-
-				}
-				else
-				{
-					//The sub command tells us there is a repetition
-					//unsigned short RepetitionCode=(CompressedBufferPointer[1] << 8) | CompressedBufferPointer[0];
-					byte CurrentByte = CompressedBuffer[CompressedBufferPointer];
-					byte NextByte = CompressedBuffer[CompressedBufferPointer + 1]; //Lower nibble is the repetition count or RunLength
-					CompressedBufferPointer += 2;
-
-					//Calculate the offset of the byte to use in the sliding dictionary
-					int DictionaryOffset = ((NextByte & 0xF0) << 4) | CurrentByte;
-
-					//It is not really run length compression, but instead it is a dictionary based method
-					//I just ran out of ideas what to name the variables
-					int RunCounter = 0;
-					int RunLength = (NextByte & 0xF) + 3; //Compression defines a repetition to be at minimum three bytes
-
-					while (RunCounter < RunLength)
+					get
 					{
-						byte RawByte = SlidingDictionary[((RunCounter + DictionaryOffset) & 0xFFF)];
-						DecompressedBuffer[DecompressedBufferPointer] = RawByte;
-						DecompressedBufferPointer++;
-
-						if (DecompressedBufferPointer >= DecompressedBuffer.Length)
-							return;
-
-						//Add the byte to the dictionary
-						SlidingDictionary[DictionaryInsertionOffset] = RawByte;
-						DictionaryInsertionOffset = (DictionaryInsertionOffset + 1) & 0xFFF; //Slide the dictionary
-
-						RunCounter++;
+						return ((lowByte & NIBBLE_HIGH) << 4) | highByte;
 					}
 				}
 
-				//Rotate the sub command
-				CommandCounter--;
-				DecompressCommand >>= 1;
-			}
-		}
-
-		public static bool isFileCompressed(byte[] CompressedBuffer)
-		{
-			return System.Text.Encoding.ASCII.GetString(CompressedBuffer, 0, 13) == "compress v1.0";
-		}
-
-		public static byte[] ProcessBuffer(byte[] CompressedBuffer)
-		{
-			if (isFileCompressed(CompressedBuffer))
-			{
-				uint DecompressedSize = BitConverter.ToUInt32(CompressedBuffer, 16);
-				byte[] DecompressedBuffer = new byte[DecompressedSize];
-				//Xor Decrypt the whole buffer
-				byte XorEncryptionValue = CompressedBuffer[15];
-
-				byte[] CompBuf = new byte[CompressedBuffer.Length - 20];
-				for (int i = 20; i < CompressedBuffer.Length; i++)
+				//TODO: Set
+				public int Length
 				{
-					CompBuf[i - 20] = (byte)(CompressedBuffer[i] ^ XorEncryptionValue);
+					get
+					{
+						return (lowByte & NIBBLE_LOW) + 3;
+					}
+				}
+			}
+
+			//TODO: Documentation
+			struct ChunkHeader
+			{
+				private byte flags;
+				private byte mask;
+
+				// TODO: Documentation
+				public bool ReadFlag(out bool flag)
+				{
+					bool endOfHeader = mask != 0x00;
+
+					flag = (flags & mask) != 0;
+
+					mask <<= 1;
+					return endOfHeader;
 				}
 
-				//Decompress the whole buffer
-				DecompressBuffer(ref DecompressedBuffer, CompBuf);
+				public ChunkHeader(byte flags)
+				{
+					this.flags = flags;
+					this.mask = 0x01;
+				}
+			}
 
-				//Switch the buffers around so the decompressed one gets saved instead
-				return DecompressedBuffer;
-			}
-			else
+			//TODO:
+			private static void CompressBuffer(byte[] compBuf, byte[] decompBuf /*Starting at + 20*/)
 			{
-				return CompressedBuffer;
+
 			}
+
+			// Decompresses a Lempel-Ziv buffer.
+			// TODO: Add documentation
+			private static void DecompressBuffer(byte[] decompBuf, byte[] compBuf /*Starting at + 20*/)
+			{
+				OffsetLengthPair olPair = new OffsetLengthPair();
+
+				int compBufPtr = 0;
+				int decompBufPtr = 0;
+
+				//Create sliding dictionary buffer and clear first 4078 bytes of dictionary buffer to 0
+				byte[] slidingDict = new byte[SLIDING_LEN];
+
+				//Set an offset to the dictionary insertion point
+				uint dictInsertionOffset = SLIDING_LEN - 18;
+
+				// Current chunk header
+				ChunkHeader chunkHeader = new ChunkHeader();
+
+				while (decompBufPtr < decompBuf.Length)
+				{
+					// At the start of each chunk...
+					if (!chunkHeader.ReadFlag(out bool flag))
+					{
+						// Load the chunk header
+						chunkHeader = new ChunkHeader(compBuf[compBufPtr++]);
+						chunkHeader.ReadFlag(out flag);
+					}
+
+					// Each chunk header is a byte and is a collection of 8 flags
+
+					// If the flag is set, load a character
+					if (flag)
+					{
+						// Copy the character
+						byte rawByte = compBuf[compBufPtr++];
+						decompBuf[decompBufPtr++] = rawByte;
+
+						// Add the character to the dictionary, and slide the dictionary
+						slidingDict[dictInsertionOffset++] = rawByte;
+						dictInsertionOffset &= SLIDING_MASK;
+
+					}
+					// If the flag is clear, load an offset/length pair
+					else
+					{
+						// Load the offset/length pair
+						olPair.highByte = compBuf[compBufPtr++];
+						olPair.lowByte = compBuf[compBufPtr++];
+
+						// Get the offset from the offset/length pair
+						int offset = olPair.Offset;
+
+						// Get the length from the offset/length pair
+						int length = olPair.Length;
+
+						for (int i = 0; i < length; i++)
+						{
+							byte rawByte = slidingDict[(offset + i) & SLIDING_MASK];
+							decompBuf[decompBufPtr++] = rawByte;
+
+							if (decompBufPtr >= decompBuf.Length) return;
+
+							// Add the character to the dictionary, and slide the dictionary
+							slidingDict[dictInsertionOffset++] = rawByte;
+							dictInsertionOffset &= SLIDING_MASK;
+						}
+					}
+				}
+			}
+
+			public static bool isFileCompressed(byte[] CompressedBuffer)
+			{
+				return System.Text.Encoding.ASCII.GetString(CompressedBuffer, 0, 13) == "compress v1.0";
+			}
+
+			public static byte[] ProcessBuffer(byte[] CompressedBuffer)
+			{
+				if (isFileCompressed(CompressedBuffer))
+				{
+					uint DecompressedSize = BitConverter.ToUInt32(CompressedBuffer, 16);
+					byte[] DecompressedBuffer = new byte[DecompressedSize];
+					//Xor Decrypt the whole buffer
+					byte XorEncryptionValue = CompressedBuffer[15];
+
+					byte[] CompBuf = new byte[CompressedBuffer.Length - 20];
+					for (int i = 20; i < CompressedBuffer.Length; i++)
+					{
+						CompBuf[i - 20] = (byte)(CompressedBuffer[i] ^ XorEncryptionValue);
+					}
+
+					//Decompress the whole buffer
+					DecompressBuffer(DecompressedBuffer, CompBuf);
+
+					//Switch the buffers around so the decompressed one gets saved instead
+					return DecompressedBuffer;
+				}
+				else
+				{
+					return CompressedBuffer;
+				}
+			}
+
 		}
+
+		private void ascendingToolStripMenuItem_Click(object sender, EventArgs e)
+		{
+			ascendingToolStripMenuItem.Checked = true;
+			descendingToolStripMenuItem.Checked = false;
+			descending = false;
+		}
+
+		private void descendingToolStripMenuItem_Click(object sender, EventArgs e)
+		{
+			ascendingToolStripMenuItem.Checked = false;
+			descendingToolStripMenuItem.Checked = true;
+			descending = true;
+		}
+
 	}
 }

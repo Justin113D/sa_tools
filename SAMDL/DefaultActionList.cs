@@ -56,7 +56,7 @@ namespace SonicRetro.SAModel.SAMDL
 			new ActionKeyMapping()
 			{
 				Name = "Reset camera move speed",
-				MainKey = Keys.Enter,
+				MainKey = Keys.NumPad5,
 				AltKey = Keys.None,
 				Description = "",
 				IsSearchable = true,
@@ -111,7 +111,7 @@ namespace SonicRetro.SAModel.SAMDL
 			new ActionKeyMapping()
 			{
 				Name = "Camera Look",
-				MainKey = Keys.Menu,
+				MainKey = Keys.ShiftKey,
 				AltKey = Keys.None,
 				Description = "Combine with Camera Move to mouselook the camera.",
 				FireType = ActionFireType.OnHold,

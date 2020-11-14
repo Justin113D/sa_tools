@@ -121,7 +121,7 @@ namespace SonicRetro.SAModel.SAEditorCommon.DataTypes
 			LevelData.AddSETItem(LevelData.Character, this);
 		}
 
-		public override void Delete()
+		protected override void DeleteInternal(EditorItemSelection selectionManager)
 		{
 			LevelData.RemoveSETItem(LevelData.Character, this);
 		}
@@ -131,7 +131,7 @@ namespace SonicRetro.SAModel.SAEditorCommon.DataTypes
 			return objdef.CheckHit(this, Near, Far, Viewport, Projection, View, new MatrixStack());
 		}
 
-		public override List<RenderInfo> Render(Device dev, EditorCamera camera, MatrixStack transform)
+		public override List<RenderInfo> Render(Device dev, EditorCamera camera, MatrixStack transform, bool ignorematcolors = false)
 		{
 			if (!camera.SphereInFrustum(Bounds))
 				return EmptyRenderInfo;

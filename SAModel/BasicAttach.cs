@@ -425,12 +425,11 @@ namespace SonicRetro.SAModel
 				labels.Add(MaterialName);
 				writer.Write("MATERIAL ");
 				writer.Write(MaterialName + "[]" + Environment.NewLine);
-				//writer.WriteLine("[] = {");
-				writer.WriteLine("START");
+				writer.WriteLine("START" + Environment.NewLine);
 				List<string> mtls = new List<string>(Material.Count);
 				foreach (NJS_MATERIAL item in Material)
 					mtls.Add(item.ToNJA(textures));
-				writer.WriteLine("\t" + string.Join("," + Environment.NewLine + "\t", mtls.ToArray()));
+				writer.WriteLine(string.Join(Environment.NewLine, mtls.ToArray()));
 				writer.WriteLine("END");
 				writer.WriteLine();
 			}
@@ -447,14 +446,19 @@ namespace SonicRetro.SAModel
 						writer.WriteLine("START");
 
 						List<string> plys = new List<string>(Mesh[i].Poly.Count);
-						foreach (Poly item in Mesh[i].Poly)
+						for (int p = 0; p < Mesh[i].Poly.Count; p++)
 						{
+							Poly item = Mesh[i].Poly[p];
 							if (item.PolyType == Basic_PolyType.Strips)
 							{
 								Strip strip = item as Strip;
 								plys.Add("Strip(" + (strip.Reversed ? "0x8000, " : "0x0,") + strip.Indexes.Length.ToString() + ")");
+								plys.Add(item.ToNJA());
 							}
-							plys.Add(item.ToStruct());
+							else
+							{
+								plys.Add(item.ToNJA());
+							}
 						}
 						writer.WriteLine("\t" + string.Join("," + Environment.NewLine + "\t", plys.ToArray()));
 						writer.WriteLine("END");
@@ -522,7 +526,7 @@ namespace SonicRetro.SAModel
 				List<string> mshs = new List<string>(Mesh.Count);
 				foreach (NJS_MESHSET item in Mesh)
 					mshs.Add(item.ToNJA(DX));
-				writer.WriteLine("\t" + string.Join("," + Environment.NewLine + "\t", mshs.ToArray()));
+				writer.WriteLine(string.Join(Environment.NewLine, mshs.ToArray()));
 				writer.WriteLine("END");
 				writer.WriteLine();
 			}
@@ -568,9 +572,9 @@ namespace SonicRetro.SAModel
 			writer.WriteLine("Materials " + MaterialName + ",");
 			writer.WriteLine("MeshsetNum " + Mesh.Count + ",");
 			writer.WriteLine("MatNum " + Material.Count + ",");
-			writer.WriteLine("Center " + Bounds.Center.X + "," + Bounds.Center.Y + "," + Bounds.Center.Z  + ",");
-			writer.WriteLine("Radius " + Bounds.Radius + ",");
-			writer.WriteLine("END");
+			writer.WriteLine("Center " + Bounds.Center.X.ToC() + ", " + Bounds.Center.Y.ToC() + ", " + Bounds.Center.Z.ToC()  + ",");
+			writer.WriteLine("Radius " + Bounds.Radius.ToC() + ",");
+			writer.WriteLine("END" + Environment.NewLine);
 		}
 		public override void ProcessVertexData()
 		{

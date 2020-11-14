@@ -52,9 +52,9 @@ namespace SonicRetro.SAModel.SAEditorCommon.DataTypes
 			throw new NotImplementedException();
 		}
 
-		public override void Delete()
+		protected override void DeleteInternal(EditorItemSelection selectionManager)
 		{
-			throw new NotImplementedException();
+			
 		}
 
 		public override HitResult CheckHit(Vector3 Near, Vector3 Far, Viewport Viewport, Matrix Projection, Matrix View)
@@ -67,7 +67,7 @@ namespace SonicRetro.SAModel.SAEditorCommon.DataTypes
 			return Model.CheckHit(Near, Far, Viewport, Projection, View, transform, Meshes);
 		}
 
-		public override List<RenderInfo> Render(Device dev, EditorCamera camera, MatrixStack transform)
+		public override List<RenderInfo> Render(Device dev, EditorCamera camera, MatrixStack transform, bool ignorematcolors = false)
 		{
 			float dist = Direct3D.Extensions.Distance(camera.Position, Position.ToVector3());
 			if (dist > camera.DrawDistance) return EmptyRenderInfo;
@@ -76,8 +76,15 @@ namespace SonicRetro.SAModel.SAEditorCommon.DataTypes
 			transform.Push();
 			transform.NJTranslate(0, offset, 0);
 			transform.NJTranslate(Position);
-			transform.NJRotateY(YRotation);
-			result.AddRange(Model.DrawModelTree(dev.GetRenderState<FillMode>(RenderState.FillMode), transform, LevelData.Textures[texture], Meshes));
+			transform.NJRotateY(-0x8000 - YRotation);
+			if (LevelData.Textures != null && LevelData.Textures.Count > 0 && LevelData.Textures.ContainsKey(texture))
+			{
+				result.AddRange(Model.DrawModelTree(dev.GetRenderState<FillMode>(RenderState.FillMode), transform, LevelData.Textures[texture], Meshes));
+			}
+			else
+			{
+				result.AddRange(Model.DrawModelTree(dev.GetRenderState<FillMode>(RenderState.FillMode), transform, null, Meshes));
+			}
 			if (Selected)
 				result.AddRange(Model.DrawModelTreeInvert(transform, Meshes));
 			transform.Pop();

@@ -1,44 +1,45 @@
-split 1ST_READ.bin 1ST_READ.ini
-split SONICADV/STG00.prs STG00.ini
-split SONICADV/STG01.prs STG01.ini
-split SONICADV/STG02.prs STG02.ini
-split SONICADV/STG03.prs STG03.ini
-split SONICADV/STG04.prs STG04.ini
-split SONICADV/STG05.prs STG05.ini
-split SONICADV/STG06.prs STG06.ini
-split SONICADV/STG07.prs STG07.ini
-split SONICADV/STG08.prs STG08.ini
-split SONICADV/STG09.prs STG09.ini
-split SONICADV/STG10.prs STG10.ini
-split SONICADV/STG12.prs STG12.ini
-split SONICADV/ADV00.prs ADV00.ini
-split SONICADV/ADV0100.prs ADV0100.ini
-split SONICADV/ADV0130.prs ADV0130.ini
-split SONICADV/ADV02.prs ADV02.ini
-split SONICADV/ADV03.prs ADV03.ini
-split SONICADV/MINICART.prs MINICART.ini
-split SONICADV/SBOARD.prs SBOARD.ini
-split SONICADV/SHOOTING.prs SHOOTING.ini
-split SONICADV/AL_GARDEN00.prs AL_GARDEN00.ini
-split SONICADV/AL_GARDEN01.prs AL_GARDEN01.ini
-split SONICADV/AL_GARDEN02.prs AL_GARDEN02.ini
-split SONICADV/AL_RACE.prs AL_RACE.ini
-split SONICADV/AL_MAIN.prs AL_MAIN.ini
-split SONICADV/B_CHAOS0.prs B_CHAOS0.ini
-split SONICADV/B_CHAOS2.prs B_CHAOS2.ini
-split SONICADV/B_CHAOS4.prs B_CHAOS4.ini
-split SONICADV/B_CHAOS6.prs B_CHAOS6.ini
-split SONICADV/B_CHAOS7.prs B_CHAOS7.ini
-split SONICADV/B_E101.prs B_E101.ini
-split SONICADV/B_E101_R.prs B_E101_R.ini
-split SONICADV/B_EGM1.prs B_EGM1.ini
-split SONICADV/B_EGM2.prs B_EGM2.ini
-split SONICADV/B_EGM3.prs B_EGM3.ini
-split SONICADV/B_ROBO.prs B_ROBO.ini
-split SONICADV/S_MOT.prs S_MOT.ini
-split SONICADV/K_MOT.prs K_MOT.ini
-split SONICADV/A_MOT.prs A_MOT.ini
-split SONICADV/B_MOT.prs B_MOT.ini
-split SONICADV/E_MOT.prs E_MOT.ini
-split SONICADV/S_SBMOT.prs S_SBMOT.ini
-split SONICADV/SUMMARY.prs SUMMARY.ini
+..\bin\split binary data/1ST_READ.bin 1ST_READ.ini output/
+..\bin\split binary data/SONICADV/STG00.prs STG00.ini output/
+..\bin\split binary data/SONICADV/STG01.prs STG01.ini output/
+..\bin\split binary data/SONICADV/STG02.prs STG02.ini output/
+..\bin\split binary data/SONICADV/STG03.prs STG03.ini output/
+..\bin\split binary data/SONICADV/STG04.prs STG04.ini output/
+..\bin\split binary data/SONICADV/STG05.prs STG05.ini output/
+..\bin\split binary data/SONICADV/STG06.prs STG06.ini output/
+..\bin\split binary data/SONICADV/STG07.prs STG07.ini output/
+..\bin\split binary data/SONICADV/STG08.prs STG08.ini output/
+..\bin\split binary data/SONICADV/STG09.prs STG09.ini output/
+..\bin\split binary data/SONICADV/STG10.prs STG10.ini output/
+..\bin\split binary data/SONICADV/STG12.prs STG12.ini output/
+..\bin\split binary data/SONICADV/ADV00.prs ADV00.ini output/
+..\bin\split binary data/SONICADV/ADV0100.prs ADV0100.ini output/
+..\bin\split binary data/SONICADV/ADV0130.prs ADV0130.ini output/
+..\bin\split binary data/SONICADV/ADV02.prs ADV02.ini output/
+..\bin\split binary data/SONICADV/ADV03.prs ADV03.ini output/
+..\bin\split binary data/SONICADV/MINICART.prs MINICART.ini output/
+..\bin\split binary data/SONICADV/SBOARD.prs SBOARD.ini output/
+..\bin\split binary data/SONICADV/SHOOTING.prs SHOOTING.ini output/
+..\bin\split binary data/SONICADV/AL_GARDEN00.prs AL_GARDEN00.ini output/
+..\bin\split binary data/SONICADV/AL_GARDEN01.prs AL_GARDEN01.ini output/
+..\bin\split binary data/SONICADV/AL_GARDEN02.prs AL_GARDEN02.ini output/
+..\bin\split binary data/SONICADV/AL_RACE.prs AL_RACE.ini output/
+..\bin\split binary data/SONICADV/AL_MAIN.prs AL_MAIN.ini output/
+..\bin\split binary data/SONICADV/ADVERTISE.prs ADVERTISE.ini output/
+..\bin\split binary data/SONICADV/B_CHAOS0.prs B_CHAOS0.ini output/
+..\bin\split binary data/SONICADV/B_CHAOS2.prs B_CHAOS2.ini output/
+..\bin\split binary data/SONICADV/B_CHAOS4.prs B_CHAOS4.ini output/
+..\bin\split binary data/SONICADV/B_CHAOS6.prs B_CHAOS6.ini output/
+..\bin\split binary data/SONICADV/B_CHAOS7.prs B_CHAOS7.ini output/
+..\bin\split binary data/SONICADV/B_E101.prs B_E101.ini output/
+..\bin\split binary data/SONICADV/B_E101_R.prs B_E101_R.ini output/
+..\bin\split binary data/SONICADV/B_EGM1.prs B_EGM1.ini output/
+..\bin\split binary data/SONICADV/B_EGM2.prs B_EGM2.ini output/
+..\bin\split binary data/SONICADV/B_EGM3.prs B_EGM3.ini output/
+..\bin\split binary data/SONICADV/B_ROBO.prs B_ROBO.ini output/
+..\bin\split binary data/SONICADV/S_MOT.prs S_MOT.ini output/
+..\bin\split binary data/SONICADV/K_MOT.prs K_MOT.ini output/
+..\bin\split binary data/SONICADV/A_MOT.prs A_MOT.ini output/
+..\bin\split binary data/SONICADV/B_MOT.prs B_MOT.ini output/
+..\bin\split binary data/SONICADV/E_MOT.prs E_MOT.ini output/
+..\bin\split binary data/SONICADV/S_SBMOT.prs S_SBMOT.ini output/
+..\bin\split binary data/SONICADV/SUMMARY.prs SUMMARY.ini output/

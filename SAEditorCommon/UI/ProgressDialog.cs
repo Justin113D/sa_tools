@@ -51,6 +51,12 @@ namespace SonicRetro.SAModel.SAEditorCommon.UI
 			}
 		}
 
+		/// <summary>
+		/// If enabled, the dialog is hidden instead of being closed.
+		/// This resolves issues when the dialog is reusable and/or shouldn't be disposed of immediately.
+		/// </summary>
+		private bool dontdispose;
+
 		// HACK: Work around to avoid animation which is not configurable and FAR too slow.
 		private int progressValue
 		{
@@ -76,7 +82,8 @@ namespace SonicRetro.SAModel.SAEditorCommon.UI
 		/// <param name="max">The number of steps required</param>
 		/// <param name="enableCloseOptions">Defines whether or not the close-on-completion checkbox and OK button are usable.</param>
 		/// <param name="autoClose">The default close-on-completion option.</param>
-		public ProgressDialog(string title, int max = 100, bool enableCloseOptions = false, bool autoClose = true)
+		/// <param name="reusable">Don't dispose the dialog after completion.</param>
+		public ProgressDialog(string title, int max = 100, bool enableCloseOptions = false, bool autoClose = true, bool reusable = false)
 		{
 			InitializeComponent();
 
@@ -84,8 +91,11 @@ namespace SonicRetro.SAModel.SAEditorCommon.UI
 			progressBar.Maximum = max;
 			EnableCloseOptions = enableCloseOptions;
 			checkAutoClose.Checked = autoClose;
+			checkAutoClose.Visible = enableCloseOptions;
+			buttonOK.Visible = enableCloseOptions;
 			labelTask.Text = "";
 			labelStep.Text = "";
+			dontdispose = reusable;
 		}
 
 		/// <summary>
@@ -101,19 +111,18 @@ namespace SonicRetro.SAModel.SAEditorCommon.UI
 			{
 				// Not using progressBar.Step() because dirt hacks
 				progressValue = progressValue + 1;
-
-				if (EnableCloseOptions)
+				if (progressBar.Value == progressBar.Maximum)
 				{
-					if (progressBar.Value == progressBar.Maximum)
+					if (checkAutoClose.Checked)
 					{
-						if (checkAutoClose.Checked)
-							Close();
-						else
-							buttonOK.Enabled = true;
+						if (dontdispose) Hide();
+						else Close();
 					}
+					else
+						buttonOK.Enabled = true;
 				}
 			}
-		}
+		}		
 
 		/// <summary>
 		/// Sets the current task to display on the window. (Upper label)
@@ -158,10 +167,43 @@ namespace SonicRetro.SAModel.SAEditorCommon.UI
 			}
 		}
 
+		/// <summary>
+		/// Resets the current progress bar position for reusable dialogs.
+		/// </summary>
+		public void ResetSteps()
+		{
+			if (InvokeRequired)
+			{
+				Invoke((Action)ResetSteps);
+			}
+			else
+			{
+				progressBar.Value = 0;
+			}
+		}
+
+		/// <summary>
+		/// Changes the maximum progress bar value for reusable dialogs.
+		/// </summary>
+		/// <param name="steps">New number of steps</param>
+		public void SetMaxSteps(int steps)
+		{
+			if (InvokeRequired)
+			{
+				Invoke((Action<int>)SetMaxSteps, steps);
+			}
+			else
+			{
+				progressBar.Maximum = steps;
+			}
+		}
+
 		private void SetOkEnabledState()
 		{
 			if (progressBar.Value < progressBar.Maximum)
-				buttonOK.Enabled = !checkAutoClose.Checked;
+				buttonOK.Enabled = false;
+			else
+				buttonOK.Enabled = true;
 		}
 
 		private void checkAutoClose_CheckedChanged(object sender, EventArgs e)
@@ -176,7 +218,7 @@ namespace SonicRetro.SAModel.SAEditorCommon.UI
 		}
 		private void buttonOK_Click(object sender, EventArgs e)
 		{
-			Close();
+			if (dontdispose) Hide(); else Close();
 		}
 	}
 }

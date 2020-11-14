@@ -98,7 +98,7 @@ namespace SA_Tools
 			exefile = result;
 		}
 
-		public static void FixRELPointers(byte[] file)
+		public static void FixRELPointers(byte[] file, uint imageBase = 0)
 		{
 			OSModuleHeader header = new OSModuleHeader(file, 0);
 			OSSectionInfo[] sections = new OSSectionInfo[header.info.numSections];
@@ -125,23 +125,23 @@ namespace SA_Tools
 						switch (rel.type)
 						{
 							case 0x01:
-								ByteConverter.GetBytes(rel.addend + sectionbase).CopyTo(file, dataaddr);
+								ByteConverter.GetBytes(rel.addend + sectionbase + imageBase).CopyTo(file, dataaddr);
 								break;
 							case 0x02:
-								ByteConverter.GetBytes((ByteConverter.ToUInt32(file, dataaddr) & 0xFC000003) | ((rel.addend + sectionbase) & 0x3FFFFFC)).CopyTo(file, dataaddr);
+								ByteConverter.GetBytes((ByteConverter.ToUInt32(file, dataaddr) & 0xFC000003) | ((rel.addend + sectionbase) & 0x3FFFFFC) + imageBase).CopyTo(file, dataaddr);
 								break;
 							case 0x03:
 							case 0x04:
-								ByteConverter.GetBytes((ushort)(rel.addend + sectionbase)).CopyTo(file, dataaddr);
+								ByteConverter.GetBytes((ushort)(rel.addend + sectionbase) + imageBase).CopyTo(file, dataaddr);
 								break;
 							case 0x05:
-								ByteConverter.GetBytes((ushort)((rel.addend + sectionbase) >> 16)).CopyTo(file, dataaddr);
+								ByteConverter.GetBytes((ushort)((rel.addend + sectionbase) >> 16) + imageBase).CopyTo(file, dataaddr);
 								break;
 							case 0x06:
-								ByteConverter.GetBytes((ushort)(((rel.addend + sectionbase) >> 16) + (((rel.addend + sectionbase) & 0x8000) == 0x8000 ? 1 : 0))).CopyTo(file, dataaddr);
+								ByteConverter.GetBytes((ushort)(((rel.addend + sectionbase) >> 16) + (((rel.addend + sectionbase) & 0x8000) == 0x8000 ? 1 : 0)) + imageBase).CopyTo(file, dataaddr);
 								break;
 							case 0x0A:
-								ByteConverter.GetBytes((uint)((ByteConverter.ToUInt32(file, dataaddr) & 0xFC000003) | (((rel.addend + sectionbase) - dataaddr) & 0x3FFFFFC))).CopyTo(file, dataaddr);
+								ByteConverter.GetBytes((uint)((ByteConverter.ToUInt32(file, dataaddr) & 0xFC000003) | (((rel.addend + sectionbase) - dataaddr) & 0x3FFFFFC)) + imageBase).CopyTo(file, dataaddr);
 								break;
 							case 0x00:
 							case (byte)RelocTypes.R_DOLPHIN_NOP:
@@ -189,13 +189,25 @@ namespace SA_Tools
 
 		public static Encoding GetEncoding() { return jpenc; }
 
-		public static Encoding GetEncoding(Languages language)
+		public static Encoding GetEncoding(Languages language) => GetEncoding(Game.SA1, language);
+
+		public static Encoding GetEncoding(Game game, Languages language)
 		{
 			switch (language)
 			{
 				case Languages.Japanese:
-				case Languages.English:
 					return jpenc;
+				case Languages.English:
+					switch (game)
+					{
+						case Game.SA1:
+						case Game.SADX:
+							return jpenc;
+						case Game.SA2:
+						case Game.SA2B:
+							return euenc;
+					}
+					throw new ArgumentOutOfRangeException("game");
 				default:
 					return euenc;
 			}
@@ -255,12 +267,14 @@ namespace SA_Tools
 				return "0x" + i.ToString("X");
 		}
 
-		public static string ToC(this string str) { return str.ToC(Languages.Japanese); }
+		public static string ToC(this string str) => str.ToC(Languages.Japanese);
 
-		public static string ToC(this string str, Languages language)
+		public static string ToC(this string str, Languages language) => ToC(str, Game.SA1, language);
+
+		public static string ToC(this string str, Game game, Languages language)
 		{
 			if (str == null) return "NULL";
-			Encoding enc = GetEncoding(language);
+			Encoding enc = GetEncoding(game, language);
 			StringBuilder result = new StringBuilder("\"");
 			foreach (char item in str)
 			{
@@ -385,7 +399,31 @@ namespace SA_Tools
 				return "0";
 			}
 		}
+
+		public static bool CheckBigEndianInt16(byte[] file, int address)
+		{
+			bool bigEndState = ByteConverter.BigEndian;
+
+			ByteConverter.BigEndian = true;
+			bool isBigEndian = BitConverter.ToUInt16(file, address) > ByteConverter.ToUInt16(file, address);
+
+			ByteConverter.BigEndian = bigEndState;
+
+			return isBigEndian;
+		}
+		public static bool CheckBigEndianInt32(byte[] file, int address)
+		{
+			bool bigEndState = ByteConverter.BigEndian;
+
+			ByteConverter.BigEndian = true;
+			bool isBigEndian = BitConverter.ToUInt32(file, address) > ByteConverter.ToUInt32(file, address);
+
+			ByteConverter.BigEndian = bigEndState;
+
+			return isBigEndian;
+		}
 	}
+
 
 	enum SectOffs
 	{
@@ -707,4 +745,6 @@ namespace SA_Tools
 		R_DOLPHIN_SECTION = 202,	 //  CAh current section = OSRel.section
 		R_DOLPHIN_END = 203	 //  CBh
 	}
+
+
 }

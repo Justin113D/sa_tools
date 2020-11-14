@@ -6,6 +6,7 @@ using System.Linq;
 using SharpDX;
 using SharpDX.Direct3D9;
 using SonicRetro.SAModel.Direct3D;
+using SonicRetro.SAModel.Direct3D.TextureSystem;
 using SonicRetro.SAModel.SAEditorCommon.UI;
 using Mesh = SonicRetro.SAModel.Direct3D.Mesh;
 
@@ -121,15 +122,15 @@ namespace SonicRetro.SAModel.SAEditorCommon.DataTypes
 			return COL.Model.CheckHit(Near, Far, Viewport, Projection, View, Mesh);
 		}
 
-		public override List<RenderInfo> Render(Device dev, EditorCamera camera, MatrixStack transform)
+		public override List<RenderInfo> Render(Device dev, EditorCamera camera, MatrixStack transform, bool ignorematcolors = false)
 		{
 			if (!camera.SphereInFrustum(COL.Bounds)) return EmptyRenderInfo;
 
 			List<RenderInfo> result = new List<RenderInfo>();
-			if (!string.IsNullOrEmpty(LevelData.leveltexs))
-				result.AddRange(COL.Model.DrawModel(dev.GetRenderState<FillMode>(RenderState.FillMode), transform, LevelData.Textures[LevelData.leveltexs], Mesh, Visible));
+			if (!string.IsNullOrEmpty(LevelData.leveltexs) && LevelData.Textures.Count > 0)
+				result.AddRange(COL.Model.DrawModel(dev.GetRenderState<FillMode>(RenderState.FillMode), transform, LevelData.Textures[LevelData.leveltexs], Mesh, Visible, ignorematcolors));
 			else
-				result.AddRange(COL.Model.DrawModel(dev.GetRenderState<FillMode>(RenderState.FillMode), transform, null, Mesh, Visible));
+				result.AddRange(COL.Model.DrawModel(dev.GetRenderState<FillMode>(RenderState.FillMode), transform, null, Mesh, Visible, ignorematcolors));
 			if (Selected)
 				result.AddRange(COL.Model.DrawModelInvert(transform, Mesh, Visible));
 			return result;
@@ -142,7 +143,7 @@ namespace SonicRetro.SAModel.SAEditorCommon.DataTypes
 			LevelData.AddLevelItem(this);
 		}
 
-		public override void Delete()
+		protected override void DeleteInternal(EditorItemSelection selectionManager)
 		{
 			LevelData.geo.COL.Remove(COL);
 
@@ -173,7 +174,9 @@ namespace SonicRetro.SAModel.SAEditorCommon.DataTypes
 		{
 			if (COL.Model.Attach is BasicAttach)
 			{
-				using (MaterialEditor pw = new MaterialEditor(((BasicAttach)COL.Model.Attach).Material, LevelData.TextureBitmaps[LevelData.leveltexs]))
+				BMPInfo[] textures;
+				if (LevelData.leveltexs == null || LevelData.TextureBitmaps.Count == 0) textures = null; else textures = LevelData.TextureBitmaps[LevelData.leveltexs];
+				using (MaterialEditor pw = new MaterialEditor(((BasicAttach)COL.Model.Attach).Material, textures))
 				{
 					pw.FormUpdated += pw_FormUpdated;
 					pw.ShowDialog();

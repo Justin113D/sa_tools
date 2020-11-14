@@ -8,8 +8,8 @@ using System.IO;
 using System.Linq;
 using System.Text;
 using System.Windows.Forms;
-using VrSharp.GvrTexture;
-using VrSharp.PvrTexture;
+using VrSharp.Gvr;
+using VrSharp.Pvr;
 
 namespace TextureEditor
 {
@@ -29,8 +29,15 @@ namespace TextureEditor
 
 		private void SetFilename(string filename)
 		{
+			if (Settings.MRUList.Count > 10)
+			{
+				for (int i = 9; i < Settings.MRUList.Count; i++)
+				{
+					Settings.MRUList.RemoveAt(i);
+				}
+			}
 			this.filename = filename;
-			if (Settings.MRUList.Contains(filename))
+				if (Settings.MRUList.Contains(filename))
 			{
 				int i = Settings.MRUList.IndexOf(filename);
 				Settings.MRUList.RemoveAt(i);
@@ -85,12 +92,13 @@ namespace TextureEditor
 			}
 			else
 			{
-				if (pvmfile.Is(pvmdata, filename))
+					MemoryStream stream = new MemoryStream(pvmdata);
+					if (PvmArchive.Identify(stream))
 					format = TextureFormat.PVM;
 				else
 				{
 					pvmfile = new GvmArchive();
-					if (!pvmfile.Is(pvmdata, filename))
+					if (!GvmArchive.Identify(stream))
 					{
 						MessageBox.Show(this, "Could not open file \"" + filename + "\".", Text, MessageBoxButtons.OK, MessageBoxIcon.Warning);
 						return false;
@@ -601,7 +609,7 @@ namespace TextureEditor
 											if (dim.Length > 1)
 												pvmx.Dimensions = new Size(int.Parse(dim[0]), int.Parse(dim[1]));
 										}
-										textures.Add(pvmx);
+											textures.Add(pvmx);
 										break;
 									case TextureFormat.PAK:
 										textures.Add(new PakTextureInfo(name, gbix, bmp));
@@ -621,24 +629,33 @@ namespace TextureEditor
 
 		private void exportAllToolStripMenuItem_Click(object sender, EventArgs e)
 		{
-			using (SaveFileDialog dlg = new SaveFileDialog() { DefaultExt = "txt", Filter = "index.txt|index.txt", FileName = "index.txt" })
+			
+			using (SaveFileDialog dlg = new SaveFileDialog() { DefaultExt = "", Filter = "", FileName = "texturepack" })
 			{
+	
 				if (filename != null)
+				{
 					dlg.InitialDirectory = Path.GetDirectoryName(filename);
+					dlg.FileName = Path.GetFileNameWithoutExtension(filename);
+				}
 
 				if (dlg.ShowDialog(this) == DialogResult.OK)
-					using (TextWriter texList = File.CreateText(dlg.FileName))
+				{
+					Directory.CreateDirectory(dlg.FileName);
+					string dir = Path.Combine(Path.GetDirectoryName(dlg.FileName), Path.GetFileName(dlg.FileName));
+					using (TextWriter texList = File.CreateText(Path.Combine(dir, "index.txt")))
 					{
-						string dir = Path.GetDirectoryName(dlg.FileName);
 						foreach (TextureInfo tex in textures)
 						{
-							tex.Image.Save(Path.Combine(dir, tex.Name + ".png"));
+							System.Drawing.Bitmap bmp = new System.Drawing.Bitmap(tex.Image);
+							bmp.Save(Path.Combine(dir, tex.Name + ".png"));
 							if (tex is PvmxTextureInfo xtex && xtex.Dimensions.HasValue)
 								texList.WriteLine("{0},{1},{2}x{3}", xtex.GlobalIndex, xtex.Name + ".png", xtex.Dimensions.Value.Width, xtex.Dimensions.Value.Height);
 							else
-								texList.WriteLine("{0},{1}", tex.GlobalIndex, tex.Name + ".png");
+								texList.WriteLine("{0},{1},{2}x{3}", tex.GlobalIndex, tex.Name + ".png", tex.Image.Width, tex.Image.Height);
 						}
 					}
+				}
 			}
 		}
 
@@ -686,6 +703,7 @@ namespace TextureEditor
 				textureImage.Image = image;
 		}
 
+		bool suppress = false;
 		private void listBox1_SelectedIndexChanged(object sender, EventArgs e)
 		{
 			indexTextBox.Text = hexIndexCheckBox.Checked ? listBox1.SelectedIndex.ToString("X") : listBox1.SelectedIndex.ToString();
@@ -693,6 +711,7 @@ namespace TextureEditor
 			removeTextureButton.Enabled = textureName.Enabled = globalIndex.Enabled = importButton.Enabled = exportButton.Enabled = en;
 			if (en)
 			{
+				suppress = true;
 				textureUpButton.Enabled = listBox1.SelectedIndex > 0;
 				textureDownButton.Enabled = listBox1.SelectedIndex < textures.Count - 1;
 				textureName.Text = textures[listBox1.SelectedIndex].Name;
@@ -705,7 +724,7 @@ namespace TextureEditor
 				else
 					mipmapCheckBox.Checked = mipmapCheckBox.Enabled = false;
 				UpdateTextureView(textures[listBox1.SelectedIndex].Image);
-				textureSizeLabel.Text = $"Size: {textures[listBox1.SelectedIndex].Image.Width}x{textures[listBox1.SelectedIndex].Image.Height}";
+				textureSizeLabel.Text = $"Actual Size: {textures[listBox1.SelectedIndex].Image.Width}x{textures[listBox1.SelectedIndex].Image.Height}";
 				switch (textures[listBox1.SelectedIndex])
 				{
 					case PvrTextureInfo pvr:
@@ -713,18 +732,43 @@ namespace TextureEditor
 						pixelFormatLabel.Text = $"Pixel Format: {pvr.PixelFormat}";
 						dataFormatLabel.Show();
 						pixelFormatLabel.Show();
+						numericUpDownOrigSizeX.Enabled = numericUpDownOrigSizeY.Enabled = false;
+						numericUpDownOrigSizeX.Value = pvr.Image.Width;
+						numericUpDownOrigSizeY.Value = pvr.Image.Height;
 						break;
 					case GvrTextureInfo gvr:
 						dataFormatLabel.Text = $"Data Format: {gvr.DataFormat}";
 						pixelFormatLabel.Text = $"Pixel Format: {gvr.PixelFormat}";
 						dataFormatLabel.Show();
 						pixelFormatLabel.Show();
+						numericUpDownOrigSizeX.Enabled = numericUpDownOrigSizeY.Enabled = false;
+						numericUpDownOrigSizeX.Value = gvr.Image.Width;
+						numericUpDownOrigSizeY.Value = gvr.Image.Height;
+						break;
+					case PvmxTextureInfo pvmx:
+						numericUpDownOrigSizeX.Enabled = numericUpDownOrigSizeY.Enabled = true;
+						if (pvmx.Dimensions.HasValue)
+						{
+							numericUpDownOrigSizeX.Value = pvmx.Dimensions.Value.Width;
+							numericUpDownOrigSizeY.Value = pvmx.Dimensions.Value.Height;
+						}
+						else 
+						{
+							numericUpDownOrigSizeX.Value = pvmx.Image.Width;
+							numericUpDownOrigSizeY.Value = pvmx.Image.Height;
+						}
+						dataFormatLabel.Hide();
+						pixelFormatLabel.Hide();
 						break;
 					default:
 						dataFormatLabel.Hide();
 						pixelFormatLabel.Hide();
+						numericUpDownOrigSizeX.Enabled = numericUpDownOrigSizeY.Enabled = false;
+						numericUpDownOrigSizeX.Value = textures[listBox1.SelectedIndex].Image.Width;
+						numericUpDownOrigSizeY.Value = textures[listBox1.SelectedIndex].Image.Height;
 						break;
 				}
+				suppress = false;
 			}
 			else
 			{
@@ -806,7 +850,8 @@ namespace TextureEditor
 										pvmfile = new GvmArchive();
 										break;
 								}
-								if (!pvmfile.Is(pvmdata, file))
+								MemoryStream stream = new MemoryStream(pvmdata);
+								if (!PvmArchive.Identify(stream) && !GvmArchive.Identify(stream))
 								{
 									MessageBox.Show(this, "Could not open file \"" + file + "\".", Text, MessageBoxButtons.OK, MessageBoxIcon.Warning);
 									continue;
@@ -977,6 +1022,80 @@ namespace TextureEditor
 			textures[listBox1.SelectedIndex].Mipmap = mipmapCheckBox.Checked;
 		}
 
+		private void textureImage_MouseMove(object sender, MouseEventArgs e)
+		{
+			if (listBox1.SelectedIndex != -1 && e.Button == MouseButtons.Left)
+			{
+				Bitmap bmp = new Bitmap(textures[listBox1.SelectedIndex].Image);
+				DataObject dobj = new DataObject();
+				dobj.SetImage(bmp);
+				string fn = Path.Combine(Path.GetTempPath(), textures[listBox1.SelectedIndex].Name + ".png");
+				bmp.Save(fn);
+				dobj.SetFileDropList(new System.Collections.Specialized.StringCollection() { fn });
+				DoDragDrop(dobj, DragDropEffects.Copy);
+			}
+		}
+
+		private void textureImage_DragEnter(object sender, DragEventArgs e)
+		{
+			if (listBox1.SelectedIndex != -1 && (e.Data.GetDataPresent(DataFormats.FileDrop) || e.Data.GetDataPresent(DataFormats.Bitmap)))
+				e.Effect = DragDropEffects.Copy | DragDropEffects.Move | DragDropEffects.Link;
+		}
+
+		private void textureImage_DragDrop(object sender, DragEventArgs e)
+		{
+			if (listBox1.SelectedIndex == -1) return;
+			Bitmap tex = null;
+			if (e.Data.GetDataPresent(DataFormats.FileDrop))
+			{
+				using (Bitmap bmp = new Bitmap(((string[])e.Data.GetData(DataFormats.FileDrop, true))[0]))
+					tex = new Bitmap(bmp);
+			}
+			else if (e.Data.GetDataPresent(DataFormats.Bitmap))
+				tex = new Bitmap((Image)e.Data.GetData(DataFormats.Bitmap));
+			else
+				return;
+			textures[listBox1.SelectedIndex].Image = tex;
+			UpdateTextureView(textures[listBox1.SelectedIndex].Image);
+			textureSizeLabel.Text = $"Actual Size: {tex.Width}x{tex.Height}";
+			if (textures[listBox1.SelectedIndex].CheckMipmap())
+			{
+				mipmapCheckBox.Enabled = true;
+				mipmapCheckBox.Checked = textures[listBox1.SelectedIndex].Mipmap;
+			}
+			else
+				mipmapCheckBox.Checked = mipmapCheckBox.Enabled = false;
+		}
+
+		private void textureImage_MouseClick(object sender, MouseEventArgs e)
+		{
+			if (listBox1.SelectedIndex != -1 && e.Button == MouseButtons.Right)
+			{
+				pasteToolStripMenuItem.Enabled = Clipboard.ContainsImage();
+				contextMenuStrip1.Show(textureImage, e.Location);
+			}
+		}
+
+		private void copyToolStripMenuItem_Click(object sender, EventArgs e)
+		{
+			Clipboard.SetImage(textures[listBox1.SelectedIndex].Image);
+		}
+
+		private void pasteToolStripMenuItem_Click(object sender, EventArgs e)
+		{
+			Bitmap tex = new Bitmap(Clipboard.GetImage());
+			textures[listBox1.SelectedIndex].Image = tex;
+			UpdateTextureView(textures[listBox1.SelectedIndex].Image);
+			textureSizeLabel.Text = $"Size: {tex.Width}x{tex.Height}";
+			if (textures[listBox1.SelectedIndex].CheckMipmap())
+			{
+				mipmapCheckBox.Enabled = true;
+				mipmapCheckBox.Checked = textures[listBox1.SelectedIndex].Mipmap;
+			}
+			else
+				mipmapCheckBox.Checked = mipmapCheckBox.Enabled = false;
+		}
+
 		private void importButton_Click(object sender, EventArgs e)
 		{
 			KeyValuePair<string, Bitmap>? tex = BrowseForTexture(listBox1.GetItemText(listBox1.SelectedItem));
@@ -1001,7 +1120,10 @@ namespace TextureEditor
 		{
 			using (SaveFileDialog dlg = new SaveFileDialog() { DefaultExt = "png", FileName = textures[listBox1.SelectedIndex].Name + ".png", Filter = "PNG Files|*.png" })
 				if (dlg.ShowDialog(this) == DialogResult.OK)
-					textures[listBox1.SelectedIndex].Image.Save(dlg.FileName);
+				{
+					Bitmap bmp = new Bitmap(textures[listBox1.SelectedIndex].Image);
+					bmp.Save(dlg.FileName);
+				}
 
 			listBox1.Select();
 		}
@@ -1023,6 +1145,18 @@ namespace TextureEditor
 		private void MainForm_FormClosing(object sender, FormClosingEventArgs e)
 		{
 			Settings.Save();
+		}
+
+		private void numericUpDownOrigSizeX_ValueChanged(object sender, EventArgs e)
+		{
+			if (!suppress && textures[listBox1.SelectedIndex] is PvmxTextureInfo tex)
+				tex.Dimensions = new Size((int)numericUpDownOrigSizeX.Value, (int)numericUpDownOrigSizeY.Value);
+		}
+
+		private void numericUpDownOrigSizeY_ValueChanged(object sender, EventArgs e)
+		{
+			if (!suppress && textures[listBox1.SelectedIndex] is PvmxTextureInfo tex)
+				tex.Dimensions = new Size((int)numericUpDownOrigSizeX.Value, (int)numericUpDownOrigSizeY.Value);
 		}
 	}
 

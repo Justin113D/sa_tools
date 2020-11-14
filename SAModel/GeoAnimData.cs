@@ -12,17 +12,18 @@ namespace SonicRetro.SAModel
 		public NJS_MOTION Animation { get; set; }
 		public int Unknown4 { get; set; }
 
-		public static uint Size
+		public string ActionName { get; set; }
+		public static int Size
 		{
 			get { return 0x18; }
 		}
 
-		public GeoAnimData(byte[] file, uint address, uint imageBase, LandTableFormat format, Dictionary<uint, Attach> attaches)
-			: this(file, address, imageBase, format, new Dictionary<uint, string>(), attaches)
+		public GeoAnimData(byte[] file, int address, uint imageBase, LandTableFormat format, Dictionary<int, Attach> attaches)
+			: this(file, address, imageBase, format, new Dictionary<int, string>(), attaches)
 		{
 		}
 
-		public GeoAnimData(byte[] file, uint address, uint imageBase, LandTableFormat format, Dictionary<uint, string> labels, Dictionary<uint, Attach> attaches)
+		public GeoAnimData(byte[] file, int address, uint imageBase, LandTableFormat format, Dictionary<int, string> labels, Dictionary<int, Attach> attaches)
 		{
 			ModelFormat mfmt = 0;
 			switch (format)
@@ -40,9 +41,18 @@ namespace SonicRetro.SAModel
 			Unknown1 = ByteConverter.ToInt32(file, address);
 			Unknown2 = ByteConverter.ToSingle(file, address + 4);
 			Unknown3 = ByteConverter.ToSingle(file, address + 8);
-			Model = new NJS_OBJECT(file, ByteConverter.ToUInt32(file, address + 0xC) - imageBase, imageBase, mfmt, labels, attaches);
-			Animation = NJS_MOTION.ReadHeader(file, ByteConverter.ToUInt32(file, address + 0x10) - imageBase, imageBase, mfmt, labels, attaches);
+			Model = new NJS_OBJECT(file, (int)(ByteConverter.ToUInt32(file, address + 0xC) - imageBase), imageBase, mfmt, labels, attaches);
+			int actionaddr = (int)(ByteConverter.ToUInt32(file, address + 0x10) - imageBase);
+			int motionaddr = (int)(ByteConverter.ToUInt32(file, actionaddr + 4) - imageBase);
+			Animation = NJS_MOTION.ReadDirect(file, Model.CountAnimated(), motionaddr, imageBase, mfmt, labels, attaches);
 			Unknown4 = ByteConverter.ToInt32(file, address + 0x14);
+			if (labels.ContainsKey(actionaddr)) ActionName = labels[actionaddr];
+			else
+			{
+				NJS_ACTION action = new NJS_ACTION(file, actionaddr, imageBase, mfmt, labels, attaches);
+				ActionName = action.Name;
+				labels.Add(actionaddr + (int)imageBase, ActionName);
+			}
 		}
 
 		public byte[] GetBytes(uint imageBase, uint modelptr, uint animptr)
@@ -68,7 +78,7 @@ namespace SonicRetro.SAModel
 			result.Append(", ");
 			result.Append(Model != null ? "&" + Model.Name : "NULL");
 			result.Append(", ");
-			result.Append(Animation != null ? "&action_" + Animation.Name : "NULL");
+			result.Append(Animation != null ? "&" + ActionName : "NULL");
 			result.Append(", (NJS_TEXLIST *)");
 			result.Append(Unknown4.ToCHex());
 			result.Append(" }");

@@ -231,7 +231,7 @@ namespace SonicRetro.SAModel.Direct3D
 			List<Vector3> verts = new List<Vector3>();
 			foreach (VertexData vert in attach.MeshInfo[mesh].Vertices)
 				verts.Add(Vector3.TransformCoordinate(vert.Position.ToVector3(), transform));
-			return SharpDX.BoundingSphere.FromPoints(verts.ToArray()).ToSAModel();
+			return Calculate(verts);
 		}
 
 		public static void CalculateBounds(this COL col)
@@ -241,7 +241,65 @@ namespace SonicRetro.SAModel.Direct3D
 			foreach (MeshInfo mesh in col.Model.Attach.MeshInfo)
 				foreach (VertexData vert in mesh.Vertices)
 					verts.Add(Vector3.TransformCoordinate(vert.Position.ToVector3(), matrix));
-			col.Bounds = SharpDX.BoundingSphere.FromPoints(verts.ToArray()).ToSAModel();
+			col.Bounds = Calculate(verts);
+		}
+
+		/// <summary>
+		/// We are using this implementation of Ritter's Bounding Sphere,
+		/// because whatever was going on with SharpDX's BoundingSphere class was catastrophically under-shooting
+		/// the bounds.
+		/// </summary>
+		/// <param name="aPoints"></param>
+		/// <returns></returns>
+		private static BoundingSphere Calculate(IEnumerable<Vector3> aPoints)
+		{
+			Vector3 one = new Vector3(1, 1, 1);
+
+			Vector3 xmin, xmax, ymin, ymax, zmin, zmax;
+			xmin = ymin = zmin = one * float.PositiveInfinity;
+			xmax = ymax = zmax = one * float.NegativeInfinity;
+			foreach (Vector3 p in aPoints)
+			{
+				if (p.X < xmin.X) xmin = p;
+				if (p.X > xmax.X) xmax = p;
+				if (p.Y < ymin.Y) ymin = p;
+				if (p.Y > ymax.Y) ymax = p;
+				if (p.Z < zmin.Z) zmin = p;
+				if (p.Z > zmax.Z) zmax = p;
+			}
+			float xSpan = (xmax - xmin).LengthSquared();
+			float ySpan = (ymax - ymin).LengthSquared();
+			float zSpan = (zmax - zmin).LengthSquared();
+			Vector3 dia1 = xmin;
+			Vector3 dia2 = xmax;
+			var maxSpan = xSpan;
+			if (ySpan > maxSpan)
+			{
+				maxSpan = ySpan;
+				dia1 = ymin; dia2 = ymax;
+			}
+			if (zSpan > maxSpan)
+			{
+				dia1 = zmin; dia2 = zmax;
+			}
+			Vector3 center = (dia1 + dia2) * 0.5f;
+			float sqRad = (dia2 - center).LengthSquared();
+			float radius = (float)Math.Sqrt(sqRad);
+
+			foreach (var p in aPoints)
+			{
+				float d = (p - center).LengthSquared();
+				if (d > sqRad)
+				{
+					var r = (float)Math.Sqrt(d);
+					radius = r;
+					sqRad = radius * radius;
+					var offset = r - radius;
+					center = (radius * center + offset * p) / r;
+				}
+			}
+			return new BoundingSphere(center.ToVertex(), radius * 1.125f); // fixed multiplier hack because while ours 
+				// undershoots less than SharpDX's, there still is some and this should handle it in most cases.
 		}
 
 		public static BoundingSphere Merge(BoundingSphere sphereA, BoundingSphere sphereB)
@@ -576,7 +634,7 @@ namespace SonicRetro.SAModel.Direct3D
 					mesh.UpdateSelection(selind);
 		}
 
-		public static List<RenderInfo> DrawModel(this NJS_OBJECT obj, FillMode fillMode, MatrixStack transform, Texture[] textures, Mesh mesh, bool useMat)
+		public static List<RenderInfo> DrawModel(this NJS_OBJECT obj, FillMode fillMode, MatrixStack transform, Texture[] textures, Mesh mesh, bool useMat, bool ignorematcolors = false)
 		{
 			List<RenderInfo> result = new List<RenderInfo>();
 
@@ -588,6 +646,7 @@ namespace SonicRetro.SAModel.Direct3D
 
 			if (obj.Attach != null)
 			{
+				Color bkcolor = Color.White;
 				for (int j = 0; j < obj.Attach.MeshInfo.Length; j++)
 				{
 					NJS_MATERIAL mat;
@@ -616,7 +675,14 @@ namespace SonicRetro.SAModel.Direct3D
 							obj.Attach.MeshInfo[j] = new MeshInfo(mat, old.Polys, old.Vertices, old.HasUV, old.HasVC);
 						}
 					}
+					if (ignorematcolors)
+					{
+						bkcolor = mat.DiffuseColor;
+						mat.DiffuseColor = Color.FromArgb(mat.DiffuseColor.A, Color.White);
+					}
 					result.Add(new RenderInfo(mesh, j, transform.Top, mat, texture, fillMode, obj.Attach.CalculateBounds(j, transform.Top)));
+					if (ignorematcolors)
+						mat.DiffuseColor = bkcolor;
 				}
 			}
 
@@ -651,20 +717,21 @@ namespace SonicRetro.SAModel.Direct3D
 			return result;
 		}
 
-		public static List<RenderInfo> DrawModelTree(this NJS_OBJECT obj, FillMode fillMode, MatrixStack transform, Texture[] textures, Mesh[] meshes)
+		public static List<RenderInfo> DrawModelTree(this NJS_OBJECT obj, FillMode fillMode, MatrixStack transform, Texture[] textures, Mesh[] meshes, bool ignorematcolor = false)
 		{
 			int modelindex = -1;
 			List<RenderInfo> result = new List<RenderInfo>();
 			do
 			{
-				result.AddRange(obj.DrawModelTree(fillMode, transform, textures, meshes, ref modelindex));
+				result.AddRange(obj.DrawModelTree(fillMode, transform, textures, meshes, ref modelindex, ignorematcolor));
 				obj = obj.Sibling;
 			} while (obj != null);
 			return result;
 		}
 
-		private static List<RenderInfo> DrawModelTree(this NJS_OBJECT obj, FillMode fillMode, MatrixStack transform, Texture[] textures, Mesh[] meshes, ref int modelindex)
+		private static List<RenderInfo> DrawModelTree(this NJS_OBJECT obj, FillMode fillMode, MatrixStack transform, Texture[] textures, Mesh[] meshes, ref int modelindex, bool ignorematcolors = false)
 		{
+			Color bkcolor = Color.White;
 			List<RenderInfo> result = new List<RenderInfo>();
 			transform.Push();
 			modelindex++;
@@ -682,12 +749,19 @@ namespace SonicRetro.SAModel.Direct3D
 					// HACK: Null material hack 2: Fixes display of objects in SADXLVL2, Twinkle Park 1
 					if (textures != null && mat != null && mat.TextureID < textures.Length)
 						texture = textures[mat.TextureID];
+					if (ignorematcolors)
+					{
+						bkcolor = mat.DiffuseColor;
+						mat.DiffuseColor = Color.FromArgb(mat.DiffuseColor.A, Color.White);
+					}
 					result.Add(new RenderInfo(meshes[modelindex], j, transform.Top, mat, texture, fillMode, obj.Attach.CalculateBounds(j, transform.Top)));
+					if (ignorematcolors)
+						mat.DiffuseColor = bkcolor;
 				}
 			}
 
 			foreach (NJS_OBJECT child in obj.Children)
-				result.AddRange(DrawModelTree(child, fillMode, transform, textures, meshes, ref modelindex));
+				result.AddRange(DrawModelTree(child, fillMode, transform, textures, meshes, ref modelindex, ignorematcolors));
 			transform.Pop();
 			return result;
 		}
@@ -738,21 +812,22 @@ namespace SonicRetro.SAModel.Direct3D
 			return result;
 		}
 
-		public static List<RenderInfo> DrawModelTreeAnimated(this NJS_OBJECT obj, FillMode fillMode, MatrixStack transform, Texture[] textures, Mesh[] meshes, NJS_MOTION anim, int animframe)
+		public static List<RenderInfo> DrawModelTreeAnimated(this NJS_OBJECT obj, FillMode fillMode, MatrixStack transform, Texture[] textures, Mesh[] meshes, NJS_MOTION anim, int animframe, bool ignorematcolor = false)
 		{
 			int modelindex = -1;
 			int animindex = -1;
 			List<RenderInfo> result = new List<RenderInfo>();
 			do
 			{
-				result.AddRange(obj.DrawModelTreeAnimated(fillMode, transform, textures, meshes, anim, animframe, ref modelindex, ref animindex));
+				result.AddRange(obj.DrawModelTreeAnimated(fillMode, transform, textures, meshes, anim, animframe, ref modelindex, ref animindex, ignorematcolor));
 				obj = obj.Sibling;
 			} while (obj != null);
 			return result;
 		}
 
-		private static List<RenderInfo> DrawModelTreeAnimated(this NJS_OBJECT obj, FillMode fillMode, MatrixStack transform, Texture[] textures, Mesh[] meshes, NJS_MOTION anim, int animframe, ref int modelindex, ref int animindex)
+		private static List<RenderInfo> DrawModelTreeAnimated(this NJS_OBJECT obj, FillMode fillMode, MatrixStack transform, Texture[] textures, Mesh[] meshes, NJS_MOTION anim, int animframe, ref int modelindex, ref int animindex, bool ignorematcolors = false)
 		{
+			Color bkcolor = Color.White;
 			List<RenderInfo> result = new List<RenderInfo>();
 			transform.Push();
 			modelindex++;
@@ -770,10 +845,17 @@ namespace SonicRetro.SAModel.Direct3D
 					NJS_MATERIAL mat = obj.Attach.MeshInfo[j].Material;
 					if (textures != null && mat.TextureID < textures.Length)
 						texture = textures[mat.TextureID];
+					if (ignorematcolors)
+					{
+						bkcolor = mat.DiffuseColor;
+						mat.DiffuseColor = Color.FromArgb(mat.DiffuseColor.A, Color.White);
+					}
 					result.Add(new RenderInfo(meshes[modelindex], j, transform.Top, mat, texture, fillMode, obj.Attach.CalculateBounds(j, transform.Top)));
+					if (ignorematcolors)
+						mat.DiffuseColor = bkcolor;
 				}
 			foreach (NJS_OBJECT child in obj.Children)
-				result.AddRange(DrawModelTreeAnimated(child, fillMode, transform, textures, meshes, anim, animframe, ref modelindex, ref animindex));
+				result.AddRange(DrawModelTreeAnimated(child, fillMode, transform, textures, meshes, anim, animframe, ref modelindex, ref animindex, ignorematcolors));
 			transform.Pop();
 			return result;
 		}
@@ -822,7 +904,7 @@ namespace SonicRetro.SAModel.Direct3D
 			return result;
 		}
 
-		public static List<RenderInfo> DrawModelTreeWeighted(this NJS_OBJECT obj, FillMode fillMode, Matrix transform, Texture[] textures, Mesh[] meshes)
+		public static List<RenderInfo> DrawModelTreeWeighted(this NJS_OBJECT obj, FillMode fillMode, Matrix transform, Texture[] textures, Mesh[] meshes, bool ignorematcolor = false)
 		{
 			List<RenderInfo> result = new List<RenderInfo>();
 			NJS_OBJECT[] objs = obj.GetObjects();
@@ -831,13 +913,21 @@ namespace SonicRetro.SAModel.Direct3D
 				{
 					for (int j = 0; j < objs[i].Attach.MeshInfo.Length; j++)
 					{
+						Color bkcolor = Color.White;
 						Texture texture = null;
 						NJS_MATERIAL mat = objs[i].Attach.MeshInfo[j].Material;
 						if (textures != null && mat != null && mat.TextureID < textures.Length)
 							texture = textures[mat.TextureID];
+						if (ignorematcolor)
+						{
+							bkcolor = mat.DiffuseColor;
+							mat.DiffuseColor = Color.FromArgb(mat.DiffuseColor.A, Color.White);
+						}
 						result.Add(new RenderInfo(meshes[i], j, transform, mat, texture, fillMode, objs[i].Attach.CalculateBounds(j, transform)));
+						if (ignorematcolor)
+							mat.DiffuseColor = bkcolor;
+						}
 					}
-				}
 			return result;
 		}
 

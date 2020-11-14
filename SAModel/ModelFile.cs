@@ -2,7 +2,9 @@
 using System.Collections.Generic;
 using System.Collections.ObjectModel;
 using System.IO;
+using System.Linq;
 using System.Text;
+using Newtonsoft.Json;
 
 namespace SonicRetro.SAModel
 {
@@ -214,11 +216,37 @@ namespace SonicRetro.SAModel
 				if (filename != null)
 				{
 					string path = Path.GetDirectoryName(filename);
+					if (File.Exists(Path.GetFileNameWithoutExtension(filename) + ".action"))
+					{
+						using (TextReader tr = File.OpenText(Path.GetFileNameWithoutExtension(filename) + ".action"))
+						{
+							List<string> animlist = new List<string>();
+							int count = File.ReadLines(Path.GetFileNameWithoutExtension(filename) + ".action").Count();
+							for (int i = 0; i < count; i++)
+							{
+								string line = tr.ReadLine();
+								if (File.Exists(Path.Combine(path, line))) animlist.Add(line);
+							}
+							animationFiles = animlist.ToArray();
+						}
+					}
 					List<NJS_MOTION> anims = new List<NJS_MOTION>();
 					try
 					{
 						foreach (string item in animationFiles)
-							anims.Add(NJS_MOTION.Load(Path.Combine(path, item), Model.CountAnimated()));
+						{
+							if (Path.GetExtension(item).ToLowerInvariant() == ".json")
+							{
+								JsonSerializer js = new JsonSerializer() { Culture = System.Globalization.CultureInfo.InvariantCulture };
+								using (TextReader tr = File.OpenText(Path.Combine(path, item)))
+								{
+									using (JsonTextReader jtr = new JsonTextReader(tr))
+										anims.Add(js.Deserialize<NJS_MOTION>(jtr));
+								}
+							}
+							else
+								anims.Add(NJS_MOTION.Load(Path.Combine(path, item), Model.CountAnimated()));
+						}
 					}
 					catch
 					{
@@ -296,12 +324,23 @@ namespace SonicRetro.SAModel
 			}
 			if (Animations.Count > 0)
 			{
+				using (TextWriter tw = File.CreateText(Path.ChangeExtension(filename, ".action")))
+				{
+					for (int a = 0; a < animationFiles.Count(); a++)
+					{
+						tw.WriteLine(animationFiles[a]);
+					}
+					tw.Flush();
+					tw.Close();
+				}
+				/*
+				//Old animation code
 				List<byte> chunk = new List<byte>((Animations.Count + 1) * 4);
 				int straddr = (Animations.Count + 1) * 4;
 				List<byte> strbytes = new List<byte>();
 				for (int i = 0; i < Animations.Count; i++)
 				{
-					Animations[i].Save(Path.Combine(path, animationFiles[i]));
+					//Animations[i].Save(Path.Combine(path, animationFiles[i]));
 					chunk.AddRange(ByteConverter.GetBytes(straddr + strbytes.Count));
 					strbytes.AddRange(Encoding.UTF8.GetBytes(animationFiles[i]));
 					strbytes.Add(0);
@@ -312,6 +351,7 @@ namespace SonicRetro.SAModel
 				file.AddRange(ByteConverter.GetBytes((uint)ChunkTypes.Animation));
 				file.AddRange(ByteConverter.GetBytes(chunk.Count));
 				file.AddRange(chunk);
+				*/
 			}
 			if (!string.IsNullOrEmpty(Author))
 			{
@@ -346,7 +386,7 @@ namespace SonicRetro.SAModel
 		}
 
 		public static void CreateFile(string filename, NJS_OBJECT model, string[] animationFiles, string author,
-			string description, Dictionary<uint, byte[]> metadata, ModelFormat format)
+			string description, Dictionary<uint, byte[]> metadata, ModelFormat format, bool nometa = false)
 		{
 			bool be = ByteConverter.BigEndian;
 			ByteConverter.BigEndian = false;
@@ -373,77 +413,92 @@ namespace SonicRetro.SAModel
 			Dictionary<string, uint> labels = new Dictionary<string, uint>();
 			byte[] mdl = model.GetBytes(0x10, false, labels, out uint addr);
 			file.AddRange(ByteConverter.GetBytes(addr + 0x10));
-			file.AddRange(ByteConverter.GetBytes(mdl.Length + 0x10));
+			if (!nometa) file.AddRange(ByteConverter.GetBytes(mdl.Length + 0x10));
+			else file.AddRange(ByteConverter.GetBytes(0));
 			file.AddRange(mdl);
-
-			if (labels.Count > 0)
+			if (!nometa)
 			{
-				List<byte> chunk = new List<byte>((labels.Count * 8) + 8);
-				int straddr = (labels.Count * 8) + 8;
-				List<byte> strbytes = new List<byte>();
-				foreach (KeyValuePair<string, uint> label in labels)
+				if (labels.Count > 0)
 				{
-					chunk.AddRange(ByteConverter.GetBytes(label.Value));
-					chunk.AddRange(ByteConverter.GetBytes(straddr + strbytes.Count));
-					strbytes.AddRange(Encoding.UTF8.GetBytes(label.Key));
-					strbytes.Add(0);
-					strbytes.Align(4);
+					List<byte> chunk = new List<byte>((labels.Count * 8) + 8);
+					int straddr = (labels.Count * 8) + 8;
+					List<byte> strbytes = new List<byte>();
+					foreach (KeyValuePair<string, uint> label in labels)
+					{
+						chunk.AddRange(ByteConverter.GetBytes(label.Value));
+						chunk.AddRange(ByteConverter.GetBytes(straddr + strbytes.Count));
+						strbytes.AddRange(Encoding.UTF8.GetBytes(label.Key));
+						strbytes.Add(0);
+						strbytes.Align(4);
+					}
+					chunk.AddRange(ByteConverter.GetBytes(-1L));
+					chunk.AddRange(strbytes);
+					file.AddRange(ByteConverter.GetBytes((uint)ChunkTypes.Label));
+					file.AddRange(ByteConverter.GetBytes(chunk.Count));
+					file.AddRange(chunk);
 				}
-				chunk.AddRange(ByteConverter.GetBytes(-1L));
-				chunk.AddRange(strbytes);
-				file.AddRange(ByteConverter.GetBytes((uint)ChunkTypes.Label));
-				file.AddRange(ByteConverter.GetBytes(chunk.Count));
-				file.AddRange(chunk);
-			}
-			if (animationFiles != null && animationFiles.Length > 0)
-			{
-				List<byte> chunk = new List<byte>((animationFiles.Length + 1) * 4);
-				int straddr = (animationFiles.Length + 1) * 4;
-				List<byte> strbytes = new List<byte>();
-				for (int i = 0; i < animationFiles.Length; i++)
+				if (animationFiles != null && animationFiles.Length > 0)
 				{
-					chunk.AddRange(ByteConverter.GetBytes(straddr + strbytes.Count));
-					strbytes.AddRange(Encoding.UTF8.GetBytes(animationFiles[i]));
-					strbytes.Add(0);
-					strbytes.Align(4);
+					using (TextWriter tw = File.CreateText(Path.ChangeExtension(filename, ".action")))
+					{
+						for (int a = 0; a < animationFiles.Count(); a++)
+						{
+							tw.WriteLine(animationFiles[a]);
+						}
+						tw.Flush();
+						tw.Close();
+					}
+					/*
+					//Old animation code
+					List<byte> chunk = new List<byte>((animationFiles.Length + 1) * 4);
+					int straddr = (animationFiles.Length + 1) * 4;
+					List<byte> strbytes = new List<byte>();
+					for (int i = 0; i < animationFiles.Length; i++)
+					{
+						chunk.AddRange(ByteConverter.GetBytes(straddr + strbytes.Count));
+						strbytes.AddRange(Encoding.UTF8.GetBytes(animationFiles[i]));
+						strbytes.Add(0);
+						strbytes.Align(4);
+					}
+					chunk.AddRange(ByteConverter.GetBytes(-1));
+					chunk.AddRange(strbytes);
+					file.AddRange(ByteConverter.GetBytes((uint)ChunkTypes.Animation));
+					file.AddRange(ByteConverter.GetBytes(chunk.Count));
+					file.AddRange(chunk);
+					*/
 				}
-				chunk.AddRange(ByteConverter.GetBytes(-1));
-				chunk.AddRange(strbytes);
-				file.AddRange(ByteConverter.GetBytes((uint)ChunkTypes.Animation));
-				file.AddRange(ByteConverter.GetBytes(chunk.Count));
-				file.AddRange(chunk);
-			}
-			if (!string.IsNullOrEmpty(author))
-			{
-				List<byte> chunk = new List<byte>(author.Length + 1);
-				chunk.AddRange(Encoding.UTF8.GetBytes(author));
-				chunk.Add(0);
-				chunk.Align(4);
-				file.AddRange(ByteConverter.GetBytes((uint)ChunkTypes.Author));
-				file.AddRange(ByteConverter.GetBytes(chunk.Count));
-				file.AddRange(chunk);
-			}
-			if (!string.IsNullOrEmpty(description))
-			{
-				List<byte> chunk = new List<byte>(description.Length + 1);
-				chunk.AddRange(Encoding.UTF8.GetBytes(description));
-				chunk.Add(0);
-				chunk.Align(4);
-				file.AddRange(ByteConverter.GetBytes((uint)ChunkTypes.Description));
-				file.AddRange(ByteConverter.GetBytes(chunk.Count));
-				file.AddRange(chunk);
-			}
-			if (metadata != null)
-			{
-				foreach (KeyValuePair<uint, byte[]> item in metadata)
+				if (!string.IsNullOrEmpty(author))
 				{
-					file.AddRange(ByteConverter.GetBytes(item.Key));
-					file.AddRange(ByteConverter.GetBytes(item.Value.Length));
-					file.AddRange(item.Value);
+					List<byte> chunk = new List<byte>(author.Length + 1);
+					chunk.AddRange(Encoding.UTF8.GetBytes(author));
+					chunk.Add(0);
+					chunk.Align(4);
+					file.AddRange(ByteConverter.GetBytes((uint)ChunkTypes.Author));
+					file.AddRange(ByteConverter.GetBytes(chunk.Count));
+					file.AddRange(chunk);
 				}
+				if (!string.IsNullOrEmpty(description))
+				{
+					List<byte> chunk = new List<byte>(description.Length + 1);
+					chunk.AddRange(Encoding.UTF8.GetBytes(description));
+					chunk.Add(0);
+					chunk.Align(4);
+					file.AddRange(ByteConverter.GetBytes((uint)ChunkTypes.Description));
+					file.AddRange(ByteConverter.GetBytes(chunk.Count));
+					file.AddRange(chunk);
+				}
+				if (metadata != null)
+				{
+					foreach (KeyValuePair<uint, byte[]> item in metadata)
+					{
+						file.AddRange(ByteConverter.GetBytes(item.Key));
+						file.AddRange(ByteConverter.GetBytes(item.Value.Length));
+						file.AddRange(item.Value);
+					}
+				}
+				file.AddRange(ByteConverter.GetBytes((uint)ChunkTypes.End));
+				file.AddRange(new byte[4]);
 			}
-			file.AddRange(ByteConverter.GetBytes((uint)ChunkTypes.End));
-			file.AddRange(new byte[4]);
 			File.WriteAllBytes(filename, file.ToArray());
 			ByteConverter.BigEndian = be;
 		}

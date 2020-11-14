@@ -4,8 +4,8 @@ using System.Drawing;
 using System.IO;
 using PuyoTools.Modules.Archive;
 using VrSharp;
-using VrSharp.GvrTexture;
-using VrSharp.PvrTexture;
+using VrSharp.Gvr;
+using VrSharp.Pvr;
 
 namespace SonicRetro.SAModel.Direct3D.TextureSystem
 {
@@ -16,6 +16,7 @@ namespace SonicRetro.SAModel.Direct3D.TextureSystem
 	{
 		public static BMPInfo[] GetTextures(string filename)
 		{
+			if (!File.Exists(filename)) return null;
 			List<BMPInfo> functionReturnValue = new List<BMPInfo>();
 			bool gvm = false;
 			ArchiveBase pvmfile = null;
@@ -23,7 +24,8 @@ namespace SonicRetro.SAModel.Direct3D.TextureSystem
 			if (Path.GetExtension(filename).Equals(".prs", StringComparison.OrdinalIgnoreCase))
 				pvmdata = FraGag.Compression.Prs.Decompress(pvmdata);
 			pvmfile = new PvmArchive();
-			if (!pvmfile.Is(pvmdata, filename))
+			MemoryStream stream = new MemoryStream(pvmdata);
+			if (!PvmArchive.Identify(stream))
 			{
 				pvmfile = new GvmArchive();
 				gvm = true;

@@ -12,7 +12,7 @@ namespace SonicRetro.SAModel
 		public float U { get; set; }
 		public float V { get; set; }
 
-		public static uint Size
+		public static int Size
 		{
 			get { return 4; }
 		}
@@ -21,15 +21,24 @@ namespace SonicRetro.SAModel
 		{
 		}
 
-		public UV(byte[] file, uint address)
+		public UV(byte[] file, int address)
 			: this(file, address, false)
 		{
 		}
 
-		public UV(byte[] file, uint address, bool UVH)
+		public UV(byte[] file, int address, bool UVH, bool chunk = false)
 		{
-			U = ByteConverter.ToInt16(file, address) / (UVH ? 1023f : 255f);
-			V = ByteConverter.ToInt16(file, address + 2) / (UVH ? 1023f : 255f);
+			//"Reverse" is for the order used in SADX Gamecube
+			if (ByteConverter.Reverse || !ByteConverter.BigEndian || chunk)
+			{
+				U = ByteConverter.ToInt16(file, address) / (UVH ? 1023f : 255f);
+				V = ByteConverter.ToInt16(file, address + 2) / (UVH ? 1023f : 255f);
+			}
+			else
+			{
+				V = ByteConverter.ToInt16(file, address) / (UVH ? 1023f : 255f);
+				U = ByteConverter.ToInt16(file, address + 2) / (UVH ? 1023f : 255f);
+			}
 		}
 
 		public UV(string data)
@@ -37,6 +46,12 @@ namespace SonicRetro.SAModel
 			string[] uv = data.Split(',');
 			U = short.Parse(uv[0], NumberStyles.Float, NumberFormatInfo.InvariantInfo);
 			V = short.Parse(uv[1], NumberStyles.Float, NumberFormatInfo.InvariantInfo);
+		}
+
+		public UV(float u, float v)
+		{
+			U = u;
+			V = v;
 		}
 
 		public byte[] GetBytes()

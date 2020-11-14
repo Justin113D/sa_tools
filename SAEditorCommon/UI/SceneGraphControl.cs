@@ -114,6 +114,14 @@ namespace SonicRetro.SAModel.SAEditorCommon.UI
 
 					selectedNodes.Add(deathZoneNode.Nodes[index]);
 				}
+				else if (item is MissionSETItem)
+				{
+					MissionSETItem miSetItem = (MissionSETItem)item;
+
+					int index = LevelData.MissionSETItems[LevelData.Character].IndexOf(miSetItem);
+
+					selectedNodes.Add(missionSETNode.Nodes[index]);
+				}
 				else if (item is SETItem)
 				{
 					SETItem setItem = (SETItem)item;
@@ -129,14 +137,6 @@ namespace SonicRetro.SAModel.SAEditorCommon.UI
 					int index = LevelData.CAMItems[LevelData.Character].IndexOf(camItem);
 
 					selectedNodes.Add(camNode.Nodes[index]);
-				}
-				else if (item is MissionSETItem)
-				{
-					MissionSETItem miSetItem = (MissionSETItem)item;
-
-					int index = LevelData.MissionSETItems[LevelData.Character].IndexOf(miSetItem);
-
-					selectedNodes.Add(missionSETNode.Nodes[index]);
 				}
 				else if (item is SplineData)
 				{
@@ -216,9 +216,12 @@ namespace SonicRetro.SAModel.SAEditorCommon.UI
 				}
 
 			// cam node
-			foreach (CAMItem camItem in LevelData.CAMItems[LevelData.Character])
+			if (LevelData.CAMItems != null && LevelData.CAMItems[LevelData.Character] != null)
 			{
-				camNode.Nodes.Add(camItem.CamType.ToString());
+				foreach (CAMItem camItem in LevelData.CAMItems[LevelData.Character])
+				{
+					camNode.Nodes.Add(camItem.CamType.ToString());
+				}
 			}
 
 			foreach (SplineData splineData in LevelData.LevelSplines)

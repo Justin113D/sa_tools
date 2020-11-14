@@ -31,7 +31,17 @@ namespace SonicRetro.SAModel
 
 		public string Name { get; set; }
 
+		public bool IgnorePosition { get; set; }
+
+		public bool IgnoreRotation { get; set; }
+
+		public bool IgnoreScale { get; set; }
+
 		public bool RotateZYX { get; set; }
+
+		public bool SkipDraw { get; set; }
+
+		public bool SkipChildren { get; set; }
 
 		[DefaultValue(true)]
 		public bool Animate { get; set; }
@@ -99,8 +109,22 @@ namespace SonicRetro.SAModel
 				Name = labels[address];
 			else
 				Name = "object_" + address.ToString("X8");
+			if (address > file.Length - 52)
+			{
+				Position = new Vertex();
+				Rotation = new Rotation();
+				Scale = new Vertex(1, 1, 1);
+				children = new List<NJS_OBJECT>();
+				Children = new ReadOnlyCollection<NJS_OBJECT>(children);
+				return;
+			}
 			ObjectFlags flags = (ObjectFlags)ByteConverter.ToInt32(file, address);
 			RotateZYX = (flags & ObjectFlags.RotateZYX) == ObjectFlags.RotateZYX;
+			SkipDraw = (flags & ObjectFlags.NoDisplay) == ObjectFlags.NoDisplay;
+			SkipChildren = (flags & ObjectFlags.NoChildren) == ObjectFlags.NoChildren;
+			IgnorePosition = (flags & ObjectFlags.NoPosition) == ObjectFlags.NoPosition;
+			IgnoreRotation = (flags & ObjectFlags.NoRotate) == ObjectFlags.NoRotate;
+			IgnoreScale = (flags & ObjectFlags.NoScale) == ObjectFlags.NoScale;
 			Animate = (flags & ObjectFlags.NoAnimate) == 0;
 			Morph = (flags & ObjectFlags.NoMorph) == 0;
 			uint tmpaddr = ByteConverter.ToUInt32(file, address + 4);
@@ -215,15 +239,15 @@ namespace SonicRetro.SAModel
 		public ObjectFlags GetFlags()
 		{
 			ObjectFlags flags = 0;
-			if (Position.IsEmpty)
+			if (IgnorePosition || Position.IsEmpty)
 				flags = ObjectFlags.NoPosition;
-			if (Rotation.IsEmpty)
+			if (IgnoreRotation || Rotation.IsEmpty)
 				flags |= ObjectFlags.NoRotate;
-			if (Scale.X == 1 && Scale.Y == 1 && Scale.Z == 1)
+			if (IgnoreScale || (Scale.X == 1 && Scale.Y == 1 && Scale.Z == 1))
 				flags |= ObjectFlags.NoScale;
-			if (Attach == null)
+			if (Attach == null || SkipDraw)
 				flags |= ObjectFlags.NoDisplay;
-			if (Children.Count == 0)
+			if (Children.Count == 0 || SkipChildren)
 				flags |= ObjectFlags.NoChildren;
 			if (RotateZYX)
 				flags |= ObjectFlags.RotateZYX;
@@ -278,6 +302,7 @@ namespace SonicRetro.SAModel
 		{
 			children.Add(child);
 			child.Parent = this;
+			if (child.Sibling != null) AddChild(child.Sibling);
 		}
 
 		public void AddChildren(IEnumerable<NJS_OBJECT> children)
@@ -394,7 +419,7 @@ namespace SonicRetro.SAModel
 				Sibling.ToNJA(writer, DX, labels, textures);
 				writer.WriteLine();
 			}
-			writer.WriteLine("OBJECT_START");
+			writer.WriteLine("OBJECT_START" + Environment.NewLine);
 			if (Attach is BasicAttach)
 			{
 				BasicAttach basicattach = Attach as BasicAttach;
@@ -411,32 +436,22 @@ namespace SonicRetro.SAModel
 			writer.WriteLine("[]");
 			writer.WriteLine("START");
 			writer.WriteLine("EvalFlags ( " + ((StructEnums.NJD_EVAL)GetFlags()).ToString().Replace(", ", " | ") + " ),");
-			writer.WriteLine("Model  " + (Attach != null ? "&" + Attach.Name : "NULL") + ",");
-			writer.Write("OPosition ( ");
-			foreach (float value in Position.ToArray())
-			{
-				writer.Write(value.ToC());
-				writer.Write(", ");
-			}
-			writer.WriteLine("),");
-			writer.Write("OAngle ( ");
-			foreach (float value in Rotation.ToArray())
-			{
-				writer.Write(value.ToC());
-				writer.Write(", ");
-			}
-			writer.WriteLine("),");
-			writer.Write("OScale ( ");
-			foreach (float value in Scale.ToArray())
-			{
-				writer.Write(value.ToC());
-				writer.Write(", ");
-			}
-			writer.WriteLine("),");
+			writer.WriteLine("Model " + (Attach != null ? Attach.Name : "NULL") + ",");
+			writer.WriteLine("OPosition ( " + Position.X.ToC() + ", " + Position.Y.ToC() + ", " + Position.Z.ToC()+" ),");
+			writer.WriteLine("OAngle ( " + ((float)Rotation.X / 182.044f).ToC() + ", " + ((float)Rotation.Y / 182.044f).ToC() + ", " + ((float)Rotation.Z / 182.044f).ToC() + " ),");
+			writer.WriteLine("OScale ( " + Scale.X.ToC() + ", " + Scale.Y.ToC() + ", "+ Scale.Z.ToC() + " ),");
 			writer.WriteLine("Child " + (Children.Count > 0 ? Children[0].Name : "NULL") + ",");
 			writer.WriteLine("Sibling " + (Sibling != null ? Sibling.Name : "NULL"));
-			writer.WriteLine("END");
+			writer.WriteLine("END" + Environment.NewLine);
 			writer.WriteLine("OBJECT_END");
+			if (Parent == null)
+			{
+				writer.WriteLine(Environment.NewLine + "DEFAULT_START");
+				writer.WriteLine(Environment.NewLine + "#ifndef DEFAULT_OBJECT_NAME");
+				writer.WriteLine("#define DEFAULT_OBJECT_NAME " + Name);
+				writer.WriteLine("#endif");
+				writer.WriteLine(Environment.NewLine + "DEFAULT_END");
+			}
 		}
 
 		public void ToStructVariables(TextWriter writer, bool DX, List<string> labels, string[] textures = null)
