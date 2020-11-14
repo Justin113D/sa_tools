@@ -304,6 +304,16 @@ namespace SonicRetro.SAModel.Graphics.OpenGL
 				Matrix4 normal = Matrix4.Identity;
 				GL.UniformMatrix4(11, false, ref normal);
 
+				/*foreach(LandEntry le in Scene.geometry)
+				{
+					Bounds b = le.ModelBounds;
+					Matrix4 world = Matrix4.CreateScale(b.Radius) * Matrix4.CreateTranslation(b.Position.ToGL());
+					GL.UniformMatrix4(10, false, ref world);
+					world = world * GLCam.ViewMatrix * GLCam.Projectionmatrix;
+					GL.UniformMatrix4(12, false, ref world);
+					Sphere.Render(null, true, false);
+				}*/
+
 				Bounds b = ActiveLE.ModelBounds;
 				Matrix4 world = Matrix4.CreateScale(b.Radius) * Matrix4.CreateTranslation(b.Position.ToGL());
 				GL.UniformMatrix4(10, false, ref world);

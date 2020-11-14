@@ -152,7 +152,7 @@ namespace SonicRetro.SAModel.Graphics
 			_fonts.AddFontFile("debugFont.ttf");
 			_debugFont = new Font(_fonts.Families[0], 12);
 			_debugFontBold = new Font(_fonts.Families[0], 15, FontStyle.Bold);
-			BackgroundColor = new Color(0x40,0x40,0x40);
+			BackgroundColor = new Color(0x20, 0x20, 0x20);
 
 			byte[] sphere = File.ReadAllBytes("Sphere.bufmdl");
 			uint addr = 0;
@@ -332,6 +332,25 @@ namespace SonicRetro.SAModel.Graphics
 								}
 							}
 						}
+						else
+						{
+							if (ActiveLE == null) ActiveLE = Scene.geometry[0];
+							else
+							{
+								for (int i = 0; i < Scene.geometry.Count; i++)
+								{
+									if (Scene.geometry[i] == ActiveLE)
+									{
+										i += backWard ? -1 : 1;
+										if (i == -1) i = Scene.geometry.Count - 1;
+										else if (i == Scene.geometry.Count) i = 0;
+										ActiveLE = Scene.geometry[i];
+										Camera.Position = ActiveLE.ModelBounds.Position;
+										break;
+									}
+								}
+							}
+						}
 					}
 				}
 
@@ -359,7 +378,7 @@ namespace SonicRetro.SAModel.Graphics
 			RenderMaterial.RenderMode = _renderMode;
 		}
 
-		byte value = 0;
+		//byte value = 0;
 
 		/// <summary>
 		/// Renders the debug texture
@@ -376,9 +395,9 @@ namespace SonicRetro.SAModel.Graphics
 				int yOffset = 5;
 				int lineHeight = _debugFont.Height;
 				Brush br = Brushes.White;
-				Brush bg = new SolidBrush(System.Drawing.Color.FromArgb(value, 0, 0, 0));
-				if (value == 0xFF) value = 0;
-				else value++;
+				Brush bg = new SolidBrush(System.Drawing.Color.FromArgb(0x60, 0x60, 0x60, 0x60));
+				//if (value == 0xFF) value = 0;
+				//else value++;
 				
 
 				void text(string str, int xOffset)
