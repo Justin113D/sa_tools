@@ -114,6 +114,27 @@ namespace SonicRetro.SAModel.Graphics
 		CullSide = 0x09
 	}
 
+	/// <summary>
+	/// Which bounds should be drawn
+	/// </summary>
+	public enum BoundsMode
+	{
+		/// <summary>
+		/// Draws no bounds
+		/// </summary>
+		None,
+
+		/// <summary>
+		/// Draws bounds of selected objects
+		/// </summary>
+		Selected,
+
+		/// <summary>
+		/// Draws all bounds
+		/// </summary>
+		All
+	}
+
 	public enum MouseButton : int
 	{
 		Left = 0,

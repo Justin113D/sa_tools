@@ -32,14 +32,14 @@ namespace SonicRetro.SAModel.Graphics
 	}
 
 	/// <summary>
-	/// Holds all different settings values
+	/// Holds all different settings values for the Debug Scene
 	/// </summary>
-	public class Settings
+	public class DebugSettings
 	{
 		/// <summary>
 		/// Settings accessible for everything
 		/// </summary>
-		public static Settings Global { get; private set; }
+		public static DebugSettings Global { get; private set; }
 
 		[SettingsKey("Navigation Mode", "Switches between Orbiting and FPS movement", Key.O)]
 		public Key navMode;
@@ -99,7 +99,7 @@ namespace SonicRetro.SAModel.Graphics
 		[SettingsKey("Debug Render", "Displays the debug render menu", Key.F3)]
 		public Key DebugRender;
 
-		public Settings()
+		public DebugSettings()
 		{
 			var fields = GetType().GetTypeInfo().GetFields();
 			foreach (var field in fields)
@@ -120,7 +120,7 @@ namespace SonicRetro.SAModel.Graphics
 		/// </summary>
 		public static void InitDefault()
 		{
-			Global = new Settings();
+			Global = new DebugSettings();
 		}
 
 		/// <summary>
@@ -141,13 +141,13 @@ namespace SonicRetro.SAModel.Graphics
 		/// <param name="path"></param>
 		public static void Load(string path)
 		{
-			Settings settings = null;
+			DebugSettings settings = null;
 			JsonSerializer js = new JsonSerializer() { Culture = System.Globalization.CultureInfo.InvariantCulture };
 			try
 			{
 				using (TextReader tr = File.OpenText(path))
 				using (JsonTextReader jtr = new JsonTextReader(tr))
-					settings = js.Deserialize<Settings>(jtr);
+					settings = js.Deserialize<DebugSettings>(jtr);
 			}
 			catch (Exception)
 			{

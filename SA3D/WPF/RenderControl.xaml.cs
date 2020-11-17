@@ -27,7 +27,10 @@ namespace SonicRetro.SA3D.WPF.Viewmodel
 
 		public void UpdateFocus()
 		{
-			_renderContext.Focused = IsMouseOver;
+			if(IsMouseOver)
+				_renderContext.Focus();
+			else
+				Context.ResetFocus();
 		}
 
 		private void UserControl_SizeChanged(object sender, SizeChangedEventArgs e)

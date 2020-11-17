@@ -32,8 +32,8 @@
     <WarningLevel>4</WarningLevel>
   </PropertyGroup>
   <ItemGroup>
-    <Reference Include="GLWpfControl, Version=3.1.0.0, Culture=neutral, processorArchitecture=MSIL">
-      <HintPath>..\packages\OpenTK.GLWpfControl.3.1.0\lib\net452\GLWpfControl.dll</HintPath>
+    <Reference Include="GLWpfControl, Version=3.1.1.0, Culture=neutral, processorArchitecture=MSIL">
+      <HintPath>..\packages\OpenTK.GLWpfControl.3.1.1\lib\net452\GLWpfControl.dll</HintPath>
     </Reference>
     <Reference Include="OpenTK, Version=3.3.1.0, Culture=neutral, PublicKeyToken=bad199fe84eb3df4, processorArchitecture=MSIL">
       <HintPath>..\packages\OpenTK.3.3.1\lib\net20\OpenTK.dll</HintPath>
@@ -58,8 +58,12 @@
   </ItemGroup>
   <ItemGroup>
     <Compile Include="Context\GLCamera.cs" />
+    <Compile Include="Context\GLCanvas.cs" />
     <Compile Include="Context\GLContext.cs" />
+    <Compile Include="Context\GLDebugContext.cs" />
     <Compile Include="Context\GLInputUpdater.cs" />
+    <Compile Include="Context\GLRenderMesh.cs" />
+    <Compile Include="Context\GLWindow.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
     <Compile Include="Properties\Resources.Designer.cs">
       <AutoGen>True</AutoGen>
@@ -84,9 +88,9 @@
     <None Include="app.config" />
     <None Include="OpenTK.dll.config" />
     <None Include="packages.config" />
-    <None Include="Rendering\Shaders\Fragment\Debug.frag" />
+    <None Include="Rendering\Shaders\Fragment\DefaultUI.frag" />
     <None Include="Rendering\Shaders\Fragment\FragShader.frag" />
-    <None Include="Rendering\Shaders\Vertex\Debug.vert" />
+    <None Include="Rendering\Shaders\Vertex\DefaultUI.vert" />
     <None Include="Rendering\Shaders\Vertex\VertexShader.vert" />
   </ItemGroup>
   <ItemGroup />

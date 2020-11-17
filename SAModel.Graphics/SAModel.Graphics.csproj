@@ -43,13 +43,17 @@
   <ItemGroup>
     <Compile Include="Context\Camera.cs" />
     <Compile Include="Context\Context.cs" />
+    <Compile Include="Context\DebugContext.cs" />
     <Compile Include="Context\Enums.cs" />
     <Compile Include="Context\GameTask.cs" />
     <Compile Include="Context\GraphicsHelper.cs" />
     <Compile Include="Context\Input.cs" />
     <Compile Include="Context\Scene.cs" />
-    <Compile Include="Context\Settings.cs" />
-    <Compile Include="Context\RenderMaterial.cs" />
+    <Compile Include="Context\DebugSettings.cs" />
+    <Compile Include="Context\UI\Canvas.cs" />
+    <Compile Include="Context\UI\UIElement.cs" />
+    <Compile Include="Context\UI\UIImage.cs" />
+    <Compile Include="Context\UI\UIText.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
   </ItemGroup>
   <ItemGroup>

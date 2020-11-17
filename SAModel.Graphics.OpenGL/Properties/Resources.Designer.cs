@@ -63,9 +63,9 @@ namespace SonicRetro.SAModel.Graphics.OpenGL.Properties {
         /// <summary>
         ///   Looks up a localized resource of type System.Byte[].
         /// </summary>
-        internal static byte[] DebugFrag {
+        internal static byte[] DefaultUI_frag {
             get {
-                object obj = ResourceManager.GetObject("DebugFrag", resourceCulture);
+                object obj = ResourceManager.GetObject("DefaultUI.frag", resourceCulture);
                 return ((byte[])(obj));
             }
         }
@@ -73,9 +73,9 @@ namespace SonicRetro.SAModel.Graphics.OpenGL.Properties {
         /// <summary>
         ///   Looks up a localized resource of type System.Byte[].
         /// </summary>
-        internal static byte[] DebugVert {
+        internal static byte[] DefaultUI_vert {
             get {
-                object obj = ResourceManager.GetObject("DebugVert", resourceCulture);
+                object obj = ResourceManager.GetObject("DefaultUI.vert", resourceCulture);
                 return ((byte[])(obj));
             }
         }

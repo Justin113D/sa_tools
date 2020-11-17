@@ -225,7 +225,7 @@ namespace SonicRetro.SAModel.Graphics
 		/// </summary>
 		public void Move(float delta)
 		{
-			Settings s = Settings.Global;
+			DebugSettings s = DebugSettings.Global;
 			if (!_orbiting)
 			{
 				// rotation

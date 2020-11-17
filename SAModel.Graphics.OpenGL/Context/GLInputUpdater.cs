@@ -8,8 +8,14 @@ using TKey = OpenTK.Input.Key;
 
 namespace SonicRetro.SAModel.Graphics.OpenGL
 {
+	/// <summary>
+	/// Used to capture and convert OpenTK input to Windows input used by the context
+	/// </summary>
 	public class GLInputUpdater : InputUpdater
 	{
+		/// <summary>
+		/// Key mapper to convert from OpenTK input to API input
+		/// </summary>
 		private static readonly Dictionary<Key, TKey> Keymap = new Dictionary<Key, TKey>()
 		{
 			{ Key.None , TKey.Unknown },
@@ -131,9 +137,19 @@ namespace SonicRetro.SAModel.Graphics.OpenGL
 			{ Key.OemBackslash , TKey.BackSlash }
 		};
 
+		/// <summary>
+		/// All mouse button types mapped to indices
+		/// </summary>
 		private static MouseButton[] _mouseButtons;
+
+		/// <summary>
+		/// Used to evaluate scroll difference
+		/// </summary>
 		private static int _lastScroll;
 
+		/// <summary>
+		/// Default constructor
+		/// </summary>
 		public GLInputUpdater()
 		{
 			_mouseButtons = Enum.GetValues(typeof(MouseButton)).Cast<MouseButton>().Distinct().ToArray();

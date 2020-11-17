@@ -38,6 +38,82 @@ namespace SonicRetro.SAModel.Graphics.OpenGL
 		}
 	}
 
+	public static class RenderMethods
+	{
+		public static void PrepareModel(List<GLRenderMesh> renderMeshes, GLCamera camera, NJObject activeObj, NJObject obj, Matrix4? parentWorld, bool weighted)
+		{
+			Matrix4 world = obj.LocalMatrix();
+			if(parentWorld.HasValue)
+				world *= parentWorld.Value;
+
+			if(obj.Attach != null)
+			{
+				// if a model is weighted, then the buffered vertex positions/normals will have to be set to world space, which means that world and normal matrix should be identities
+				if(weighted)
+				{
+					renderMeshes.Add(new GLRenderMesh(obj.Attach, world, Matrix4.Identity, Matrix4.Identity, camera.ViewMatrix * camera.Projectionmatrix, obj == activeObj));
+				}
+				else
+				{
+					Matrix4 normalMtx = world.Inverted();
+					normalMtx.Transpose();
+					renderMeshes.Add(new GLRenderMesh(obj.Attach, null, world, normalMtx, world * camera.ViewMatrix * camera.Projectionmatrix, obj == activeObj));
+				}
+			}
+
+			for(int i = 0; i < obj.ChildCount; i++)
+				PrepareModel(renderMeshes, camera, activeObj, obj[i], world, weighted);
+		}
+
+		public static void PrepareLandentry(List<GLRenderMesh> renderMeshes, List<LandEntry> entries, GLCamera camera, LandEntry activeLE, LandEntry le)
+		{
+			if(!camera.Renderable(le) || entries.Contains(le))
+				return;
+			entries.Add(le);
+			Matrix4 world = le.LocalMatrix();
+			Matrix4 normalMtx = world.Inverted();
+			normalMtx.Transpose();
+			renderMeshes.Add(new GLRenderMesh(le.Attach, null, world, normalMtx, world * camera.ViewMatrix * camera.Projectionmatrix, le == activeLE));
+		}
+
+		public static void RenderModels(List<GLRenderMesh> renderMeshes, bool transparent)
+		{
+			for(int i = 0; i < renderMeshes.Count; i++)
+			{
+				GLRenderMesh m = renderMeshes[i];
+				GL.UniformMatrix4(10, false, ref m.worldMtx);
+				GL.UniformMatrix4(11, false, ref m.normalMtx);
+				GL.UniformMatrix4(12, false, ref m.MVP);
+				m.attach.Render(m.realWorldMtx, transparent, m.active);
+			}
+		}
+
+		public static void RenderModelsWireframe(List<GLRenderMesh> renderMeshes, bool transparent)
+		{
+			GL.Uniform1(13, 0.001f); // setting normal offset for wireframe
+			RenderMode old = GLMaterial.RenderMode;
+			GLMaterial.RenderMode = RenderMode.FullDark; // drawing the lines black
+			GLMaterial.Reset();
+			GLMaterial.ReBuffer();
+			GL.PolygonMode(MaterialFace.FrontAndBack, PolygonMode.Line);
+
+			for(int i = 0; i < renderMeshes.Count; i++)
+			{
+				GLRenderMesh m = renderMeshes[i];
+				GL.UniformMatrix4(10, false, ref m.worldMtx);
+				GL.UniformMatrix4(11, false, ref m.normalMtx);
+				GL.UniformMatrix4(12, false, ref m.MVP);
+				m.attach.RenderWireframe(transparent);
+			}
+
+			// reset
+			GL.Uniform1(13, 0f);
+			GLMaterial.RenderMode = old;
+			GL.PolygonMode(MaterialFace.FrontAndBack, PolygonMode.Fill);
+		}
+
+	}
+
 	public static class Extensions
 	{
 		private static readonly CachedVertex[] vertices = new CachedVertex[0xFFFF];

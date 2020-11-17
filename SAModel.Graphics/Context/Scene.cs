@@ -1,5 +1,6 @@
 ﻿using SonicRetro.SAModel.ObjData;
 using SonicRetro.SAModel.ObjData.Animation;
+using SonicRetro.SAModel.Structs;
 using System;
 using System.Collections.Generic;
 using System.Linq;

@@ -44,7 +44,7 @@ namespace SonicRetro.SA3D.WPF.ViewModel
 
 		public MainViewModel()
 		{
-			_renderContext = new GLContext(default);
+			_renderContext = new GLDebugContext(default);
 			RenderControl = new RenderControl(_renderContext);
 			MainControl = RenderControl;
 			OpenFileRC = new RelayCommand(OpenFile);

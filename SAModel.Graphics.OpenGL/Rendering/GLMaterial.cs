@@ -1,7 +1,4 @@
 ﻿using System;
-using System.IO;
-using System.Drawing;
-using OpenTK;
 using OpenTK.Graphics.OpenGL4;
 using SonicRetro.SAModel.ModelData.Buffer;
 using SonicRetro.SAModel.ModelData;
@@ -10,8 +7,28 @@ using Reloaded.Memory.Streams;
 
 namespace SonicRetro.SAModel.Graphics.OpenGL.Rendering
 {
-	public class GLMaterial : RenderMaterial
+	public class GLMaterial
 	{
+		/// <summary>
+		/// Active material
+		/// </summary>
+		public static BufferMaterial Material { get; private set; }
+
+		/// <summary>
+		/// Global rendering mode
+		/// </summary>
+		public static RenderMode RenderMode { get; set; }
+
+		/// <summary>
+		/// Viewing position
+		/// </summary>
+		public static Structs.Vector3 ViewPos { get; set; }
+
+		/// <summary>
+		/// Camera viewing direction
+		/// </summary>
+		public static Structs.Vector3 ViewDir { get; set; }
+
 		/// <summary>
 		/// The buffer handle
 		/// </summary>
@@ -23,34 +40,34 @@ namespace SonicRetro.SAModel.Graphics.OpenGL.Rendering
 		unsafe public static void Init()
 		{
 			Handle = GL.GenBuffer();
-			material = new BufferMaterial();
-			Buffer();
+			Material = new BufferMaterial();
+			ReBuffer();
 		}
 
 		public static void Reset()
 		{
-			material = new BufferMaterial();
+			Material = new BufferMaterial();
 		}
 
 		public static void Buffer(BufferMaterial mat)
 		{
-			material = mat;
-			Buffer();
+			Material = mat;
+			ReBuffer();
 		}
 
-		unsafe public static void Buffer()
+		unsafe public static void ReBuffer()
 		{
-			if (material.MaterialFlags.HasFlag(MaterialFlags.useTexture))
+			if (Material.MaterialFlags.HasFlag(MaterialFlags.useTexture))
 			{
 				// bind texture here using textureID and the correct texture list
-				GL.TexParameter(TextureTarget.Texture2D, TextureParameterName.TextureMinFilter, (int)material.TextureFiltering.ToGLMinFilter());
-				GL.TexParameter(TextureTarget.Texture2D, TextureParameterName.TextureMagFilter, (int)material.TextureFiltering.ToGLMagFilter());
-				GL.TexParameter(TextureTarget.Texture2D, TextureParameterName.TextureWrapS, (int)material.WrapModeU());
-				GL.TexParameter(TextureTarget.Texture2D, TextureParameterName.TextureWrapT, (int)material.WrapModeV());
+				GL.TexParameter(TextureTarget.Texture2D, TextureParameterName.TextureMinFilter, (int)Material.TextureFiltering.ToGLMinFilter());
+				GL.TexParameter(TextureTarget.Texture2D, TextureParameterName.TextureMagFilter, (int)Material.TextureFiltering.ToGLMagFilter());
+				GL.TexParameter(TextureTarget.Texture2D, TextureParameterName.TextureWrapS, (int)Material.WrapModeU());
+				GL.TexParameter(TextureTarget.Texture2D, TextureParameterName.TextureWrapT, (int)Material.WrapModeV());
 			}
-			if (material.UseAlpha) GL.BlendFunc(material.SourceBlendMode.ToGLBlend(), material.DestinationBlendmode.ToGLBlend());
+			if (Material.UseAlpha) GL.BlendFunc(Material.SourceBlendMode.ToGLBlend(), Material.DestinationBlendmode.ToGLBlend());
 
-			if (material.Culling && RenderMode != RenderMode.CullSide)
+			if (Material.Culling && RenderMode != RenderMode.CullSide)
 				GL.Enable(EnableCap.CullFace);
 			else GL.Disable(EnableCap.CullFace);
 
@@ -65,26 +82,26 @@ namespace SonicRetro.SAModel.Graphics.OpenGL.Rendering
 				ViewDir.Write(writer, Structs.IOType.Float);
 				writer.Write(0);
 
-				LightDir.Write(writer, Structs.IOType.Float);
+				new Structs.Vector3(0, 1, 0).Write(writer, Structs.IOType.Float);
 				writer.Write(0);
 
-				writer.Write(material.Diffuse.RedF);
-				writer.Write(material.Diffuse.GreenF);
-				writer.Write(material.Diffuse.BlueF);
-				writer.Write(material.Diffuse.AlphaF);
+				writer.Write(Material.Diffuse.RedF);
+				writer.Write(Material.Diffuse.GreenF);
+				writer.Write(Material.Diffuse.BlueF);
+				writer.Write(Material.Diffuse.AlphaF);
 
-				writer.Write(material.Specular.RedF);
-				writer.Write(material.Specular.GreenF);
-				writer.Write(material.Specular.BlueF);
-				writer.Write(material.Specular.AlphaF);
+				writer.Write(Material.Specular.RedF);
+				writer.Write(Material.Specular.GreenF);
+				writer.Write(Material.Specular.BlueF);
+				writer.Write(Material.Specular.AlphaF);
 
-				writer.Write(material.Ambient.RedF);
-				writer.Write(material.Ambient.GreenF);
-				writer.Write(material.Ambient.BlueF);
-				writer.Write(material.Ambient.AlphaF);
+				writer.Write(Material.Ambient.RedF);
+				writer.Write(Material.Ambient.GreenF);
+				writer.Write(Material.Ambient.BlueF);
+				writer.Write(Material.Ambient.AlphaF);
 
-				writer.Write(material.SpecularExponent);
-				int flags = (ushort)material.MaterialFlags | ((int)RenderMode << 24);
+				writer.Write(Material.SpecularExponent);
+				int flags = (ushort)Material.MaterialFlags | ((int)RenderMode << 24);
 				writer.Write(flags);
 
 				GL.BindBuffer(BufferTarget.UniformBuffer, Handle);

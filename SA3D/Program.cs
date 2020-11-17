@@ -74,7 +74,7 @@ namespace SonicRetro.SA3D
 			}
 
 			System.Drawing.Rectangle rect = new System.Drawing.Rectangle(0, 0, width, height);
-			GLContext context = new GLContext(rect);
+			GLDebugContext context = new GLDebugContext(rect);
 			if(path != null)
 			{
 				string ext = Path.GetExtension(path);
