@@ -376,6 +376,23 @@ namespace SonicRetro.SAModel.ObjData
 			return result;
 		}
 
+		/// <summary>
+		/// Check if this object or the hierarchy below has a specific name
+		/// </summary>
+		/// <param name="name">Name to check</param>
+		/// <returns></returns>
+		public bool ContainsName(string name)
+		{
+			if(Name == name)
+				return true;
+
+			foreach(NJObject item in _children)
+				if(item.ContainsName(name))
+					return true;
+
+			return false;
+		}
+
 		private void GetObjects(List<NJObject> result)
 		{
 			result.Add(this);

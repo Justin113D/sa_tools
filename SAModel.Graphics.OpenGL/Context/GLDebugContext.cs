@@ -1,9 +1,6 @@
-﻿using System;
-using System.Collections.Generic;
+﻿using System.Collections.Generic;
 using System.Drawing;
-using System.Linq;
 using System.Text;
-using System.Threading.Tasks;
 using System.Windows;
 using System.Windows.Interop;
 using OpenTK;
@@ -13,7 +10,6 @@ using OpenTK.Platform;
 using OpenTK.Wpf;
 using SonicRetro.SAModel.Graphics.OpenGL.Properties;
 using SonicRetro.SAModel.Graphics.OpenGL.Rendering;
-using SonicRetro.SAModel.Graphics.UI;
 using SonicRetro.SAModel.ObjData;
 using SonicRetro.SAModel.Structs;
 

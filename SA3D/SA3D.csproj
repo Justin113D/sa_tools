@@ -44,12 +44,18 @@
     <ApplicationIcon>Icons\logo.ico</ApplicationIcon>
   </PropertyGroup>
   <ItemGroup>
+    <Reference Include="Microsoft.Expression.Interactions, Version=4.0.0.0, Culture=neutral, PublicKeyToken=31bf3856ad364e35, processorArchitecture=MSIL">
+      <HintPath>..\packages\System.Windows.Interactivity.WPF.2.0.20525\lib\net40\Microsoft.Expression.Interactions.dll</HintPath>
+    </Reference>
     <Reference Include="PropertyChanged, Version=3.2.7.0, Culture=neutral, PublicKeyToken=ee3ee20bcf148ddd, processorArchitecture=MSIL">
       <HintPath>..\packages\PropertyChanged.Fody.3.2.7\lib\net40\PropertyChanged.dll</HintPath>
     </Reference>
     <Reference Include="System" />
     <Reference Include="System.Data" />
     <Reference Include="System.Drawing" />
+    <Reference Include="System.Windows.Interactivity, Version=4.0.0.0, Culture=neutral, PublicKeyToken=31bf3856ad364e35, processorArchitecture=MSIL">
+      <HintPath>..\packages\System.Windows.Interactivity.WPF.2.0.20525\lib\net40\System.Windows.Interactivity.dll</HintPath>
+    </Reference>
     <Reference Include="System.Xml" />
     <Reference Include="Microsoft.CSharp" />
     <Reference Include="System.Core" />
@@ -64,9 +70,8 @@
     <Reference Include="PresentationFramework" />
   </ItemGroup>
   <ItemGroup>
-    <Compile Include="WPF\RenderControl.xaml.cs">
-      <DependentUpon>RenderControl.xaml</DependentUpon>
-    </Compile>
+    <Compile Include="WPF\ViewModel\NJObjectTreeVM.cs" />
+    <Compile Include="WPF\ViewModel\NJObjectVM.cs" />
     <Page Include="WPF\app.xaml">
       <SubType>Designer</SubType>
       <Generator>MSBuild:Compile</Generator>
@@ -78,17 +83,13 @@
     <Compile Include="WPF\app.xaml.cs">
       <DependentUpon>app.xaml</DependentUpon>
     </Compile>
-    <Compile Include="WPF\Viewmodel\Base\BaseViewModel.cs" />
-    <Compile Include="WPF\Viewmodel\Base\RelayCommand.cs" />
-    <Compile Include="WPF\Viewmodel\MainViewModel.cs" />
+    <Compile Include="WPF\ViewModel\Base\BaseViewModel.cs" />
+    <Compile Include="WPF\ViewModel\Base\RelayCommand.cs" />
+    <Compile Include="WPF\ViewModel\MainViewModel.cs" />
     <Compile Include="WPF\MainWindow.xaml.cs">
       <DependentUpon>MainWindow.xaml</DependentUpon>
       <SubType>Code</SubType>
     </Compile>
-    <Page Include="WPF\RenderControl.xaml">
-      <SubType>Designer</SubType>
-      <Generator>MSBuild:Compile</Generator>
-    </Page>
   </ItemGroup>
   <ItemGroup>
     <Compile Include="Program.cs" />

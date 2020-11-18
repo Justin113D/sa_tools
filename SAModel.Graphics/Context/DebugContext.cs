@@ -1,7 +1,6 @@
 ﻿using SonicRetro.SAModel.ModelData.Buffer;
 using SonicRetro.SAModel.ObjData;
 using Color = SonicRetro.SAModel.Structs.Color;
-
 using System;
 using System.Drawing;
 using System.Drawing.Drawing2D;
@@ -141,6 +140,10 @@ namespace SonicRetro.SAModel.Graphics
 		public virtual void CircleRenderMode(bool back)
 		{
 			_renderMode = (RenderMode)Circle((int)_renderMode, Enum.GetValues(typeof(RenderMode)).Length, back);
+			if(_renderMode == RenderMode.FullBright)
+				_renderMode = RenderMode.Normals;
+			else if(_renderMode == RenderMode.FullDark)
+				_renderMode = RenderMode.Falloff;
 		}
 
 		public virtual void CircleBoundsMode(bool back)

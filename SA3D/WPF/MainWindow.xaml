@@ -3,17 +3,23 @@
         xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
         xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
         xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+        xmlns:i="http://schemas.microsoft.com/expression/2010/interactivity"
         xmlns:local="clr-namespace:SonicRetro.SA3D.WPF"
         xmlns:vm="clr-namespace:SonicRetro.SA3D.WPF.ViewModel"
         mc:Ignorable="d"
-        Title="SA3D" Height="720" Width="1280"
-        Icon="/SA3D;component/Icons/logo.ico"
-        MouseDown="Window_MouseDown">
+        d:DataContext="{d:DesignInstance vm:MainViewModel}"
+        Title="SA3D" Width="1280" Height="720"
+        Icon="/SA3D;component/Icons/logo.ico">
 
-    <Window.DataContext>
-        <vm:MainViewModel/>
-    </Window.DataContext>
-    
+    <i:Interaction.Triggers>
+        <i:EventTrigger EventName="MouseDown">
+            <i:InvokeCommandAction Command="{Binding Path=FocusWindow, Mode=OneWay}"/>
+        </i:EventTrigger>
+        <i:EventTrigger EventName="ContentRendered">
+            <i:InvokeCommandAction Command="{Binding Path=ResizeRender, Mode=OneWay}"/>
+        </i:EventTrigger>
+    </i:Interaction.Triggers>
+
     <Window.Resources>
         <Image x:Key="ico_Export" Source="/SA3D;component/Icons/Export_16x.png" x:Shared="false"/>
         <Image x:Key="ico_Import" Source="/SA3D;component/Icons/Import_16x.png" x:Shared="false"/>
@@ -21,11 +27,10 @@
         <Image x:Key="ico_OpenFile" Source="/SA3D;component/Icons/OpenFile_16x.png" x:Shared="false"/>
         <Image x:Key="ico_Save" Source="/SA3D;component/Icons/Save_16x.png" x:Shared="false"/>
         <Image x:Key="ico_SaveAs" Source="/SA3D;component/Icons/SaveAs_16x.png" x:Shared="false"/>
-    </Window.Resources> 
-   
+    </Window.Resources>
+
     <Grid>
         <Grid.RowDefinitions>
-            <RowDefinition Height="auto"/>
             <RowDefinition Height="auto"/>
             <RowDefinition Height="*"/>
         </Grid.RowDefinitions>
@@ -70,9 +75,55 @@
                 <MenuItem Header="Wiki"/>
             </MenuItem>
         </Menu>
-        
-        <Separator Grid.Row="1"/>
 
-        <UserControl Grid.Row="2" Content="{Binding MainControl}"/>
+        <Grid Grid.Row="1">
+            <Grid.ColumnDefinitions>
+                <ColumnDefinition Width="*"/>
+                <ColumnDefinition Width="5"/>
+                <ColumnDefinition Width="300"/>
+            </Grid.ColumnDefinitions>
+
+            <Grid Grid.Column="0">
+                <Grid.RowDefinitions>
+                    <RowDefinition Height="20"/>
+                    <RowDefinition Height="*"/>
+                </Grid.RowDefinitions>
+
+                <ContentControl x:Name="Render" Grid.Row="1" Content="{Binding RenderControl}">
+                    <i:Interaction.Triggers>
+                        <i:EventTrigger EventName="SizeChanged">
+                            <i:InvokeCommandAction Command="{Binding Path=ResizeRender, Mode=OneWay}"/>
+                        </i:EventTrigger>
+                    </i:Interaction.Triggers>
+                </ContentControl>
+            </Grid>
+
+            <GridSplitter Grid.Column="1" Width="5" HorizontalAlignment="Stretch"/>
+
+            <TabControl Grid.Column="2">
+                <TabItem Header="Geometry">
+                </TabItem>
+                <TabItem Header="Models" DataContext="{Binding NJObjectTreeVM}" IsEnabled="{Binding IsEnabled, Mode=OneWay}" IsSelected="{Binding IsSelected, Mode=TwoWay}">
+                    <TreeView ItemsSource="{Binding NJObjects}">
+                        <TreeView.ItemContainerStyle>
+                            <Style TargetType="{x:Type TreeViewItem}">
+                                <Setter Property="IsExpanded" Value="{Binding IsExpanded, Mode=TwoWay}"/>
+                                <Setter Property="IsSelected" Value="{Binding IsSelected, Mode=OneWayToSource}"/>
+                            </Style>
+                        </TreeView.ItemContainerStyle>
+
+                        <TreeView.ItemTemplate>
+                            <HierarchicalDataTemplate ItemsSource="{Binding Children}">
+                                <Label Content="{Binding Name}" VerticalAlignment="Center" VerticalContentAlignment="Stretch"/>
+                            </HierarchicalDataTemplate>
+                        </TreeView.ItemTemplate>
+
+                    </TreeView>
+                </TabItem>
+                <TabItem Header="Objects"/>
+            </TabControl>
+        </Grid>
+
+
     </Grid>
 </Window>

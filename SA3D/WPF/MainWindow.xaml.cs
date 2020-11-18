@@ -10,13 +10,8 @@ namespace SonicRetro.SA3D.WPF
     {
         public MainWindow()
         {
-            InitializeComponent();
-			
-        }
-
-		private void Window_MouseDown(object sender, System.Windows.Input.MouseButtonEventArgs e)
-		{
-			((MainViewModel)DataContext).RenderControl.UpdateFocus();
+			DataContext = new MainViewModel(this);
+			InitializeComponent();
 		}
 	}
 }

@@ -1,5 +1,4 @@
 ﻿using Microsoft.Win32;
-using SonicRetro.SA3D.WPF.Viewmodel;
 using SonicRetro.SA3D.WPF.ViewModel.Base;
 using SonicRetro.SAModel.Graphics;
 using SonicRetro.SAModel.Graphics.OpenGL;
@@ -7,6 +6,7 @@ using System;
 using System.IO;
 using System.Windows;
 using System.Windows.Controls;
+using System.Windows.Interop;
 
 namespace SonicRetro.SA3D.WPF.ViewModel
 {
@@ -28,28 +28,75 @@ namespace SonicRetro.SA3D.WPF.ViewModel
 		/// </summary>
 		private Mode _applicationMode;
 
-		private readonly Context _renderContext;
+		private MainWindow _window;
 
 		/// <summary>
-		/// Main control that is displayed below the menu
+		/// Render context being displayed
 		/// </summary>
-		public UserControl MainControl { get; private set; }
+		public DebugContext RenderContext { get; }
 
 		/// <summary>
-		/// Render control used to display models (and other various things)
+		/// Rendercontrol output
 		/// </summary>
-		public RenderControl RenderControl { get; }
+		public FrameworkElement RenderControl { get; }
+
+		/// <summary>
+		/// Gets called on mouse down <br/> 
+		/// Sets the context accordingly to focused/not focused
+		/// </summary>
+		public RelayCommand FocusWindow { get; }
+
+		/// <summary>
+		/// Gets called when <see cref="RenderControl"/>s size changes <br/> 
+		/// Updates the contexts resolution
+		/// </summary>
+		public RelayCommand ResizeRender { get; }
+
+		public RelayCommand SelectionChangedCommand { get; }
 
 		public RelayCommand OpenFileRC { get; }
 
-		public MainViewModel()
+		public NJObjectTreeVM NJObjectTreeVM { get; }
+
+		public MainViewModel(MainWindow window)
 		{
-			_renderContext = new GLDebugContext(default);
-			RenderControl = new RenderControl(_renderContext);
-			MainControl = RenderControl;
+			RenderContext = new GLDebugContext(default);
+
+			NJObjectTreeVM = new NJObjectTreeVM(this);
+			FocusWindow = new RelayCommand(Focus);
+			ResizeRender = new RelayCommand(Resize);
 			OpenFileRC = new RelayCommand(OpenFile);
+
+			_window = window;
+			var _hwnd = new HwndSource(0, 0, 0, 0, 0, "RenderControl", new WindowInteropHelper(window).Handle);
+
+			// TODO once graphics.DX exists and works, we gotta make it switchable
+			RenderControl = RenderContext.AsControl(_hwnd);
+
 		}
 
+		/// <summary>
+		/// Focuses the context or not
+		/// </summary>
+		public void Focus()
+		{
+			if(_window.IsMouseOver)
+				RenderContext.Focus();
+			else
+				Context.ResetFocus();
+		}
+
+		/// <summary>
+		/// Passes the rendercontrol resolution to the context
+		/// </summary>
+		public void Resize()
+		{
+			RenderContext.Resolution = new System.Drawing.Size((int)_window.Render.ActualWidth, (int)_window.Render.ActualHeight);
+		}
+
+		/// <summary>
+		/// Opens and loads a model/level file
+		/// </summary>
 		private void OpenFile()
 		{
 			OpenFileDialog ofd = new OpenFileDialog()
@@ -67,7 +114,8 @@ namespace SonicRetro.SA3D.WPF.ViewModel
 					if(mdlFile != null)
 					{
 						_applicationMode = Mode.Model;
-						_renderContext.Scene.LoadModelFile(mdlFile);
+						RenderContext.Scene.LoadModelFile(mdlFile);
+						NJObjectTreeVM.Refresh();
 						return;
 					}
 				}
@@ -82,7 +130,7 @@ namespace SonicRetro.SA3D.WPF.ViewModel
 					if(ltbl != null)
 					{
 						_applicationMode = Mode.Level;
-						_renderContext.Scene.LoadLandtable(ltbl);
+						RenderContext.Scene.LoadLandtable(ltbl);
 						return;
 					}
 				}
