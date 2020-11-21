@@ -7,8 +7,22 @@ namespace Split
 {
 	class Program
 	{
+		static int CompareFiles(string file1, string file2)
+		{
+			int result = 0;
+			byte[] model1 = File.ReadAllBytes(file1);
+			byte[] model2 = File.ReadAllBytes(file2);
+			for (int i = 0; i < Math.Min(model1.Length, model2.Length); i++)
+			{
+				if (model1[i] != model2[i]) result++;
+			}
+			int abs = Math.Abs(model1.Length - model2.Length);
+			if (abs != 0) result += abs;
+			return result;
+		}
 		static void Main(string[] args)
 		{
+			bool nometa = false;
 			if (args.Length > 0 && args[args.Length - 1] == "-m")
 			{
 				SplitM(args);
@@ -17,6 +31,11 @@ namespace Split
 			else if (args.Length > 0 && args[args.Length - 1] == "-l")
 			{
 				SplitL(args);
+				return;
+			}
+			else if (args.Length > 0 && args[args.Length - 1] == "-c")
+			{
+				SplitC(args);
 				return;
 			}
 			string mode;
@@ -28,7 +47,7 @@ namespace Split
 				Console.WriteLine("Split any binary files supported by SA Tools.\n");
 				Console.WriteLine("Usage:\n");
 				Console.WriteLine("-Splitting binary files with INI data-");
-				Console.WriteLine("split binary <file> <inifile> [output path]\n");
+				Console.WriteLine("split binary <file> <inifile> [output path] [-nometa]\n");
 				Console.WriteLine("-Splitting SA1/SADX NB files-");
 				Console.WriteLine("split nb <file> [output path]\n");
 				Console.WriteLine("-Splitting SA2 MDL files-");
@@ -41,6 +60,10 @@ namespace Split
 			}
 			else
 			{
+				for (int u = 2; u < args.Length; u++)
+				{
+					if (args[u] == "-nometa") nometa = true;
+				}
 				mode = args[0];
 				switch (mode.ToLowerInvariant())
 				{
@@ -67,9 +90,10 @@ namespace Split
 							fullpath_out = Path.GetFullPath(fullpath_out);
 						}
 						Console.WriteLine("Output folder: {0}", fullpath_out);
+						if (nometa) Console.WriteLine("Labels are disabled");
 						if (Path.GetExtension(args[1]).ToLowerInvariant() == ".dll")
-							SA_Tools.SplitDLL.SplitDLL.SplitDLLFile(fullpath_bin, fullpath_ini, fullpath_out);
-						else SA_Tools.Split.Split.SplitFile(fullpath_bin, fullpath_ini, fullpath_out);
+							SA_Tools.SplitDLL.SplitDLL.SplitDLLFile(fullpath_bin, fullpath_ini, fullpath_out, nometa);
+						else SA_Tools.Split.Split.SplitFile(fullpath_bin, fullpath_ini, fullpath_out, nometa);
 						break;
 					case "nb":
 					case "nb_b":
@@ -137,7 +161,6 @@ namespace Split
 						Console.ReadLine();
 						return;
 				}
-
 			}
 		}
 		static void SplitM(string[] args)
@@ -319,6 +342,36 @@ namespace Split
 				}
 			}
 			IniSerializer.Serialize(newinifile, Path.GetFileNameWithoutExtension(listname) + ".ini");
+		}
+		static void SplitC(string[] args)
+		{
+			if (args.Length < 3)
+			{
+				return;
+			}
+			List<string> foundmodels = new List<string>();
+			string[] filenames_dir1 = Directory.GetFiles(args[0], "*", SearchOption.AllDirectories);
+			string[] filenames_dir2 = Directory.GetFiles(args[1], "*", SearchOption.AllDirectories);
+			for (int i = 0; i < filenames_dir1.Length; i++)
+			{
+				int threshold = 0;
+				if (Path.GetExtension(filenames_dir1[i]).ToLowerInvariant() == ".sa1lvl") threshold = 128;
+				int match = 0;
+				for (int u = 0; u < filenames_dir2.Length; u++)
+				{
+					int comp = CompareFiles(filenames_dir1[i], filenames_dir2[u]);
+					if (comp <= threshold)
+					{
+						if (match > 0) Console.Write("*");
+						if (foundmodels.Contains(filenames_dir2[u])) Console.Write("$");
+						Console.Write("{0}={1}", filenames_dir1[i].Replace("\\", "/"), filenames_dir2[u].Replace("\\", "/"));
+						match++;
+						foundmodels.Add(filenames_dir2[u]);
+						Console.Write(System.Environment.NewLine);
+					}
+				}
+				if (match == 0) Console.WriteLine("No match for {0}", filenames_dir1[i]);
+			}
 		}
 	}
 }
