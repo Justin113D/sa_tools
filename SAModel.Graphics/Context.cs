@@ -3,15 +3,37 @@ using Color = SonicRetro.SAModel.Structs.Color;
 using System.Drawing;
 using System.Windows.Interop;
 using SonicRetro.SAModel.Graphics.UI;
+using SonicRetro.SAModel.Graphics.APIAccess;
 
 namespace SonicRetro.SAModel.Graphics
 {
 	/// <summary>
 	/// Rendering context base class
 	/// </summary>
-	public abstract class Context
+	public class Context
 	{
+		#region Statics
+
+		/// <summary>
+		/// The focused context
+		/// </summary>
 		public static Context Focused { get; private set; }
+
+		#endregion
+
+		#region private fields
+
+		/// <summary>
+		/// Graphics API Access Object
+		/// </summary>
+		protected GAPIAccessObject _apiAccessObject;
+
+		/// <summary>
+		/// Whether the context was focused in the last update
+		/// </summary>
+		protected bool _wasFocused;
+
+		private Point _screenCenter;
 
 		/// <summary>
 		/// Positiona and resolution of the context
@@ -19,16 +41,58 @@ namespace SonicRetro.SAModel.Graphics
 		protected Rectangle _screen;
 
 		/// <summary>
-		/// Center of the screen, 
+		/// see <see cref="BackgroundColor"/>
 		/// </summary>
-		public Point Center { get; protected set; }
+		private Color _backgroundColor;
+
+		#endregion
+
+		#region Public Properties
 
 		/// <summary>
-		/// Whether the context was focused in the last update
+		/// Whether this window is in focus
 		/// </summary>
-		protected bool _wasFocused;
+		public bool IsFocused
+		{
+			get => Focused == this;
+			set
+			{
+				if(value)
+					Focused = this;
+				else if(Focused == this)
+					Focused = null;
+			}
+		}
 
-		public Color BackgroundColor { get; protected set; }
+		/// <summary>
+		/// Polygon display handler
+		/// </summary>
+		public Material Material { get; }
+
+		/// <summary>
+		/// UI handler
+		/// </summary>
+		public Canvas Canvas { get; }
+
+		/// <summary>
+		/// Input handler
+		/// </summary>
+		public Input Input { get; }
+
+		/// <summary>
+		/// The camera of the scene
+		/// </summary>
+		public Camera Camera { get; }
+
+		/// <summary>
+		/// 3D scene to hold objects and geometry
+		/// </summary>
+		public Scene Scene { get; }
+
+		/// <summary>
+		/// Screen Rectangle (get only)
+		/// </summary>
+		public Rectangle Screen => _screen;
 
 		/// <summary>
 		/// The resolution of the context
@@ -39,7 +103,9 @@ namespace SonicRetro.SAModel.Graphics
 			set
 			{
 				_screen.Size = value;
-				UpdateScreen(true);
+				UpdateScreenCenter();
+				Camera.Aspect = _screen.Width / (float)_screen.Height;
+				_apiAccessObject.UpdateViewport(_screen, true);
 			}
 		}
 
@@ -52,97 +118,97 @@ namespace SonicRetro.SAModel.Graphics
 			set
 			{
 				_screen.Location = value;
-				UpdateScreen(false);
+				UpdateScreenCenter();
+				_apiAccessObject.UpdateViewport(_screen, false);
 			}
 		}
 
 		/// <summary>
-		/// The camera of the scene
+		/// Center of the screen (useful for locking the mouse position)d
 		/// </summary>
-		public Camera Camera { get; }
+		public Point ScreenCenter => _screenCenter;
 
 		/// <summary>
-		/// 3D scene to hold objects and geometry
+		/// Clearcolor
 		/// </summary>
-		public Scene Scene { get; }
+		public Color BackgroundColor
+		{
+			get => _backgroundColor;
+			set
+			{
+				_backgroundColor = value;
+				_apiAccessObject.UpdateBackgroundColor(_backgroundColor);
+			}
+		}
 
-		public Canvas Canvas { get; }
+		#endregion
 
 		/// <summary>
 		/// Creates a new render context
 		/// </summary>
 		/// <param name="inputUpdater"></param>
-		public Context(Rectangle screen, Camera camera, Canvas canvas, InputUpdater inputUpdater)
+		public Context(Rectangle screen, GAPIAccessObject apiAccessObject)
 		{
-			_screen = screen;
-			Camera = camera;
-			Scene = new Scene(camera);
-			Canvas = canvas;
-			BackgroundColor = new Color(0x60, 0x60, 0x60);
+			_apiAccessObject = apiAccessObject;
 
-			Input.Init(inputUpdater);
+			_screen = screen;
+			Camera = new Camera(screen.Width / (float)screen.Height, apiAccessObject);
+			Material = new Material(apiAccessObject);
+			Canvas = new Canvas(apiAccessObject);
+			Input = new Input(apiAccessObject);
+			Scene = new Scene(Camera);
+			_backgroundColor = new Color(0x60, 0x60, 0x60);
+		}
+
+		/// <summary>
+		/// Gets called when the window gets moved or resized
+		/// </summary>
+		/// <param name="resized">Whether the screen is being resized</param>
+		private void UpdateScreenCenter()
+		{
+			int x = _screen.X + _screen.Width / 2;
+			int y = _screen.Y + _screen.Height / 2;
+			_screenCenter = new Point(x, y);
 		}
 
 		/// <summary>
 		/// Starts the context as an independent window
 		/// </summary>
-		public abstract void AsWindow();
-
-		public abstract System.Windows.FrameworkElement AsControl(HwndSource windowSource);
-
-		/// <summary>
-		/// Called after loading the graphics engine
-		/// </summary>
-		public abstract void GraphicsInit();
+		public void AsWindow()
+			=> _apiAccessObject.AsWindow(this);
 
 		/// <summary>
-		/// Resets focus
+		/// Returns the context as a WPF control
 		/// </summary>
-		public static void ResetFocus() => Focused = null;
+		/// <param name="windowSource"></param>
+		/// <returns></returns>
+		public System.Windows.FrameworkElement AsControl(HwndSource windowSource)
+			=> _apiAccessObject.AsControl(this, windowSource);
 
 		/// <summary>
-		/// Focuses this context
+		/// Gets called when graphics are being initialized
 		/// </summary>
-		public void Focus() => Focused = this;
+		public virtual void GraphicsInit()
+			=> _apiAccessObject.GraphicsInit(this);
 
 		/// <summary>
-		/// Gets called when the window gets moved or resized
+		/// Gameplay logic update
 		/// </summary>
-		/// <param name="resize">Whether the screen is being resized</param>
-		protected virtual void UpdateScreen(bool resize)
-		{
-			int x = _screen.X + _screen.Width / 2;
-			int y = _screen.Y + _screen.Height / 2;
-			Center = new Point(x, y);
-
-			if(resize)
-			{
-				Camera.Aspect = _screen.Width / (float)_screen.Height;
-			}
-		}
-
+		/// <param name="delta"></param>
 		public void Update(double delta)
 		{
 			if(Focused == this || _wasFocused)
-			{
 				Input.Update(_wasFocused);
-			}
-
-			ContextUpdate(delta);
 
 			Scene.Update(delta);
 
 			_wasFocused = Focused == this;
 		}
 
-		protected abstract void ContextUpdate(double delta);
-
-		public void Render()
+		public virtual void Render()
 		{
-			ContextRender();
+			_apiAccessObject.Render(this);
 			Canvas.Render(_screen.Width, _screen.Height);
 		}
-
-		protected abstract void ContextRender();
 	}
 }

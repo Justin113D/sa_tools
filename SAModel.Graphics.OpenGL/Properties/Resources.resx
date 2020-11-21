@@ -119,15 +119,15 @@
   </resheader>
   <assembly alias="System.Windows.Forms" name="System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089" />
   <data name="DefaultUI.frag" type="System.Resources.ResXFileRef, System.Windows.Forms">
-    <value>..\Rendering\Shaders\Fragment\DefaultUI.frag;System.Byte[], mscorlib, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
+    <value>..\Shaders\Fragment\DefaultUI.frag;System.Byte[], mscorlib, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
   </data>
   <data name="DefaultUI.vert" type="System.Resources.ResXFileRef, System.Windows.Forms">
-    <value>..\Rendering\Shaders\Vertex\DefaultUI.vert;System.Byte[], mscorlib, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
+    <value>..\Shaders\Vertex\DefaultUI.vert;System.Byte[], mscorlib, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
   </data>
   <data name="FragShader" type="System.Resources.ResXFileRef, System.Windows.Forms">
-    <value>..\Rendering\Shaders\Fragment\FragShader.frag;System.Byte[], mscorlib, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
+    <value>..\Shaders\Fragment\FragShader.frag;System.Byte[], mscorlib, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
   </data>
   <data name="VertexShader" type="System.Resources.ResXFileRef, System.Windows.Forms">
-    <value>..\Rendering\Shaders\Vertex\VertexShader.vert;System.Byte[], mscorlib, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
+    <value>..\Shaders\Vertex\VertexShader.vert;System.Byte[], mscorlib, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
   </data>
 </root>

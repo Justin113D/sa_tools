@@ -9,6 +9,9 @@ namespace SonicRetro.SAModel.Graphics
 {
 	public class Scene
 	{
+		public delegate void OnUpdate(double delta);
+		public event OnUpdate OnUpdateEvent;
+
 		public readonly Camera cam;
 		public double time = 0;
 		public float timelineSpeed = 1;
@@ -91,6 +94,7 @@ namespace SonicRetro.SAModel.Graphics
 
 		public void Update(double delta)
 		{
+			OnUpdateEvent.Invoke(delta);
 			time += delta;
 			foreach(GameTask tsk in objects)
 			{

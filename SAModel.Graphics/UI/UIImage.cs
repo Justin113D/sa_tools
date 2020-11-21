@@ -1,10 +1,5 @@
-﻿using SonicRetro.SAModel.Structs;
-using System;
-using System.Collections.Generic;
+﻿using System;
 using System.Drawing;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
 
 namespace SonicRetro.SAModel.Graphics.UI
 {
@@ -13,21 +8,29 @@ namespace SonicRetro.SAModel.Graphics.UI
 	/// </summary>
 	public class UIImage : UIElement
 	{
+		private Bitmap _texture;
+
 		/// <summary>
 		/// Texture to draw
 		/// </summary>
-		public Bitmap Texture { get; set; }
+		public Bitmap Texture
+		{
+			get => _texture;
+			set
+			{
+				_texture = value ?? throw new NullReferenceException("Texture cannot be null!");
+				BufferTexture = value;
+			}
+		}
 
-		public UIImage(Vector2 position, Vector2 localPivot, Vector2 globalPivot, float rotation, Bitmap texture) : base(position, localPivot, globalPivot, rotation)
+		public UIImage(Bitmap texture) : base()
 		{
 			Texture = texture;
 		}
 
-		public override object Clone()
+		public void RefreshTexture()
 		{
-			UIImage clone = (UIImage)base.Clone();
-			clone.Texture = (Bitmap)Texture?.Clone();
-			return clone;
+			BufferTexture = Texture;
 		}
 	}
 }

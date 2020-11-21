@@ -52,10 +52,7 @@ namespace SonicRetro.SAModel.Graphics.OpenGL
 		protected override void OnUpdateFrame(FrameEventArgs e)
 		{
 			base.OnUpdateFrame(e);
-			if(Focused)
-				_context.Focus();
-			else
-				Graphics.Context.ResetFocus();
+			_context.IsFocused = Focused;
 			_context.Update((float)e.Time);
 			if(_showedCursor == _context.Camera.Orbiting)
 			{

@@ -78,19 +78,8 @@ namespace SonicRetro.SAModel.Graphics
 		public Key alignInvert;
 		[SettingsKey("Resets Camera", "Resets camera properties to default values", Key.R)]
 		public Key resetCamera;
-
 		[SettingsKey("Focus Object", "Focuses camera to selected object when in orbit mode", Key.F)]
 		public Key focusObj;
-		[SettingsKey("Circle Lighting mode", "Circles between the various lighting modes", Key.Z)]
-		public Key circleLighting;
-		[SettingsKey("Circle Wireframe Mode", "Circles between the various wireframe modes", Key.X)]
-		public Key circleWireframe;
-		[SettingsKey("Swap Geometry", "Changes between rendering visual and collision geometry", Key.C)]
-		public Key swapGeometry;
-		[SettingsKey("Display Bounds", "Displays geometry bounds", Key.B)]
-		public Key displayBounds;
-		[SettingsKey("Circle Backwards", "Hold this button when using a hotkey for circling options to circle in the other direction", Key.LeftShift)]
-		public Key circleBackward;
 
 		[SettingsKey("Debug Help", "Displays the debug help menu", Key.F1)]
 		public Key DebugHelp;
@@ -98,6 +87,19 @@ namespace SonicRetro.SAModel.Graphics
 		public Key DebugCamera;
 		[SettingsKey("Debug Render", "Displays the debug render menu", Key.F3)]
 		public Key DebugRender;
+
+		[SettingsKey("Circle Render mode", "Circles between the various render modes", Key.F5)]
+		public Key circleRenderMode;
+		[SettingsKey("Circle Wireframe Mode", "Circles between the various wireframe modes", Key.F6)]
+		public Key circleWireframe;
+		[SettingsKey("Swap Geometry", "Changes between rendering visual and collision geometry", Key.F7)]
+		public Key swapGeometry;
+		[SettingsKey("Display Bounds", "Displays geometry bounds", Key.F8)]
+		public Key displayBounds;
+		[SettingsKey("Circle Backwards", "Hold this button when using a hotkey for circling options to circle in the other direction", Key.RightAlt)]
+		public Key circleBackward;
+
+
 
 		public DebugSettings()
 		{

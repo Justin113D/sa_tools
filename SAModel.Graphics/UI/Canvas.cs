@@ -3,66 +3,60 @@ using System.Collections.Generic;
 using System.Drawing;
 using System;
 using System.Collections.ObjectModel;
+using SonicRetro.SAModel.Graphics.APIAccess;
 
 namespace SonicRetro.SAModel.Graphics.UI
 {
 	/// <summary>
 	/// Responsible for drawing UI elements
 	/// </summary>
-	public abstract class Canvas
+	public class Canvas
 	{
-
-		private ReadOnlyDictionary<Guid, UIElement> _lastQueueContents;
+		private readonly IGAPIACanvas _apiAccess;
 
 		private readonly Queue<UIElement> _renderQueue;
 
-		/// <summary>
-		/// Current Screen Width
-		/// </summary>
-		protected int width;
+		private int _oldWidth;
+		private int _oldHeight;
 
-		/// <summary>
-		/// Current Screen Height
-		/// </summary>
-		protected int height;
-
-		public Canvas()
+		public Canvas(IGAPIACanvas apiAccess)
 		{
+			_apiAccess = apiAccess;
 			_renderQueue = new Queue<UIElement>();
-			_lastQueueContents = new ReadOnlyDictionary<Guid, UIElement>(new Dictionary<Guid, UIElement>());
 		}
 
-		public void Draw(UIElement element)
+		public void Draw(UIElement element) =>_renderQueue.Enqueue(element);
+		
+		/// <summary>
+		/// Renders the entire canvas
+		/// </summary>
+		/// <param name="width">Output resolution width</param>
+		/// <param name="height">Output resolution height</param>
+		public void Render(int width, int height)
 		{
-			_renderQueue.Enqueue((UIElement)element.Clone());
-		}
+			_apiAccess.CanvasPreDraw(width, height);
 
-		public virtual void Render(int width, int height)
-		{
-			Dictionary<Guid, UIElement> _newQueueContents = new Dictionary<Guid, UIElement>();
+			float premWidth = width * 0.5f;
+			float premHeight = height * 0.5f;
 
-			this.width = width;
-			this.height = height;
+			bool forceTransformUpdate = _oldWidth != width || _oldHeight != height;
+			if(forceTransformUpdate)
+			{
+				_oldWidth = width;
+				_oldHeight = height;
+			}
+
 			while(_renderQueue.Count > 0)
 			{
 				UIElement element = _renderQueue.Dequeue();
-				_lastQueueContents.TryGetValue(element.ID, out UIElement old);
-
-				if(element.GetType() == typeof(UIImage))
-					DrawImage((UIImage)element, (UIImage)old);
-				else if(element.GetType() == typeof(UIText))
-					DrawText((UIText)element, (UIText)old);
-				else throw new InvalidOperationException($"UI element of type {element.GetType()} not supported");
-
-				_newQueueContents.Add(element.ID, element);
+				_apiAccess.CanvasDrawUIElement(element, premWidth, premHeight, forceTransformUpdate);
 			}
 
-			_lastQueueContents = new ReadOnlyDictionary<Guid, UIElement>(_newQueueContents);
 			_renderQueue.Clear();
+
+			_apiAccess.CanvasPostDraw();
 		}
 
-		protected abstract void DrawImage(UIImage image, UIImage old);
-		protected abstract void DrawText(UIText text, UIText old);
 	}
 }
 

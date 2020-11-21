@@ -12,18 +12,33 @@ namespace SonicRetro.SAModel.Graphics.UI
 	/// </summary>
 	public class UIText : UIElement
 	{
+		private string _text;
+
 		/// <summary>
 		/// The text to draw
 		/// </summary>
-		public string Text { get; set; }
+		public string Text
+		{
+			get => _text;
+			set
+			{
+				if(value == _text)
+					return;
+				_text = value ?? throw new NullReferenceException("Text cannot be null");
+				UpdateTexture();
+			}
+		}
 
 		//TODO add font
 
-		public UIText(Vector2 position, Vector2 localPivot, Vector2 globalPivot, float rotation, string text) : base(position, localPivot, globalPivot, rotation)
+		public UIText(string text) : base()
 		{
 			Text = text;
 		}
 
-		public override object Clone() => MemberwiseClone();
+		private void UpdateTexture()
+		{
+			// TODO add texture generation
+		}
 	}
 }

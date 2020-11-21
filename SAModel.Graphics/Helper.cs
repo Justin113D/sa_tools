@@ -3,7 +3,7 @@ using System;
 
 namespace SonicRetro.SAModel.Graphics
 {
-	public static class GraphicsHelper
+	public static class Helper
 	{
 		private static readonly Color[] weightColors = new Color[]
 		{

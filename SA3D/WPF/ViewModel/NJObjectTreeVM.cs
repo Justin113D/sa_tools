@@ -48,7 +48,7 @@ namespace SonicRetro.SA3D.WPF.ViewModel
 
 		private void Select(NJObjectVM item)
 		{
-			_mainVM.RenderContext.SelectActive(item.NJObject);
+			_mainVM.RenderContext.ActiveNJO = item.NJObject;
 		}
 
 		public void Refresh()

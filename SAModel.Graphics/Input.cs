@@ -1,4 +1,5 @@
-﻿using System;
+﻿using SonicRetro.SAModel.Graphics.APIAccess;
+using System;
 using System.Collections.Generic;
 using System.Windows;
 using System.Windows.Input;
@@ -7,134 +8,86 @@ using Point = System.Drawing.Point;
 namespace SonicRetro.SAModel.Graphics
 {
 	/// <summary>
-	/// Responsible for updating input
-	/// </summary>
-	public abstract class InputUpdater
-	{
-		/// <summary>
-		/// Current cursor location
-		/// </summary>
-		public Point CursorLoc;
-
-		/// <summary>
-		/// How much the mouse has moved between updates
-		/// </summary>
-		public Point CursorDif;
-
-		/// <summary>
-		/// How much the mouse scroll was moved
-		/// </summary>
-		public int ScrollDif;
-
-
-		/// <summary>
-		/// Places the cursor in global screen space
-		/// </summary>
-		/// <param name="loc">The new location that the cursor should be at</param>
-		public virtual void PlaceCursor(Point loc)
-		{
-			CursorLoc = loc;
-		}
-
-		/// <summary>
-		/// Returns a new set of key-states
-		/// </summary>
-		/// <returns></returns>
-		public abstract Dictionary<Key, bool> UpdateKeys();
-
-		/// <summary>
-		/// Returns a new set of mousebutton-states and updates mouse related fields
-		/// </summary>
-		/// <returns></returns>
-		public abstract Dictionary<MouseButton, bool> UpdateMouse(bool wasFocused);
-	}
-
-	/// <summary>
 	/// Used to receive input from keyboard and mouse
 	/// </summary>
-	public static class Input
+	public class Input
 	{
 		/// <summary>
-		/// Responsible for updating the 
+		/// Responsible for updating the input
 		/// </summary>
-		private static InputUpdater _updater;
+		private readonly IGAPIAInput _apiAccess;
 
 		/// <summary>
 		/// Last state of each key
 		/// </summary>
-		private static Dictionary<Key, bool> _keyWasPressed;
+		private Dictionary<Key, bool> _keyWasPressed;
 
 		/// <summary>
 		/// Current state of each key
 		/// </summary>
-		private static Dictionary<Key, bool> _keyPressed;
+		private Dictionary<Key, bool> _keyPressed;
 
 		/// <summary>
 		/// Last state of each mouse button
 		/// </summary>
-		private static Dictionary<MouseButton, bool> _mouseWasPressed;
+		private Dictionary<MouseButton, bool> _mouseWasPressed;
 
 		/// <summary>
 		/// Current state of each mouse button
 		/// </summary>
-		private static Dictionary<MouseButton, bool> _mousePressed;
+		private Dictionary<MouseButton, bool> _mousePressed;
 
 		/// <summary>
 		/// The last read cursor location
 		/// </summary>
-		public static Point CursorLoc => _updater.CursorLoc;
+		public Point CursorPos => _apiAccess.GetCursorPos();
 
 		/// <summary>
 		/// The amount that the cursor moved
 		/// </summary>
-		public static Point CursorDif => _updater.CursorDif;
+		public Point CursorDif => _apiAccess.GetCursorDif();
 
 		/// <summary>
 		/// The amount that the scroll was used 
 		/// </summary>
-		public static int ScrollDif => _updater.ScrollDif;
+		public int ScrollDif => _apiAccess.GetScrollDif();
+
+		public Input(IGAPIAInput apiAccess)
+		{
+			_apiAccess = apiAccess;
+		}
 
 		/// <summary>
 		/// Initializes the input
 		/// </summary>
 		/// <param name="updater"></param>
-		public static void Init(InputUpdater updater)
-		{
-			_updater = updater;
-			_keyPressed = _updater.UpdateKeys();
-			_keyWasPressed = _keyPressed;
-			_mousePressed = _updater.UpdateMouse(true);
-			_mouseWasPressed = _mousePressed;
-		}
+		public void Init() => Update(true);
 
 		/// <summary>
 		/// Updates the input
 		/// </summary>
-		public static void Update(bool wasFocused)
+		public void Update(bool wasFocused)
 		{
-			if (_updater == null) throw new InvalidOperationException("Input was not initiated");
+			if (_apiAccess == null) throw new NotInitializedException("Input was not initialized");
 
 			_keyWasPressed = _keyPressed;
-			_keyPressed = _updater.UpdateKeys();
+			_keyPressed = _apiAccess.UpdateKeys();
 			_mouseWasPressed = _mousePressed;
-			_mousePressed = _updater.UpdateMouse(wasFocused);
+			_mousePressed = _apiAccess.UpdateMouse(wasFocused);
 		}
 
 		/// <summary>
 		/// Places the cursor in global screen space
 		/// </summary>
 		/// <param name="loc">The new location that the cursor should be at</param>
-		public static void PlaceCursor(Point loc)
-		{
-			_updater.PlaceCursor(loc);
-		}
+		public void PlaceCursor(Point loc) => _apiAccess.PlaceCursor(loc);
 
 		/// <summary>
 		/// Whether a keyboard key is being held
 		/// </summary>
 		/// <param name="key"></param>
 		/// <returns></returns>
-		public static bool IsKeyDown(Key key)
+		public bool IsKeyDown(Key key)
 		{
 			return _keyPressed.TryGetValue(key, out bool r) ? r : false;
 		}
@@ -144,7 +97,7 @@ namespace SonicRetro.SAModel.Graphics
 		/// </summary>
 		/// <param name="btn"></param>
 		/// <returns></returns>
-		public static bool IsKeyDown(MouseButton btn)
+		public bool IsKeyDown(MouseButton btn)
 		{
 			return _mousePressed.TryGetValue(btn, out bool r) ? r : false;
 		}
@@ -154,7 +107,7 @@ namespace SonicRetro.SAModel.Graphics
 		/// </summary>
 		/// <param name="key"></param>
 		/// <returns></returns>
-		public static bool IsKeyUp(Key key)
+		public bool IsKeyUp(Key key)
 		{
 			return !IsKeyDown(key);
 		}
@@ -164,7 +117,7 @@ namespace SonicRetro.SAModel.Graphics
 		/// </summary>
 		/// <param name="btn"></param>
 		/// <returns></returns>
-		public static bool IsKeyUp(MouseButton btn)
+		public bool IsKeyUp(MouseButton btn)
 		{
 			return !IsKeyDown(btn);
 		}
@@ -174,7 +127,7 @@ namespace SonicRetro.SAModel.Graphics
 		/// </summary>
 		/// <param name="key"></param>
 		/// <returns></returns>
-		public static bool KeyPressed(Key key)
+		public bool KeyPressed(Key key)
 		{
 			return IsKeyDown(key) && !_keyWasPressed[key];
 		}
@@ -184,7 +137,7 @@ namespace SonicRetro.SAModel.Graphics
 		/// </summary>
 		/// <param name="btn"></param>
 		/// <returns></returns>
-		public static bool KeyPressed(MouseButton btn)
+		public bool KeyPressed(MouseButton btn)
 		{
 			return IsKeyDown(btn) && !_mouseWasPressed[btn];
 		}
@@ -194,7 +147,7 @@ namespace SonicRetro.SAModel.Graphics
 		/// </summary>
 		/// <param name="key"></param>
 		/// <returns></returns>
-		public static bool KeyReleased(Key key)
+		public bool KeyReleased(Key key)
 		{
 			return !IsKeyDown(key) && _keyWasPressed[key];
 		}
@@ -204,7 +157,7 @@ namespace SonicRetro.SAModel.Graphics
 		/// </summary>
 		/// <param name="btn"></param>
 		/// <returns></returns>
-		public static bool KeyReleased(MouseButton btn)
+		public bool KeyReleased(MouseButton btn)
 		{
 			return !IsKeyDown(btn) && _mouseWasPressed[btn];
 		}

@@ -5,6 +5,7 @@ using SonicRetro.SAModel.Graphics.OpenGL;
 using System.Runtime.Serialization.Formatters.Binary;
 using Microsoft.SqlServer.Server;
 using SonicRetro.SAModel.ObjData.Animation;
+using SonicRetro.SAModel.Graphics;
 
 namespace SonicRetro.SA3D
 {
@@ -74,7 +75,7 @@ namespace SonicRetro.SA3D
 			}
 
 			System.Drawing.Rectangle rect = new System.Drawing.Rectangle(0, 0, width, height);
-			GLDebugContext context = new GLDebugContext(rect);
+			DebugContext context = new DebugContext(rect, new GLAPIAccessObject());
 			if(path != null)
 			{
 				string ext = Path.GetExtension(path);

@@ -60,7 +60,7 @@ namespace SonicRetro.SA3D.WPF.ViewModel
 
 		public MainViewModel(MainWindow window)
 		{
-			RenderContext = new GLDebugContext(default);
+			RenderContext = new DebugContext(default, new GLAPIAccessObject());
 
 			NJObjectTreeVM = new NJObjectTreeVM(this);
 			FocusWindow = new RelayCommand(Focus);
@@ -80,10 +80,7 @@ namespace SonicRetro.SA3D.WPF.ViewModel
 		/// </summary>
 		public void Focus()
 		{
-			if(_window.IsMouseOver)
-				RenderContext.Focus();
-			else
-				Context.ResetFocus();
+			RenderContext.IsFocused = _window.IsMouseOver;
 		}
 
 		/// <summary>
