@@ -1,6 +1,8 @@
 ﻿using Reloaded.Memory.Streams.Writers;
 using System;
 using System.IO;
+using static SonicRetro.SACommon.ByteConverter;
+using static SonicRetro.SACommon.StringExtensions;
 
 namespace SonicRetro.SAModel.Structs
 {
@@ -40,7 +42,7 @@ namespace SonicRetro.SAModel.Structs
 		{
 			get
 			{
-				switch (index)
+				switch(index)
 				{
 					case 0:
 						return X;
@@ -52,7 +54,7 @@ namespace SonicRetro.SAModel.Structs
 			}
 			set
 			{
-				switch (index)
+				switch(index)
 				{
 					case 0:
 						X = value;
@@ -99,21 +101,21 @@ namespace SonicRetro.SAModel.Structs
 		public static Vector2 Read(byte[] source, ref uint address, IOType type)
 		{
 			Vector2 result;
-			switch (type)
+			switch(type)
 			{
 				case IOType.Short:
 					result = new Vector2()
 					{
-						X = ByteConverter.ToInt16(source, address),
-						Y = ByteConverter.ToInt16(source, address + 2)
+						X = source.ToInt16(address),
+						Y = source.ToInt16(address + 2)
 					};
 					address += 4;
 					break;
 				case IOType.Float:
 					result = new Vector2()
 					{
-						X = ByteConverter.ToSingle(source, address),
-						Y = ByteConverter.ToSingle(source, address + 4)
+						X = source.ToSingle(address),
+						Y = source.ToSingle(address + 4)
 					};
 					address += 8;
 					break;
@@ -125,7 +127,7 @@ namespace SonicRetro.SAModel.Structs
 
 		public void Write(EndianMemoryStream writer, IOType type)
 		{
-			switch (type)
+			switch(type)
 			{
 				case IOType.Short:
 					writer.WriteInt16((short)X);
@@ -143,7 +145,7 @@ namespace SonicRetro.SAModel.Structs
 		public void WriteNJA(TextWriter writer, IOType type)
 		{
 			writer.Write("( ");
-			switch (type)
+			switch(type)
 			{
 				case IOType.Short:
 					writer.Write((short)X);
@@ -190,12 +192,5 @@ namespace SonicRetro.SAModel.Structs
 
 		public static bool operator ==(Vector2 l, Vector2 r) => l.Equals(r);
 		public static bool operator !=(Vector2 l, Vector2 r) => !l.Equals(r);
-
-
-		// tmp
-		public void Write(ByteWriter writer, IOType type)
-		{
-			throw new NotImplementedException();
-		}
 	}
 }

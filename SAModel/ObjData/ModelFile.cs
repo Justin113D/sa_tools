@@ -1,14 +1,13 @@
-﻿using System;
+﻿using Reloaded.Memory.Streams;
+using Reloaded.Memory.Streams.Writers;
+using SonicRetro.SAModel.ModelData;
+using SonicRetro.SAModel.ObjData.Animation;
+using System;
 using System.Collections.Generic;
 using System.Collections.ObjectModel;
 using System.IO;
 using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
-using Reloaded.Memory.Streams;
-using Reloaded.Memory.Streams.Writers;
-using SonicRetro.SAModel.ModelData;
-using SonicRetro.SAModel.ObjData.Animation;
+using static SonicRetro.SACommon.ByteConverter;
 
 namespace SonicRetro.SAModel.ObjData
 {
@@ -119,8 +118,8 @@ namespace SonicRetro.SAModel.ObjData
 		/// <returns></returns>
 		public static ModelFile Read(byte[] source, string filename = null)
 		{
-			bool be = ByteConverter.BigEndian;
-			ByteConverter.BigEndian = false;
+			bool be = BigEndian;
+			BigEndian = false;
 
 			AttachFormat? format = null;
 			NJObject model;
@@ -130,8 +129,8 @@ namespace SonicRetro.SAModel.ObjData
 			bool nj = false;
 
 			// checking for NJ format first
-			uint header4 = ByteConverter.ToUInt32(source, 0);
-			switch (header4)
+			uint header4 = source.ToUInt32(0);
+			switch(header4)
 			{
 				case NJBM:
 					format = AttachFormat.BASIC;
@@ -141,7 +140,7 @@ namespace SonicRetro.SAModel.ObjData
 					break;
 			}
 
-			if (format.HasValue)
+			if(format.HasValue)
 			{
 				// the addresses start 8 bytes ahead, and since we always subtract the image base from the addresses,
 				// we have to add them this time, so we invert the 8 to add 8 by subtracting
@@ -151,8 +150,8 @@ namespace SonicRetro.SAModel.ObjData
 			}
 
 			// checking for mdl format
-			ulong header8 = ByteConverter.ToUInt64(source, 0) & HeaderMask;
-			switch (header8)
+			ulong header8 = source.ToUInt64(0) & HeaderMask;
+			switch(header8)
 			{
 				case SA1MDL:
 					format = AttachFormat.BASIC;
@@ -170,9 +169,9 @@ namespace SonicRetro.SAModel.ObjData
 
 			// checking the version
 			byte version = source[7];
-			if (version > CurrentVersion)
+			if(version > CurrentVersion)
 			{
-				ByteConverter.BigEndian = be;
+				BigEndian = be;
 				return null;
 				//throw new FormatException("Not a valid SA1LVL/SA2LVL file.");
 			}
@@ -180,15 +179,15 @@ namespace SonicRetro.SAModel.ObjData
 			metaData = MetaData.Read(source, version, true);
 			Dictionary<uint, string> labels = new Dictionary<uint, string>(metaData.Labels);
 
-			model = NJObject.Read(source, ByteConverter.ToUInt32(source, 8), 0, format.Value, false, labels, attaches);
+			model = NJObject.Read(source, source.ToUInt32(8), 0, format.Value, false, labels, attaches);
 
 			// reading animations
-			if (filename != null)
+			if(filename != null)
 			{
 				string path = Path.GetDirectoryName(filename);
 				try
 				{
-					foreach (string item in metaData.AnimFiles)
+					foreach(string item in metaData.AnimFiles)
 						Animations.Add(Motion.ReadFile(Path.Combine(path, item), model.CountAnimated()));
 				}
 				catch
@@ -197,9 +196,9 @@ namespace SonicRetro.SAModel.ObjData
 				}
 			}
 
-		readFile:
+			readFile:
 
-			ByteConverter.BigEndian = be;
+			BigEndian = be;
 			return new ModelFile(format.Value, model, Animations.ToArray(), metaData, nj);
 		}
 
@@ -261,15 +260,15 @@ namespace SonicRetro.SAModel.ObjData
 		/// <param name="animFiles">Animation file paths</param>
 		public static byte[] Write(AttachFormat format, bool NJ, NJObject model, MetaData metaData)
 		{
-			
-			using (ExtendedMemoryStream stream = new ExtendedMemoryStream())
+
+			using(ExtendedMemoryStream stream = new ExtendedMemoryStream())
 			{
 				LittleEndianMemoryStream writer = new LittleEndianMemoryStream(stream);
 				uint imageBase = 0;
 
-				if (NJ)
+				if(NJ)
 				{
-					switch (format)
+					switch(format)
 					{
 						case AttachFormat.BASIC:
 							writer.WriteUInt32(NJBM);
@@ -285,7 +284,7 @@ namespace SonicRetro.SAModel.ObjData
 				}
 				else
 				{
-					switch (format)
+					switch(format)
 					{
 						case AttachFormat.BASIC:
 							writer.WriteUInt64(SA1MDLVer);
@@ -306,7 +305,7 @@ namespace SonicRetro.SAModel.ObjData
 				Dictionary<string, uint> labels = new Dictionary<string, uint>();
 				model.WriteHierarchy(writer, imageBase, false, labels);
 
-				if (NJ)
+				if(NJ)
 				{
 					// replace size
 					writer.Stream.Seek(4, SeekOrigin.Begin);
@@ -340,12 +339,14 @@ namespace SonicRetro.SAModel.ObjData
 			{
 				fmt = attaches[0].Format;
 				foreach(ModelData.Attach atc in attaches)
-					if(fmt != atc.Format) throw new InvalidCastException("Not all attaches are of the same type!");
-				if (fmt == AttachFormat.Buffer) throw new InvalidCastException("All attaches are of buffer format! Can't decide what format to write");
+					if(fmt != atc.Format)
+						throw new InvalidCastException("Not all attaches are of the same type!");
+				if(fmt == AttachFormat.Buffer)
+					throw new InvalidCastException("All attaches are of buffer format! Can't decide what format to write");
 			}
 
 			outputPath = Path.ChangeExtension(outputPath, ".NJA");
-			using (TextWriter writer = File.CreateText(outputPath))
+			using(TextWriter writer = File.CreateText(outputPath))
 			{
 				List<string> labels = new List<string>();
 				foreach(var atc in attaches)

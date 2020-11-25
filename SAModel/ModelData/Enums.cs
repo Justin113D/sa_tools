@@ -1,5 +1,4 @@
-﻿
-namespace SonicRetro.SAModel.ModelData
+﻿namespace SonicRetro.SAModel.ModelData
 {
 	/// <summary>
 	/// Transparency blending

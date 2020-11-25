@@ -1,13 +1,12 @@
-﻿using System;
+﻿using SA_Tools;
+using System;
 using System.Collections.Generic;
 using System.Diagnostics;
 using System.Globalization;
 using System.IO;
 using System.Linq;
-using SA_Tools;
-using SonicRetro.SAModel;
 
-namespace SA_Tools.Split
+namespace SASplit.Split
 {
 	public static class Split
 	{
@@ -21,20 +20,21 @@ namespace SA_Tools.Split
 				byte[] datafile_temp = File.ReadAllBytes(datafilename);
 				IniData inifile = IniSerializer.Deserialize<IniData>(inifilename);
 				string listfile = Path.Combine(Path.GetDirectoryName(inifilename), Path.GetFileNameWithoutExtension(datafilename) + "_labels.txt");
-				Dictionary<int, string> labels = new Dictionary<int, string>();
-				if (File.Exists(listfile))
-					labels=IniSerializer.Deserialize<Dictionary<int, string>>(listfile);
-				if (inifile.StartOffset != 0)
+				Dictionary<uint, string> labels = new Dictionary<uint, string>();
+				if(File.Exists(listfile))
+					labels = IniSerializer.Deserialize<Dictionary<uint, string>>(listfile);
+				if(inifile.StartOffset != 0)
 				{
 					byte[] datafile_new = new byte[inifile.StartOffset + datafile_temp.Length];
 					datafile_temp.CopyTo(datafile_new, inifile.StartOffset);
 					datafile = datafile_new;
 				}
-				else datafile = datafile_temp;
-				if (inifile.MD5 != null && inifile.MD5.Count > 0)
+				else
+					datafile = datafile_temp;
+				if(inifile.MD5 != null && inifile.MD5.Count > 0)
 				{
 					string datahash = HelperFunctions.FileHash(datafile);
-					if (!inifile.MD5.Any(h => h.Equals(datahash, StringComparison.OrdinalIgnoreCase)))
+					if(!inifile.MD5.Any(h => h.Equals(datahash, StringComparison.OrdinalIgnoreCase)))
 					{
 						Console.WriteLine("The file {0} is not valid for use with the INI {1}.", datafilename, inifilename);
 						return (int)SplitERRORVALUE.InvalidDataMapping;
@@ -43,13 +43,15 @@ namespace SA_Tools.Split
 				ByteConverter.BigEndian = SonicRetro.SAModel.ByteConverter.BigEndian = inifile.BigEndian;
 				ByteConverter.Reverse = SonicRetro.SAModel.ByteConverter.Reverse = inifile.Reverse;
 				Environment.CurrentDirectory = Path.Combine(Environment.CurrentDirectory, Path.GetDirectoryName(datafilename));
-				if (inifile.Compressed && Path.GetExtension(datafilename).ToLowerInvariant() != ".bin") datafile = FraGag.Compression.Prs.Decompress(datafile);
+				if(inifile.Compressed && Path.GetExtension(datafilename).ToLowerInvariant() != ".bin")
+					datafile = FraGag.Compression.Prs.Decompress(datafile);
 				uint imageBase = HelperFunctions.SetupEXE(ref datafile) ?? inifile.ImageBase.Value;
-				if (Path.GetExtension(datafilename).Equals(".rel", StringComparison.OrdinalIgnoreCase)) HelperFunctions.FixRELPointers(datafile, imageBase);
+				if(Path.GetExtension(datafilename).Equals(".rel", StringComparison.OrdinalIgnoreCase))
+					HelperFunctions.FixRELPointers(datafile, imageBase);
 				bool SA2 = inifile.Game == Game.SA2 | inifile.Game == Game.SA2B;
 				ModelFormat modelfmt = 0;
 				LandTableFormat landfmt = 0;
-				switch (inifile.Game)
+				switch(inifile.Game)
 				{
 					case Game.SA1:
 						modelfmt = ModelFormat.Basic;
@@ -70,132 +72,136 @@ namespace SA_Tools.Split
 				Dictionary<string, Dictionary<string, int>> objnamecounts = new Dictionary<string, Dictionary<string, int>>();
 				Stopwatch timer = new Stopwatch();
 				timer.Start();
-				foreach (KeyValuePair<string, SA_Tools.FileInfo> item in new List<KeyValuePair<string, SA_Tools.FileInfo>>( inifile.Files))
+				foreach(KeyValuePair<string, SA_Tools.FileInfo> item in new List<KeyValuePair<string, SA_Tools.FileInfo>>(inifile.Files))
 				{
-					if (string.IsNullOrEmpty(item.Key)) continue;
+					if(string.IsNullOrEmpty(item.Key))
+						continue;
 					string filedesc = item.Key;
 					SA_Tools.FileInfo data = item.Value;
 					Dictionary<string, string> customProperties = data.CustomProperties;
 					string type = data.Type;
-					int address = data.Address;
+					uint address = data.Address;
 					bool nohash = false;
 
 					string fileOutputPath = Path.Combine(projectFolderName, data.Filename);
 					Console.WriteLine(item.Key + ": " + data.Address.ToString("X") + " → " + fileOutputPath);
 					Directory.CreateDirectory(Path.GetDirectoryName(fileOutputPath));
-					switch (type)
+					switch(type)
 					{
 						case "landtable":
 							new LandTable(datafile, address, imageBase, landfmt, labels) { Description = item.Key }.SaveToFile(fileOutputPath, landfmt, nometa);
 							break;
 						case "model":
-							{
-								NJS_OBJECT mdl = new NJS_OBJECT(datafile, address, imageBase, modelfmt, labels, new Dictionary<int, Attach>());
-								string[] mdlanis = new string[0];
-								if (customProperties.ContainsKey("animations"))
-									mdlanis = customProperties["animations"].Split(',');
-								string[] mdlmorphs = new string[0];
-								if (customProperties.ContainsKey("morphs"))
-									mdlmorphs = customProperties["morphs"].Split(',');
-								ModelFile.CreateFile(fileOutputPath, mdl, mdlanis, null, item.Key, null, modelfmt, nometa);
-							}
-							break;
+						{
+							NJS_OBJECT mdl = new NJS_OBJECT(datafile, address, imageBase, modelfmt, labels, new Dictionary<uint, Attach>());
+							string[] mdlanis = new string[0];
+							if(customProperties.ContainsKey("animations"))
+								mdlanis = customProperties["animations"].Split(',');
+							string[] mdlmorphs = new string[0];
+							if(customProperties.ContainsKey("morphs"))
+								mdlmorphs = customProperties["morphs"].Split(',');
+							ModelFile.CreateFile(fileOutputPath, mdl, mdlanis, null, item.Key, null, modelfmt, nometa);
+						}
+						break;
 						case "basicmodel":
-							{
-								NJS_OBJECT mdl = new NJS_OBJECT(datafile, address, imageBase, ModelFormat.Basic, labels, new Dictionary<int, Attach>());
-								string[] mdlanis = new string[0];
-								if (customProperties.ContainsKey("animations"))
-									mdlanis = customProperties["animations"].Split(',');
-								string[] mdlmorphs = new string[0];
-								if (customProperties.ContainsKey("morphs"))
-									mdlmorphs = customProperties["morphs"].Split(',');
-								ModelFile.CreateFile(fileOutputPath, mdl, mdlanis, null, item.Key, null, ModelFormat.Basic, nometa);
-							}
-							break;
+						{
+							NJS_OBJECT mdl = new NJS_OBJECT(datafile, address, imageBase, ModelFormat.Basic, labels, new Dictionary<uint, Attach>());
+							string[] mdlanis = new string[0];
+							if(customProperties.ContainsKey("animations"))
+								mdlanis = customProperties["animations"].Split(',');
+							string[] mdlmorphs = new string[0];
+							if(customProperties.ContainsKey("morphs"))
+								mdlmorphs = customProperties["morphs"].Split(',');
+							ModelFile.CreateFile(fileOutputPath, mdl, mdlanis, null, item.Key, null, ModelFormat.Basic, nometa);
+						}
+						break;
 						case "basicdxmodel":
-							{
-								NJS_OBJECT mdl = new NJS_OBJECT(datafile, address, imageBase, ModelFormat.BasicDX, labels, new Dictionary<int, Attach>());
-								string[] mdlanis = new string[0];
-								if (customProperties.ContainsKey("animations"))
-									mdlanis = customProperties["animations"].Split(',');
-								string[] mdlmorphs = new string[0];
-								if (customProperties.ContainsKey("morphs"))
-									mdlmorphs = customProperties["morphs"].Split(',');
-								ModelFile.CreateFile(fileOutputPath, mdl, mdlanis, null, item.Key, null, ModelFormat.BasicDX, nometa);
-							}
-							break;
+						{
+							NJS_OBJECT mdl = new NJS_OBJECT(datafile, address, imageBase, ModelFormat.BasicDX, labels, new Dictionary<uint, Attach>());
+							string[] mdlanis = new string[0];
+							if(customProperties.ContainsKey("animations"))
+								mdlanis = customProperties["animations"].Split(',');
+							string[] mdlmorphs = new string[0];
+							if(customProperties.ContainsKey("morphs"))
+								mdlmorphs = customProperties["morphs"].Split(',');
+							ModelFile.CreateFile(fileOutputPath, mdl, mdlanis, null, item.Key, null, ModelFormat.BasicDX, nometa);
+						}
+						break;
 						case "chunkmodel":
-							{
-								NJS_OBJECT mdl = new NJS_OBJECT(datafile, address, imageBase, ModelFormat.Chunk, labels, new Dictionary<int, Attach>());
-								string[] mdlanis = new string[0];
-								if (customProperties.ContainsKey("animations"))
-									mdlanis = customProperties["animations"].Split(',');
-								string[] mdlmorphs = new string[0];
-								if (customProperties.ContainsKey("morphs"))
-									mdlmorphs = customProperties["morphs"].Split(',');
-								ModelFile.CreateFile(fileOutputPath, mdl, mdlanis, null, item.Key, null, ModelFormat.Chunk, nometa);
-							}
-							break;
+						{
+							NJS_OBJECT mdl = new NJS_OBJECT(datafile, address, imageBase, ModelFormat.Chunk, labels, new Dictionary<uint, Attach>());
+							string[] mdlanis = new string[0];
+							if(customProperties.ContainsKey("animations"))
+								mdlanis = customProperties["animations"].Split(',');
+							string[] mdlmorphs = new string[0];
+							if(customProperties.ContainsKey("morphs"))
+								mdlmorphs = customProperties["morphs"].Split(',');
+							ModelFile.CreateFile(fileOutputPath, mdl, mdlanis, null, item.Key, null, ModelFormat.Chunk, nometa);
+						}
+						break;
 						case "gcmodel":
-							{
-								NJS_OBJECT mdl = new NJS_OBJECT(datafile, address, imageBase, ModelFormat.GC, labels, new Dictionary<int, Attach>());
-								string[] mdlanis = new string[0];
-								if (customProperties.ContainsKey("animations"))
-									mdlanis = customProperties["animations"].Split(',');
-								string[] mdlmorphs = new string[0];
-								if (customProperties.ContainsKey("morphs"))
-									mdlmorphs = customProperties["morphs"].Split(',');
-								ModelFile.CreateFile(fileOutputPath, mdl, mdlanis, null, item.Key, null, ModelFormat.GC, nometa);
-							}
-							break;
+						{
+							NJS_OBJECT mdl = new NJS_OBJECT(datafile, address, imageBase, ModelFormat.GC, labels, new Dictionary<uint, Attach>());
+							string[] mdlanis = new string[0];
+							if(customProperties.ContainsKey("animations"))
+								mdlanis = customProperties["animations"].Split(',');
+							string[] mdlmorphs = new string[0];
+							if(customProperties.ContainsKey("morphs"))
+								mdlmorphs = customProperties["morphs"].Split(',');
+							ModelFile.CreateFile(fileOutputPath, mdl, mdlanis, null, item.Key, null, ModelFormat.GC, nometa);
+						}
+						break;
 						case "action":
+						{
+							NJS_ACTION ani = new NJS_ACTION(datafile, address, imageBase, modelfmt, labels, new Dictionary<uint, Attach>());
+							if(!labels.ContainsValue(ani.Name))
+								ani.Name = filedesc;
+							if(customProperties.ContainsKey("numparts"))
+								ani.Animation.ModelParts = uint.Parse(customProperties["numparts"]);
+							if(ani.Animation.ModelParts == 0)
 							{
-								NJS_ACTION ani = new NJS_ACTION(datafile, address, imageBase, modelfmt, labels, new Dictionary<int, Attach>());
-								if (!labels.ContainsValue(ani.Name)) ani.Name = filedesc;
-								if (customProperties.ContainsKey("numparts"))
-									ani.Animation.ModelParts = int.Parse(customProperties["numparts"]);
-								if (ani.Animation.ModelParts == 0)
-								{
-									Console.WriteLine("Action {0} has no model data!", ani.Name);
-									continue;
-								}
-								ani.Animation.Save(fileOutputPath, nometa);
+								Console.WriteLine("Action {0} has no model data!", ani.Name);
+								continue;
 							}
-							break;
+							ani.Animation.Save(fileOutputPath, nometa);
+						}
+						break;
 						case "animation":
-							if (customProperties.ContainsKey("shortrot"))
+							if(customProperties.ContainsKey("shortrot"))
 							{
-								NJS_MOTION mot = new NJS_MOTION(datafile, address, imageBase, int.Parse(customProperties["numparts"], NumberStyles.AllowLeadingWhite | NumberStyles.AllowTrailingWhite, NumberFormatInfo.InvariantInfo), labels) { ShortRot = bool.Parse(customProperties["shortrot"]) };
-								if (!labels.ContainsKey(address)) mot.Name = filedesc;
+								NJS_MOTION mot = new NJS_MOTION(datafile, address, imageBase, uint.Parse(customProperties["numparts"], NumberStyles.AllowLeadingWhite | NumberStyles.AllowTrailingWhite, NumberFormatInfo.InvariantInfo), labels) { ShortRot = bool.Parse(customProperties["shortrot"]) };
+								if(!labels.ContainsKey(address))
+									mot.Name = filedesc;
 								mot.Save(fileOutputPath, nometa);
 							}
 							else
 							{
-								NJS_MOTION mot = new NJS_MOTION(datafile, address, imageBase, int.Parse(customProperties["numparts"], NumberStyles.AllowLeadingWhite | NumberStyles.AllowTrailingWhite, NumberFormatInfo.InvariantInfo), labels);
-								if (!labels.ContainsKey(address)) mot.Name = filedesc;
+								NJS_MOTION mot = new NJS_MOTION(datafile, address, imageBase, uint.Parse(customProperties["numparts"], NumberStyles.AllowLeadingWhite | NumberStyles.AllowTrailingWhite, NumberFormatInfo.InvariantInfo), labels);
+								if(!labels.ContainsKey(address))
+									mot.Name = filedesc;
 								mot.Save(fileOutputPath, nometa);
 							}
 							break;
 						case "objlist":
-							{
-								ObjectListEntry[] objs = ObjectList.Load(datafile, address, imageBase, SA2);
-								if (inifile.MasterObjectList != null)
-									foreach (ObjectListEntry obj in objs)
-									{
-										if (!masterobjlist.ContainsKey(obj.CodeString))
-											masterobjlist.Add(obj.CodeString, new MasterObjectListEntry(obj));
-										if (!objnamecounts.ContainsKey(obj.CodeString))
-											objnamecounts.Add(obj.CodeString, new Dictionary<string, int>() { { obj.Name, 1 } });
-										else if (!objnamecounts[obj.CodeString].ContainsKey(obj.Name))
-											objnamecounts[obj.CodeString].Add(obj.Name, 1);
-										else
-											objnamecounts[obj.CodeString][obj.Name]++;
-									}
-								objs.Save(fileOutputPath);
-							}
-							break;
+						{
+							ObjectListEntry[] objs = ObjectList.Load(datafile, address, imageBase, SA2);
+							if(inifile.MasterObjectList != null)
+								foreach(ObjectListEntry obj in objs)
+								{
+									if(!masterobjlist.ContainsKey(obj.CodeString))
+										masterobjlist.Add(obj.CodeString, new MasterObjectListEntry(obj));
+									if(!objnamecounts.ContainsKey(obj.CodeString))
+										objnamecounts.Add(obj.CodeString, new Dictionary<string, int>() { { obj.Name, 1 } });
+									else if(!objnamecounts[obj.CodeString].ContainsKey(obj.Name))
+										objnamecounts[obj.CodeString].Add(obj.Name, 1);
+									else
+										objnamecounts[obj.CodeString][obj.Name]++;
+								}
+							objs.Save(fileOutputPath);
+						}
+						break;
 						case "startpos":
-							if (SA2)
+							if(SA2)
 								SA2StartPosList.Load(datafile, address).Save(fileOutputPath);
 							else
 								SA1StartPosList.Load(datafile, address).Save(fileOutputPath);
@@ -206,7 +212,7 @@ namespace SA_Tools.Split
 						case "texnamearray":
 							TexnameArray texnames = new TexnameArray(datafile, address, imageBase);
 							StreamWriter sw = File.CreateText(fileOutputPath);
-							for (int u = 0; u < texnames.NumTextures; u++)
+							for(int u = 0; u < texnames.NumTextures; u++)
 							{
 								sw.WriteLine(texnames.TextureNames[u] + ".pvr");
 							}
@@ -229,93 +235,93 @@ namespace SA_Tools.Split
 							SoundTestList.Load(datafile, address, imageBase).Save(fileOutputPath);
 							break;
 						case "musiclist":
-							{
-								int muscnt = int.Parse(customProperties["length"], NumberStyles.Integer, NumberFormatInfo.InvariantInfo);
-								MusicList.Load(datafile, address, imageBase, muscnt).Save(fileOutputPath);
-							}
-							break;
+						{
+							int muscnt = int.Parse(customProperties["length"], NumberStyles.Integer, NumberFormatInfo.InvariantInfo);
+							MusicList.Load(datafile, address, imageBase, muscnt).Save(fileOutputPath);
+						}
+						break;
 						case "soundlist":
 							SoundList.Load(datafile, address, imageBase).Save(fileOutputPath);
 							break;
 						case "stringarray":
-							{
-								int cnt = int.Parse(customProperties["length"], NumberStyles.Integer, NumberFormatInfo.InvariantInfo);
-								Languages lang = Languages.Japanese;
-								if (data.CustomProperties.ContainsKey("language"))
-									lang = (Languages)Enum.Parse(typeof(Languages), data.CustomProperties["language"], true);
-								StringArray.Load(datafile, address, imageBase, cnt, lang).Save(fileOutputPath);
-							}
-							break;
+						{
+							int cnt = int.Parse(customProperties["length"], NumberStyles.Integer, NumberFormatInfo.InvariantInfo);
+							Languages lang = Languages.Japanese;
+							if(data.CustomProperties.ContainsKey("language"))
+								lang = (Languages)Enum.Parse(typeof(Languages), data.CustomProperties["language"], true);
+							StringArray.Load(datafile, address, imageBase, cnt, lang).Save(fileOutputPath);
+						}
+						break;
 						case "nextlevellist":
 							NextLevelList.Load(datafile, address).Save(fileOutputPath);
 							break;
 						case "cutscenetext":
-							{
-								int cnt = int.Parse(customProperties["length"], NumberStyles.Integer, NumberFormatInfo.InvariantInfo);
-								new CutsceneText(datafile, address, imageBase, cnt).Save(fileOutputPath, out string[] hashes);
-								data.MD5Hash = string.Join(",", hashes);
-								nohash = true;
-							}
-							break;
+						{
+							int cnt = int.Parse(customProperties["length"], NumberStyles.Integer, NumberFormatInfo.InvariantInfo);
+							new CutsceneText(datafile, address, imageBase, cnt).Save(fileOutputPath, out string[] hashes);
+							data.MD5Hash = string.Join(",", hashes);
+							nohash = true;
+						}
+						break;
 						case "recapscreen":
+						{
+							int cnt = int.Parse(customProperties["length"], NumberStyles.Integer, NumberFormatInfo.InvariantInfo);
+							RecapScreenList.Load(datafile, address, imageBase, cnt).Save(fileOutputPath, out string[][] hashes);
+							string[] hash2 = new string[hashes.Length];
+							for(int i = 0; i < hashes.Length; i++)
 							{
-								int cnt = int.Parse(customProperties["length"], NumberStyles.Integer, NumberFormatInfo.InvariantInfo);
-								RecapScreenList.Load(datafile, address, imageBase, cnt).Save(fileOutputPath, out string[][] hashes);
-								string[] hash2 = new string[hashes.Length];
-								for (int i = 0; i < hashes.Length; i++)
-								{
-									hash2[i] = string.Join(",", hashes[i]);
-								}
-								data.MD5Hash = string.Join(":", hash2);
-								nohash = true;
+								hash2[i] = string.Join(",", hashes[i]);
 							}
-							break;
+							data.MD5Hash = string.Join(":", hash2);
+							nohash = true;
+						}
+						break;
 						case "npctext":
-							{
-								int cnt = int.Parse(customProperties["length"], NumberStyles.Integer, NumberFormatInfo.InvariantInfo);
-								NPCTextList.Load(datafile, address, imageBase, cnt).Save(fileOutputPath, out string[][] hashes);
-								string[] hash2 = new string[hashes.Length];
-								for (int i = 0; i < hashes.Length; i++)
-									hash2[i] = string.Join(",", hashes[i]);
-								data.MD5Hash = string.Join(":", hash2);
-								nohash = true;
-							}
-							break;
+						{
+							int cnt = int.Parse(customProperties["length"], NumberStyles.Integer, NumberFormatInfo.InvariantInfo);
+							NPCTextList.Load(datafile, address, imageBase, cnt).Save(fileOutputPath, out string[][] hashes);
+							string[] hash2 = new string[hashes.Length];
+							for(int i = 0; i < hashes.Length; i++)
+								hash2[i] = string.Join(",", hashes[i]);
+							data.MD5Hash = string.Join(":", hash2);
+							nohash = true;
+						}
+						break;
 						case "levelclearflags":
 							LevelClearFlagList.Save(LevelClearFlagList.Load(datafile, address), fileOutputPath);
 							break;
 						case "deathzone":
+						{
+							List<DeathZoneFlags> flags = new List<DeathZoneFlags>();
+							string path = Path.GetDirectoryName(fileOutputPath);
+							List<string> hashes = new List<string>();
+							int num = 0;
+							while(ByteConverter.ToUInt32(datafile, address + 4) != 0)
 							{
-								List<DeathZoneFlags> flags = new List<DeathZoneFlags>();
-								string path = Path.GetDirectoryName(fileOutputPath);
-								List<string> hashes = new List<string>();
-								int num = 0;
-								while (ByteConverter.ToUInt32(datafile, address + 4) != 0)
-								{
-									flags.Add(new DeathZoneFlags(datafile, address));
-									string file = Path.Combine(path, num++.ToString(NumberFormatInfo.InvariantInfo) + (modelfmt == ModelFormat.Chunk ? ".sa2mdl" : ".sa1mdl"));
-									ModelFile.CreateFile(file, new NJS_OBJECT(datafile, datafile.GetPointer(address + 4, imageBase), imageBase, modelfmt, new Dictionary<int, Attach>()), null, null, null, null, modelfmt, nometa);
-									hashes.Add(HelperFunctions.FileHash(file));
-									address += 8;
-								}
-								flags.ToArray().Save(fileOutputPath);
-								hashes.Insert(0, HelperFunctions.FileHash(fileOutputPath));
-								data.MD5Hash = string.Join(",", hashes.ToArray());
-								nohash = true;
+								flags.Add(new DeathZoneFlags(datafile, address));
+								string file = Path.Combine(path, num++.ToString(NumberFormatInfo.InvariantInfo) + (modelfmt == ModelFormat.Chunk ? ".sa2mdl" : ".sa1mdl"));
+								ModelFile.CreateFile(file, new NJS_OBJECT(datafile, datafile.GetPointer(address + 4, imageBase), imageBase, modelfmt, new Dictionary<uint, Attach>()), null, null, null, null, modelfmt, nometa);
+								hashes.Add(HelperFunctions.FileHash(file));
+								address += 8;
 							}
-							break;
+							flags.ToArray().Save(fileOutputPath);
+							hashes.Insert(0, HelperFunctions.FileHash(fileOutputPath));
+							data.MD5Hash = string.Join(",", hashes.ToArray());
+							nohash = true;
+						}
+						break;
 						case "skyboxscale":
-							{
-								int cnt = int.Parse(customProperties["count"], NumberStyles.Integer, NumberFormatInfo.InvariantInfo);
-								SkyboxScaleList.Load(datafile, address, imageBase, cnt).Save(fileOutputPath);
-							}
-							break;
+						{
+							int cnt = int.Parse(customProperties["count"], NumberStyles.Integer, NumberFormatInfo.InvariantInfo);
+							SkyboxScaleList.Load(datafile, address, imageBase, cnt).Save(fileOutputPath);
+						}
+						break;
 						case "stageselectlist":
-							{
-								int cnt = int.Parse(customProperties["count"], NumberStyles.Integer, NumberFormatInfo.InvariantInfo);
-								StageSelectLevelList.Load(datafile, address, cnt).Save(fileOutputPath);
-							}
-							break;
+						{
+							int cnt = int.Parse(customProperties["count"], NumberStyles.Integer, NumberFormatInfo.InvariantInfo);
+							StageSelectLevelList.Load(datafile, address, cnt).Save(fileOutputPath);
+						}
+						break;
 						case "levelrankscores":
 							LevelRankScoresList.Load(datafile, address).Save(fileOutputPath);
 							break;
@@ -326,40 +332,40 @@ namespace SA_Tools.Split
 							SA2EndPosList.Load(datafile, address).Save(fileOutputPath);
 							break;
 						case "animationlist":
-							{
-								int cnt = int.Parse(customProperties["count"], NumberStyles.Integer, NumberFormatInfo.InvariantInfo);
-								SA2AnimationInfoList.Load(datafile, address, cnt).Save(fileOutputPath);
-							}
-							break;
+						{
+							int cnt = int.Parse(customProperties["count"], NumberStyles.Integer, NumberFormatInfo.InvariantInfo);
+							SA2AnimationInfoList.Load(datafile, address, cnt).Save(fileOutputPath);
+						}
+						break;
 						case "levelpathlist":
+						{
+							List<string> hashes = new List<string>();
+							ushort lvlnum = (ushort)ByteConverter.ToUInt32(datafile, address);
+							while(lvlnum != 0xFFFF)
 							{
-								List<string> hashes = new List<string>();
-								ushort lvlnum = (ushort)ByteConverter.ToUInt32(datafile, address);
-								while (lvlnum != 0xFFFF)
+								uint ptr = ByteConverter.ToUInt32(datafile, address + 4);
+								if(ptr != 0)
 								{
-									int ptr = ByteConverter.ToInt32(datafile, address + 4);
-									if (ptr != 0)
-									{
-										ptr = (int)((uint)ptr - imageBase);
-										SA1LevelAct level = new SA1LevelAct(lvlnum);
-										string lvldir = Path.Combine(fileOutputPath, level.ToString());
-										PathList.Load(datafile, ptr, imageBase).Save(lvldir, out string[] lvlhashes);
-										hashes.Add(level.ToString() + ":" + string.Join(",", lvlhashes));
-									}
-									address += 8;
-									lvlnum = (ushort)ByteConverter.ToUInt32(datafile, address);
+									ptr = ptr - imageBase;
+									SA1LevelAct level = new SA1LevelAct(lvlnum);
+									string lvldir = Path.Combine(fileOutputPath, level.ToString());
+									PathList.Load(datafile, ptr, imageBase).Save(lvldir, out string[] lvlhashes);
+									hashes.Add(level.ToString() + ":" + string.Join(",", lvlhashes));
 								}
-								data.MD5Hash = string.Join("|", hashes.ToArray());
-								nohash = true;
+								address += 8;
+								lvlnum = (ushort)ByteConverter.ToUInt32(datafile, address);
 							}
-							break;
+							data.MD5Hash = string.Join("|", hashes.ToArray());
+							nohash = true;
+						}
+						break;
 						case "pathlist":
-							{
-								PathList.Load(datafile, address, imageBase).Save(fileOutputPath, out string[] hashes);
-								data.MD5Hash = string.Join(",", hashes.ToArray());
-								nohash = true;
-							}
-							break;
+						{
+							PathList.Load(datafile, address, imageBase).Save(fileOutputPath, out string[] hashes);
+							data.MD5Hash = string.Join(",", hashes.ToArray());
+							nohash = true;
+						}
+						break;
 						case "stagelightdatalist":
 							SA1StageLightDataList.Load(datafile, address).Save(fileOutputPath);
 							break;
@@ -373,71 +379,71 @@ namespace SA_Tools.Split
 							CreditsTextList.Load(datafile, address, imageBase).Save(fileOutputPath);
 							break;
 						case "animindexlist":
+						{
+							Directory.CreateDirectory(fileOutputPath);
+							List<string> hashes = new List<string>();
+							int i = ByteConverter.ToInt16(datafile, address);
+							while(i != -1)
 							{
-								Directory.CreateDirectory(fileOutputPath);
-								List<string> hashes = new List<string>();
-								int i = ByteConverter.ToInt16(datafile, address);
-								while (i != -1)
-								{
-									new NJS_MOTION(datafile, datafile.GetPointer(address + 4, imageBase), imageBase, ByteConverter.ToInt16(datafile, address + 2))
-										.Save(fileOutputPath + "/" + i.ToString(NumberFormatInfo.InvariantInfo) + ".saanim", nometa);
-									hashes.Add(i.ToString(NumberFormatInfo.InvariantInfo) + ":" + HelperFunctions.FileHash(fileOutputPath + "/" + i.ToString(NumberFormatInfo.InvariantInfo) + ".saanim"));
-									address += 8;
-									i = ByteConverter.ToInt16(datafile, address);
-								}
-								data.MD5Hash = string.Join("|", hashes.ToArray());
-								nohash = true;
+								new NJS_MOTION(datafile, datafile.GetPointer(address + 4, imageBase), imageBase, (uint)ByteConverter.ToInt16(datafile, address + 2))
+									.Save(fileOutputPath + "/" + i.ToString(NumberFormatInfo.InvariantInfo) + ".saanim", nometa);
+								hashes.Add(i.ToString(NumberFormatInfo.InvariantInfo) + ":" + HelperFunctions.FileHash(fileOutputPath + "/" + i.ToString(NumberFormatInfo.InvariantInfo) + ".saanim"));
+								address += 8;
+								i = ByteConverter.ToInt16(datafile, address);
 							}
-							break;
+							data.MD5Hash = string.Join("|", hashes.ToArray());
+							nohash = true;
+						}
+						break;
 						case "storysequence":
 							SA2StoryList.Load(datafile, address).Save(fileOutputPath);
 							break;
 						case "masterstringlist":
+						{
+							int cnt = int.Parse(customProperties["length"], NumberStyles.Integer, NumberFormatInfo.InvariantInfo);
+							for(int l = 0; l < 5; l++)
 							{
-								int cnt = int.Parse(customProperties["length"], NumberStyles.Integer, NumberFormatInfo.InvariantInfo);
-								for (int l = 0; l < 5; l++)
+								Languages lng = (Languages)l;
+								System.Text.Encoding enc = HelperFunctions.GetEncoding(inifile.Game, lng);
+								string ld = Path.Combine(fileOutputPath, lng.ToString());
+								Directory.CreateDirectory(ld);
+								uint ptr = datafile.GetPointer(address, imageBase);
+								for(int i = 0; i < cnt; i++)
 								{
-									Languages lng = (Languages)l;
-									System.Text.Encoding enc = HelperFunctions.GetEncoding(inifile.Game, lng);
-									string ld = Path.Combine(fileOutputPath, lng.ToString());
-									Directory.CreateDirectory(ld);
-									int ptr = datafile.GetPointer(address, imageBase);
-									for (int i = 0; i < cnt; i++)
+									uint ptr2 = datafile.GetPointer(ptr, imageBase);
+									if(ptr2 != 0)
 									{
-										int ptr2 = datafile.GetPointer(ptr, imageBase);
-										if (ptr2 != 0)
-										{
-											string fn = Path.Combine(ld, $"{i}.txt");
-											File.WriteAllText(fn, datafile.GetCString(ptr2, enc).Replace("\n", "\r\n"));
-											inifile.Files.Add($"{filedesc} {lng} {i}", new FileInfo() { Type = "string", Filename = fn, PointerList = new int[] { ptr }, MD5Hash = HelperFunctions.FileHash(fn), CustomProperties = new Dictionary<string, string>() { { "language", lng.ToString() } } });
-										}
-										ptr += 4;
+										string fn = Path.Combine(ld, $"{i}.txt");
+										File.WriteAllText(fn, datafile.GetCString(ptr2, enc).Replace("\n", "\r\n"));
+										inifile.Files.Add($"{filedesc} {lng} {i}", new FileInfo() { Type = "string", Filename = fn, PointerList = new uint[] { ptr }, MD5Hash = HelperFunctions.FileHash(fn), CustomProperties = new Dictionary<string, string>() { { "language", lng.ToString() } } });
 									}
-									address += 4;
+									ptr += 4;
 								}
-								inifile.Files.Remove(filedesc);
-								nohash = true;
+								address += 4;
 							}
-							break;
+							inifile.Files.Remove(filedesc);
+							nohash = true;
+						}
+						break;
 						default: // raw binary
-							{
-								byte[] bin = new byte[int.Parse(customProperties["size"], NumberStyles.HexNumber)];
-								Array.Copy(datafile, address, bin, 0, bin.Length);
-								File.WriteAllBytes(fileOutputPath, bin);
-							}
-							break;
+						{
+							byte[] bin = new byte[int.Parse(customProperties["size"], NumberStyles.HexNumber)];
+							Array.Copy(datafile, address, bin, 0, bin.Length);
+							File.WriteAllBytes(fileOutputPath, bin);
+						}
+						break;
 					}
-					if (!nohash)
+					if(!nohash)
 						data.MD5Hash = HelperFunctions.FileHash(fileOutputPath);
 					itemcount++;
 				}
-				if (inifile.MasterObjectList != null)
+				if(inifile.MasterObjectList != null)
 				{
-					foreach (KeyValuePair<string, MasterObjectListEntry> obj in masterobjlist)
+					foreach(KeyValuePair<string, MasterObjectListEntry> obj in masterobjlist)
 					{
 						KeyValuePair<string, int> name = new KeyValuePair<string, int>();
-						foreach (KeyValuePair<string, int> it in objnamecounts[obj.Key])
-							if (it.Value > name.Value)
+						foreach(KeyValuePair<string, int> it in objnamecounts[obj.Key])
+							if(it.Value > name.Value)
 								name = it;
 						obj.Value.Name = name.Key;
 						obj.Value.Names = objnamecounts[obj.Key].Select((it) => it.Key).ToArray();

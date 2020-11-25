@@ -1,11 +1,10 @@
-﻿using SonicRetro.SAModel;
-using System;
+﻿using System;
 using System.Collections.Generic;
 using System.Globalization;
 using System.IO;
 using System.Linq;
 
-namespace SA_Tools.SplitMDL
+namespace SASplit.SplitMDL
 {
 	public static class SplitMDL
 	{
@@ -14,7 +13,8 @@ namespace SA_Tools.SplitMDL
 			string dir = Environment.CurrentDirectory;
 			try
 			{
-				if (outputFolder[outputFolder.Length - 1] != '/') outputFolder = string.Concat(outputFolder, "/");
+				if(outputFolder[outputFolder.Length - 1] != '/')
+					outputFolder = string.Concat(outputFolder, "/");
 
 				// get file name, read it from the console if nothing
 				string mdlfilename = filePath;
@@ -23,9 +23,9 @@ namespace SA_Tools.SplitMDL
 
 				// load model file
 				byte[] mdlfile = File.ReadAllBytes(mdlfilename);
-				if (Path.GetExtension(mdlfilename).Equals(".prs", StringComparison.OrdinalIgnoreCase))
+				if(Path.GetExtension(mdlfilename).Equals(".prs", StringComparison.OrdinalIgnoreCase))
 					mdlfile = FraGag.Compression.Prs.Decompress(mdlfile);
-				switch (isBigEndian)
+				switch(isBigEndian)
 				{
 					case true:
 						ByteConverter.BigEndian = true;
@@ -37,28 +37,29 @@ namespace SA_Tools.SplitMDL
 						ByteConverter.BigEndian = false;
 						uint addr = 0;
 						short ile = ByteConverter.ToInt16(mdlfile, 0);
-						if (ile == 0)
+						if(ile == 0)
 						{
 							ile = ByteConverter.ToInt16(mdlfile, 8);
 							addr = 8;
 						}
 						ByteConverter.BigEndian = true;
-						if (ile < ByteConverter.ToInt16(mdlfile, addr))
+						if(ile < ByteConverter.ToInt16(mdlfile, addr))
 							ByteConverter.BigEndian = false;
 						break;
 				}
 				Environment.CurrentDirectory = Path.GetDirectoryName(mdlfilename);
 				(string filename, byte[] data)[] animfiles = new (string, byte[])[animationPaths.Length];
-				for (int j = 0; j < animationPaths.Length; j++)
+				for(int j = 0; j < animationPaths.Length; j++)
 				{
 					byte[] data = File.ReadAllBytes(animationPaths[j]);
-					if (Path.GetExtension(animationPaths[j]).Equals(".prs", StringComparison.OrdinalIgnoreCase))
+					if(Path.GetExtension(animationPaths[j]).Equals(".prs", StringComparison.OrdinalIgnoreCase))
 						data = FraGag.Compression.Prs.Decompress(data);
 					animfiles[j] = (Path.GetFileNameWithoutExtension(animationPaths[j]), data);
 				}
-				if (outputFolder.Length != 0)
+				if(outputFolder.Length != 0)
 				{
-					if (!Directory.Exists(outputFolder)) Directory.CreateDirectory(outputFolder);
+					if(!Directory.Exists(outputFolder))
+						Directory.CreateDirectory(outputFolder);
 					Environment.CurrentDirectory = outputFolder;
 				}
 				else
@@ -69,7 +70,7 @@ namespace SA_Tools.SplitMDL
 				uint address = 0;
 				uint i = ByteConverter.ToUInt32(mdlfile, address);
 				SortedDictionary<uint, uint> modeladdrs = new SortedDictionary<uint, uint>();
-				while (i != uint.MaxValue)
+				while(i != uint.MaxValue)
 				{
 					modeladdrs[i] = ByteConverter.ToUInt32(mdlfile, address + 4);
 					address += 8;
@@ -80,14 +81,14 @@ namespace SA_Tools.SplitMDL
 				Dictionary<uint, NJS_OBJECT> models = new Dictionary<uint, NJS_OBJECT>();
 				Dictionary<uint, string> modelnames = new Dictionary<uint, string>();
 				List<string> partnames = new List<string>();
-				foreach (KeyValuePair<uint, uint> item in modeladdrs)
+				foreach(KeyValuePair<uint, uint> item in modeladdrs)
 				{
 					NJS_OBJECT obj = new NJS_OBJECT(mdlfile, item.Value, 0, ModelFormat.Chunk, new Dictionary<uint, Attach>());
 					modelnames[item.Key] = obj.Name;
-					if (!partnames.Contains(obj.Name))
+					if(!partnames.Contains(obj.Name))
 					{
 						List<string> names = new List<string>(obj.GetObjects().Select((o) => o.Name));
-						foreach (uint idx in modelnames.Where(a => names.Contains(a.Value)).Select(a => a.Key))
+						foreach(uint idx in modelnames.Where(a => names.Contains(a.Value)).Select(a => a.Key))
 							models.Remove(idx);
 						models[item.Key] = obj;
 						partnames.AddRange(names);
@@ -97,19 +98,19 @@ namespace SA_Tools.SplitMDL
 				// load animations
 				Dictionary<uint, string> animfns = new Dictionary<uint, string>();
 				Dictionary<uint, NJS_MOTION> anims = new Dictionary<uint, NJS_MOTION>();
-				foreach ((string anifilename, byte[] anifile) in animfiles)
+				foreach((string anifilename, byte[] anifile) in animfiles)
 				{
 					Dictionary<uint, uint> processedanims = new Dictionary<uint, uint>();
 					MTNInfo ini = new MTNInfo() { BigEndian = ByteConverter.BigEndian };
 					Directory.CreateDirectory(anifilename);
 					address = 0;
 					i = ByteConverter.ToUInt16(anifile, address);
-					while (i != ushort.MaxValue)
+					while(i != ushort.MaxValue)
 					{
 						uint aniaddr = ByteConverter.ToUInt32(anifile, address + 4);
-						if (!processedanims.ContainsKey(aniaddr))
+						if(!processedanims.ContainsKey(aniaddr))
 						{
-							anims[i] = new NJS_MOTION(anifile, ByteConverter.ToUInt32(anifile, address + 4), 0, ByteConverter.ToInt16(anifile, address + 2));
+							anims[i] = new NJS_MOTION(anifile, ByteConverter.ToUInt32(anifile, address + 4), 0, (uint)ByteConverter.ToInt16(anifile, address + 2));
 							animfns[i] = Path.Combine(anifilename, i.ToString(NumberFormatInfo.InvariantInfo) + ".saanim");
 							anims[i].Save(animfns[i]);
 							processedanims[aniaddr] = i;
@@ -122,14 +123,15 @@ namespace SA_Tools.SplitMDL
 				}
 
 				// save output model files
-				foreach (KeyValuePair<uint, NJS_OBJECT> model in models)
+				foreach(KeyValuePair<uint, NJS_OBJECT> model in models)
 				{
 					List<string> animlist = new List<string>();
-					foreach (KeyValuePair<uint, NJS_MOTION> anim in anims)
-						if (model.Value.CountAnimated() == anim.Value.ModelParts)
+					foreach(KeyValuePair<uint, NJS_MOTION> anim in anims)
+						if(model.Value.CountAnimated() == anim.Value.ModelParts)
 						{
 							string rel = animfns[anim.Key].Replace(outputFolder, string.Empty);
-							if (rel.Length > 1 && rel[1] != ':') rel = "../" + rel;
+							if(rel.Length > 1 && rel[1] != ':')
+								rel = "../" + rel;
 							animlist.Add(rel);
 						}
 

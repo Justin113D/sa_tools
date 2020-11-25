@@ -1,7 +1,9 @@
 ﻿using Reloaded.Memory.Streams.Writers;
 using System;
-using System.Collections.Generic;
 using System.IO;
+using static SonicRetro.SACommon.ByteConverter;
+using static SonicRetro.SACommon.MathHelper;
+using static SonicRetro.SACommon.StringExtensions;
 
 namespace SonicRetro.SAModel.Structs
 {
@@ -54,7 +56,7 @@ namespace SonicRetro.SAModel.Structs
 		{
 			get
 			{
-				switch (index)
+				switch(index)
 				{
 					case 0:
 						return X;
@@ -68,7 +70,7 @@ namespace SonicRetro.SAModel.Structs
 			}
 			set
 			{
-				switch (index)
+				switch(index)
 				{
 					case 0:
 						X = value;
@@ -85,7 +87,7 @@ namespace SonicRetro.SAModel.Structs
 			}
 		}
 
-		public float Length => (float)Math.Sqrt( Math.Pow(X, 2) + Math.Pow(Y, 2 ) + Math.Pow(Z, 2));
+		public float Length => (float)Math.Sqrt(Math.Pow(X, 2) + Math.Pow(Y, 2) + Math.Pow(Z, 2));
 
 		/// <summary>
 		/// Returns the greatest of the 3 values in the vector
@@ -95,8 +97,10 @@ namespace SonicRetro.SAModel.Structs
 			get
 			{
 				float r = X;
-				if (Y > r) r = Y;
-				if (Z > r) r = Z;
+				if(Y > r)
+					r = Y;
+				if(Z > r)
+					r = Z;
 				return r;
 			}
 		}
@@ -125,10 +129,10 @@ namespace SonicRetro.SAModel.Structs
 		{
 			Vector3 center = new Vector3();
 
-			if (points == null || points.Length == 0)
+			if(points == null || points.Length == 0)
 				return center;
 
-			foreach (Vector3 p in points)
+			foreach(Vector3 p in points)
 				center += p;
 
 			return center / points.Length;
@@ -141,7 +145,7 @@ namespace SonicRetro.SAModel.Structs
 		/// <returns></returns>
 		public static Vector3 Center(Vector3[] points)
 		{
-			if (points == null || points.Length == 0)
+			if(points == null || points.Length == 0)
 				return new Vector3();
 
 			Vector3 Positive = points[0];
@@ -149,13 +153,19 @@ namespace SonicRetro.SAModel.Structs
 
 			foreach(Vector3 p in points)
 			{
-				if (p.X > Positive.X) Positive.X = p.X;
-				if (p.Y > Positive.Y) Positive.Y = p.Y;
-				if (p.Z > Positive.Z) Positive.Z = p.Z;
+				if(p.X > Positive.X)
+					Positive.X = p.X;
+				if(p.Y > Positive.Y)
+					Positive.Y = p.Y;
+				if(p.Z > Positive.Z)
+					Positive.Z = p.Z;
 
-				if (p.X < Negative.X) Negative.X = p.X;
-				if (p.Y < Negative.Y) Negative.Y = p.Y;
-				if (p.Z < Negative.Z) Negative.Z = p.Z;
+				if(p.X < Negative.X)
+					Negative.X = p.X;
+				if(p.Y < Negative.Y)
+					Negative.Y = p.Y;
+				if(p.Z < Negative.Z)
+					Negative.Z = p.Z;
 			}
 
 			return (Positive + Negative) / 2;
@@ -183,41 +193,41 @@ namespace SonicRetro.SAModel.Structs
 		public static Vector3 Read(byte[] source, ref uint address, IOType type)
 		{
 			Vector3 result;
-			switch (type)
+			switch(type)
 			{
 				case IOType.Short:
 					result = new Vector3()
 					{
-						X = ByteConverter.ToInt16(source, address),
-						Y = ByteConverter.ToInt16(source, address + 2),
-						Z = ByteConverter.ToInt16(source, address + 4)
+						X = source.ToInt16(address),
+						Y = source.ToInt16(address + 2),
+						Z = source.ToInt16(address + 4)
 					};
 					address += 6;
 					break;
 				case IOType.Float:
 					result = new Vector3()
 					{
-						X = ByteConverter.ToSingle(source, address),
-						Y = ByteConverter.ToSingle(source, address + 4),
-						Z = ByteConverter.ToSingle(source, address + 8)
+						X = source.ToSingle(address),
+						Y = source.ToSingle(address + 4),
+						Z = source.ToSingle(address + 8)
 					};
 					address += 12;
 					break;
 				case IOType.BAMS16:
 					result = new Vector3()
 					{
-						X = Helper.BAMSToDeg(ByteConverter.ToInt16(source, address)),
-						Y = Helper.BAMSToDeg(ByteConverter.ToInt16(source, address + 2)),
-						Z = Helper.BAMSToDeg(ByteConverter.ToInt16(source, address + 4))
+						X = BAMSToDeg(source.ToInt16(address)),
+						Y = BAMSToDeg(source.ToInt16(address + 2)),
+						Z = BAMSToDeg(source.ToInt16(address + 4))
 					};
 					address += 6;
 					break;
 				case IOType.BAMS32:
 					result = new Vector3()
 					{
-						X = Helper.BAMSToDeg(ByteConverter.ToInt32(source, address)),
-						Y = Helper.BAMSToDeg(ByteConverter.ToInt32(source, address + 4)),
-						Z = Helper.BAMSToDeg(ByteConverter.ToInt32(source, address + 8))
+						X = BAMSToDeg(source.ToInt32(address)),
+						Y = BAMSToDeg(source.ToInt32(address + 4)),
+						Z = BAMSToDeg(source.ToInt32(address + 8))
 					};
 					address += 12;
 					break;
@@ -229,7 +239,7 @@ namespace SonicRetro.SAModel.Structs
 
 		public void Write(EndianMemoryStream writer, IOType type)
 		{
-			switch (type)
+			switch(type)
 			{
 				case IOType.Short:
 					writer.WriteInt16((short)X);
@@ -242,14 +252,14 @@ namespace SonicRetro.SAModel.Structs
 					writer.WriteSingle(Z);
 					break;
 				case IOType.BAMS16:
-					writer.WriteInt16((short)Helper.DegToBAMS(X));
-					writer.WriteInt16((short)Helper.DegToBAMS(Y));
-					writer.WriteInt16((short)Helper.DegToBAMS(Z));
+					writer.WriteInt16((short)DegToBAMS(X));
+					writer.WriteInt16((short)DegToBAMS(Y));
+					writer.WriteInt16((short)DegToBAMS(Z));
 					break;
 				case IOType.BAMS32:
-					writer.WriteInt32(Helper.DegToBAMS(X));
-					writer.WriteInt32(Helper.DegToBAMS(Y));
-					writer.WriteInt32(Helper.DegToBAMS(Z));
+					writer.WriteInt32(DegToBAMS(X));
+					writer.WriteInt32(DegToBAMS(Y));
+					writer.WriteInt32(DegToBAMS(Z));
 					break;
 				default:
 					throw new ArgumentException($"Type {type} not available for struct Vector3");
@@ -259,7 +269,7 @@ namespace SonicRetro.SAModel.Structs
 		public void WriteNJA(TextWriter writer, IOType type)
 		{
 			writer.Write("( ");
-			switch (type)
+			switch(type)
 			{
 				case IOType.Short:
 					writer.Write((short)X);
@@ -276,18 +286,18 @@ namespace SonicRetro.SAModel.Structs
 					writer.Write(Z.ToC());
 					break;
 				case IOType.BAMS16:
-					writer.Write(((short)Helper.DegToBAMS(X)).ToCHex());
+					writer.Write(((short)DegToBAMS(X)).ToCHex());
 					writer.Write(", ");
-					writer.Write(((short)Helper.DegToBAMS(Y)).ToCHex());
+					writer.Write(((short)DegToBAMS(Y)).ToCHex());
 					writer.Write(", ");
-					writer.Write(((short)Helper.DegToBAMS(Z)).ToCHex());
+					writer.Write(((short)DegToBAMS(Z)).ToCHex());
 					break;
 				case IOType.BAMS32:
-					writer.Write(Helper.DegToBAMS(X).ToCHex());
+					writer.Write(DegToBAMS(X).ToCHex());
 					writer.Write(", ");
-					writer.Write(Helper.DegToBAMS(Y).ToCHex());
+					writer.Write(DegToBAMS(Y).ToCHex());
 					writer.Write(", ");
-					writer.Write(Helper.DegToBAMS(Z).ToCHex());
+					writer.Write(DegToBAMS(Z).ToCHex());
 					break;
 				default:
 					throw new ArgumentException($"Type {type} not available for Vector2");
@@ -305,7 +315,7 @@ namespace SonicRetro.SAModel.Structs
 		public static Vector3 operator *(Vector3 l, float r) => new Vector3(l.X * r, l.Y * r, l.Z * r);
 		public static Vector3 operator *(float l, Vector3 r) => r * l;
 		public static Vector3 operator /(Vector3 l, float r) => l * (1 / r);
-		
+
 		// logical operators
 		public override bool Equals(object obj)
 		{
@@ -327,11 +337,5 @@ namespace SonicRetro.SAModel.Structs
 		public static bool operator ==(Vector3 l, Vector3 r) => l.Equals(r);
 		public static bool operator !=(Vector3 l, Vector3 r) => !l.Equals(r);
 
-
-		// tmp
-		public void Write(ByteWriter writer, IOType type)
-		{
-			throw new NotImplementedException();
-		}
 	}
 }

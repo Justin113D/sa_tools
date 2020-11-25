@@ -141,7 +141,7 @@ namespace SonicRetro.SAModel.Graphics.UI
 								 left,  top,    0, 0,
 								 right, top,    1, 0, };
 		}
-	
+
 		/// <summary>
 		/// Gets the texture and sets <see cref="UpdatedTexture"/> to false
 		/// </summary>

@@ -1,10 +1,12 @@
-﻿using System;
+﻿using Reloaded.Memory.Streams.Writers;
+using SonicRetro.SAModel.ModelData;
+using SonicRetro.SAModel.Structs;
+using System;
 using System.Collections.Generic;
 using System.IO;
 using System.Linq;
-using Reloaded.Memory.Streams.Writers;
-using SonicRetro.SAModel.ModelData;
-using SonicRetro.SAModel.Structs;
+using static SonicRetro.SACommon.ByteConverter;
+using static SonicRetro.SACommon.StringExtensions;
 
 namespace SonicRetro.SAModel.ObjData
 {
@@ -24,7 +26,7 @@ namespace SonicRetro.SAModel.ObjData
 		/// <summary>
 		/// Model data of the object
 		/// </summary>
-		public ModelData.Attach Attach { get; set; }
+		public Attach Attach { get; set; }
 
 		/// <summary>
 		/// Local Position of the Object
@@ -53,10 +55,13 @@ namespace SonicRetro.SAModel.ObjData
 		{
 			get
 			{
-				if (Parent == null) return null;
+				if(Parent == null)
+					return null;
 				int index = Parent._children.IndexOf(this);
-				if (index == -1 || index == Parent.ChildCount - 1) return null;
-				else return Parent._children[index + 1];
+				if(index == -1 || index == Parent.ChildCount - 1)
+					return null;
+				else
+					return Parent._children[index + 1];
 			}
 		}
 
@@ -89,9 +94,11 @@ namespace SonicRetro.SAModel.ObjData
 		{
 			get
 			{
-				if (Attach != null && Attach.HasWeight) return true;
-				foreach (NJObject obj in _children)
-					if(obj.HasWeight) return true;
+				if(Attach != null && Attach.HasWeight)
+					return true;
+				foreach(NJObject obj in _children)
+					if(obj.HasWeight)
+						return true;
 				return false;
 			}
 		}
@@ -105,14 +112,22 @@ namespace SonicRetro.SAModel.ObjData
 			{
 				ObjectFlags r = 0;
 
-				if (Position == Vector3.Zero)	r |= ObjectFlags.NoPosition;
-				if (Rotation == Vector3.Zero)	r |= ObjectFlags.NoRotation;
-				if (Scale == Vector3.One)		r |= ObjectFlags.NoScale;
-				if (Attach == null)		r |= ObjectFlags.NoDisplay;
-				if (ChildCount == 0)	r |= ObjectFlags.NoChildren;
-				if (RotateZYX)	r |= ObjectFlags.RotateZYX;
-				if (!Animate)	r |= ObjectFlags.NoAnimate;
-				if (!Morph)		r |= ObjectFlags.NoMorph;
+				if(Position == Vector3.Zero)
+					r |= ObjectFlags.NoPosition;
+				if(Rotation == Vector3.Zero)
+					r |= ObjectFlags.NoRotation;
+				if(Scale == Vector3.One)
+					r |= ObjectFlags.NoScale;
+				if(Attach == null)
+					r |= ObjectFlags.NoDisplay;
+				if(ChildCount == 0)
+					r |= ObjectFlags.NoChildren;
+				if(RotateZYX)
+					r |= ObjectFlags.RotateZYX;
+				if(!Animate)
+					r |= ObjectFlags.NoAnimate;
+				if(!Morph)
+					r |= ObjectFlags.NoMorph;
 
 				return r;
 			}
@@ -130,7 +145,7 @@ namespace SonicRetro.SAModel.ObjData
 		/// </summary>
 		public NJObject()
 		{
-			Name = "object_" + Extensions.GenerateIdentifier();
+			Name = "object_" + GenerateIdentifier();
 			_children = new List<NJObject>();
 			Scale = new Vector3(1, 1, 1);
 		}
@@ -141,7 +156,8 @@ namespace SonicRetro.SAModel.ObjData
 		/// <param name="Parent"></param>
 		public NJObject(NJObject Parent) : this()
 		{
-			if (Parent == null) return;
+			if(Parent == null)
+				return;
 			this.Parent = Parent;
 			Parent._children.Add(this);
 		}
@@ -166,18 +182,19 @@ namespace SonicRetro.SAModel.ObjData
 			string name = labels.ContainsKey(address) ? labels[address] : "object_" + address.ToString("X8");
 
 			// reading object flags
-			ObjectFlags flags = (ObjectFlags)ByteConverter.ToInt32(source, address);
+			ObjectFlags flags = (ObjectFlags)source.ToInt32(address);
 			bool rotateZYX = flags.HasFlag(ObjectFlags.RotateZYX);
 			bool animate = !flags.HasFlag(ObjectFlags.NoAnimate);
 			bool morph = !flags.HasFlag(ObjectFlags.NoMorph);
 
 			// reading the attach
 			ModelData.Attach atc = null;
-			uint tmpaddr = ByteConverter.ToUInt32(source, address += 4);
-			if (tmpaddr != 0)
+			uint tmpaddr = source.ToUInt32(address += 4);
+			if(tmpaddr != 0)
 			{
 				tmpaddr -= imageBase;
-				if (attaches.ContainsKey(tmpaddr) == true) atc = attaches[tmpaddr];
+				if(attaches.ContainsKey(tmpaddr) == true)
+					atc = attaches[tmpaddr];
 				else
 				{
 					atc = ModelData.Attach.Read(format, source, tmpaddr, imageBase, DX, labels);
@@ -206,12 +223,14 @@ namespace SonicRetro.SAModel.ObjData
 			};
 
 			// reading child | parent and child get set in the constructor
-			tmpaddr = ByteConverter.ToUInt32(source, address);
-			if(tmpaddr != 0) Read(source, tmpaddr - imageBase, imageBase, format, DX, result, labels, attaches);
+			tmpaddr = source.ToUInt32(address);
+			if(tmpaddr != 0)
+				Read(source, tmpaddr - imageBase, imageBase, format, DX, result, labels, attaches);
 
 			// reading sibling | parent and child get set in the constructor
-			tmpaddr = ByteConverter.ToUInt32(source, address + 4);
-			if(tmpaddr != 0) Read(source, tmpaddr - imageBase, imageBase, format, DX, parent, labels, attaches);
+			tmpaddr = source.ToUInt32(address + 4);
+			if(tmpaddr != 0)
+				Read(source, tmpaddr - imageBase, imageBase, format, DX, parent, labels, attaches);
 
 			return result;
 		}
@@ -263,13 +282,13 @@ namespace SonicRetro.SAModel.ObjData
 			ModelData.Attach[] attaches = models.Where(x => x.Attach != null).Select(x => x.Attach).ToArray();
 
 			// write attaches
-			foreach (var atc in attaches)
-				if (!labels.ContainsKey(atc.Name))
+			foreach(var atc in attaches)
+				if(!labels.ContainsKey(atc.Name))
 					atc.Write(writer, imageBase, DX, labels);
 
 			// write models, but in reverse order
 			writer.Stream.Seek(modelsEnd - Size, SeekOrigin.Begin);
-			for (int i = models.Length - 1; i > 0; i--)
+			for(int i = models.Length - 1; i > 0; i--)
 			{
 				models[i].Write(writer, imageBase, labels);
 				writer.Stream.Seek((int)Size * -2, SeekOrigin.Current);
@@ -296,7 +315,7 @@ namespace SonicRetro.SAModel.ObjData
 			writer.WriteLine("START");
 
 			writer.Write("EvalFlags \t( ");
-			writer.Write(((StructEnums.NJD_EVAL)Flags).ToString().Replace(", ", " | "));
+			writer.Write(((NJD_EVAL)Flags).ToString().Replace(", ", " | "));
 			writer.WriteLine("),");
 
 			writer.Write("Model \t\t");
@@ -347,7 +366,7 @@ namespace SonicRetro.SAModel.ObjData
 		public int Count()
 		{
 			int result = 1;
-			foreach (NJObject item in _children)
+			foreach(NJObject item in _children)
 				result += item.Count();
 			return result;
 		}
@@ -359,7 +378,7 @@ namespace SonicRetro.SAModel.ObjData
 		public int CountAnimated()
 		{
 			int result = Animate ? 1 : 0;
-			foreach (NJObject item in _children)
+			foreach(NJObject item in _children)
 				result += item.CountAnimated();
 			return result;
 		}
@@ -371,7 +390,7 @@ namespace SonicRetro.SAModel.ObjData
 		public int CountMorph()
 		{
 			int result = Morph ? 1 : 0;
-			foreach (NJObject item in _children)
+			foreach(NJObject item in _children)
 				result += item.CountMorph();
 			return result;
 		}
@@ -396,7 +415,7 @@ namespace SonicRetro.SAModel.ObjData
 		private void GetObjects(List<NJObject> result)
 		{
 			result.Add(this);
-			foreach (NJObject item in _children)
+			foreach(NJObject item in _children)
 				result.AddRange(item.GetObjects());
 		}
 
@@ -416,7 +435,7 @@ namespace SonicRetro.SAModel.ObjData
 		/// <param name="children"></param>
 		public void AddChildren(IEnumerable<NJObject> children)
 		{
-			foreach (NJObject child in children)
+			foreach(NJObject child in children)
 				AddChild(child);
 		}
 
@@ -457,7 +476,7 @@ namespace SonicRetro.SAModel.ObjData
 		/// </summary>
 		public void ClearChildren()
 		{
-			foreach (NJObject child in _children)
+			foreach(NJObject child in _children)
 				child.Parent = null;
 			_children.Clear();
 		}

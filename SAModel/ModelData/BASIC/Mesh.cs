@@ -1,10 +1,13 @@
-﻿using System;
+﻿using Reloaded.Memory.Streams.Writers;
+using SonicRetro.SAModel.Structs;
+using System;
 using System.Collections.Generic;
 using System.Collections.ObjectModel;
 using System.IO;
 using System.Linq;
-using Reloaded.Memory.Streams.Writers;
-using SonicRetro.SAModel.Structs;
+using static SonicRetro.SACommon.ByteConverter;
+using static SonicRetro.SACommon.Helper;
+using static SonicRetro.SACommon.StringExtensions;
 
 namespace SonicRetro.SAModel.ModelData.BASIC
 {
@@ -22,7 +25,7 @@ namespace SonicRetro.SAModel.ModelData.BASIC
 		/// <summary>
 		/// Polygon type used
 		/// </summary>
-		public BASICPolyType PolyType { get;}
+		public BASICPolyType PolyType { get; }
 
 		/// <summary>
 		/// Name of the primitives data
@@ -69,7 +72,7 @@ namespace SonicRetro.SAModel.ModelData.BASIC
 		/// </summary>
 		public Vector2[] UVs { get; }
 
-		private Mesh(BASICPolyType polyType, Poly[] polys, Vector3[] normals, Color[] colors, Vector2[] uvs) 
+		private Mesh(BASICPolyType polyType, Poly[] polys, Vector3[] normals, Color[] colors, Vector2[] uvs)
 		{
 			PolyType = polyType;
 			Polys = new ReadOnlyCollection<Poly>(polys);
@@ -94,25 +97,25 @@ namespace SonicRetro.SAModel.ModelData.BASIC
 			Polys = new ReadOnlyCollection<Poly>(polys);
 
 			int cornerCount = 0;
-			foreach (Poly p in polys)
+			foreach(Poly p in polys)
 				cornerCount += p.Indices.Length;
 
-			PolyName = "poly_" + Extensions.GenerateIdentifier();
+			PolyName = "poly_" + GenerateIdentifier();
 
-			if (hasNormal)
+			if(hasNormal)
 			{
 				Normals = new Vector3[cornerCount];
-				NormalName = "polynormal_" + Extensions.GenerateIdentifier();
+				NormalName = "polynormal_" + GenerateIdentifier();
 			}
-			if (hasColor)
+			if(hasColor)
 			{
 				Colors = new Color[cornerCount];
-				ColorName = "vcolor_" + Extensions.GenerateIdentifier();
+				ColorName = "vcolor_" + GenerateIdentifier();
 			}
-			if (hasUV)
+			if(hasUV)
 			{
 				UVs = new Vector2[cornerCount];
-				UVName = "uv_" + Extensions.GenerateIdentifier();
+				UVName = "uv_" + GenerateIdentifier();
 			}
 		}
 
@@ -147,26 +150,26 @@ namespace SonicRetro.SAModel.ModelData.BASIC
 		public static Mesh Read(byte[] source, ref uint address, uint imageBase, Dictionary<uint, string> labels)
 		{
 			// reading the header data
-			ushort header = ByteConverter.ToUInt16(source, address);
+			ushort header = source.ToUInt16(address);
 			ushort materialID = (ushort)(header & 0x3FFFu);
 			BASICPolyType polyType = (BASICPolyType)(header >> 14);
-			ushort polyCount = ByteConverter.ToUInt16(source, address + 2);
+			ushort polyCount = source.ToUInt16(address + 2);
 
 			// getting the addresses
 			// polys
-			uint polyAddr = ByteConverter.ToUInt32(source, address + 4);
+			uint polyAddr = source.ToUInt32(address + 4);
 			string polyName = polyAddr == 0 ? null : labels.ContainsKey(polyAddr -= imageBase) ? labels[polyAddr] : "poly_" + polyAddr.ToString("X8");
 
 			// additional normals
-			uint normalAddr = ByteConverter.ToUInt32(source, address + 12);
+			uint normalAddr = source.ToUInt32(address + 12);
 			string normalName = normalAddr == 0 ? null : labels.ContainsKey(normalAddr -= imageBase) ? labels[normalAddr] : "polynormal_" + normalAddr.ToString("X8");
 
 			// colors
-			uint colorAddr = ByteConverter.ToUInt32(source, address + 16);
+			uint colorAddr = source.ToUInt32(address + 16);
 			string colorName = colorAddr == 0 ? null : labels.ContainsKey(colorAddr -= imageBase) ? labels[colorAddr] : "vcolor_" + colorAddr.ToString("X8");
 
 			// uvs
-			uint uvAddr = ByteConverter.ToUInt32(source, address + 20);
+			uint uvAddr = source.ToUInt32(address + 20);
 			string uvName = uvAddr == 0 ? null : labels.ContainsKey(uvAddr -= imageBase) ? labels[uvAddr] : "uv_" + uvAddr.ToString("X8");
 
 			// reading polygons
@@ -182,23 +185,23 @@ namespace SonicRetro.SAModel.ModelData.BASIC
 			// creating the mesh
 			Mesh result = new Mesh(polyType, polyName, polys, normalName, colorName, uvName, materialID)
 			{
-				PolyAttributes = ByteConverter.ToUInt32(source, address + 8)
+				PolyAttributes = source.ToUInt32(address + 8)
 			};
 
 			// reading the remaining data
 			// reading additional normals
-			if (normalAddr != 0)
-				for (int i = 0; i < result.Normals.Length; i++)
+			if(normalAddr != 0)
+				for(int i = 0; i < result.Normals.Length; i++)
 					result.Normals[i] = Vector3.Read(source, ref normalAddr, IOType.Float);
 
 			// reading colors
-			if (colorAddr != 0)
-				for (int i = 0; i < result.Colors.Length; i++)
+			if(colorAddr != 0)
+				for(int i = 0; i < result.Colors.Length; i++)
 					result.Colors[i] = Color.Read(source, ref colorAddr, IOType.ARGB8_32);
 
 			// reading uvs
-			if (uvAddr != 0)
-				for (int i = 0; i < result.UVs.Length; i++)
+			if(uvAddr != 0)
+				for(int i = 0; i < result.UVs.Length; i++)
 					result.UVs[i] = Vector2.Read(source, ref uvAddr, IOType.Short) / 256f;
 
 			address += 24;
@@ -223,7 +226,7 @@ namespace SonicRetro.SAModel.ModelData.BASIC
 				writer.WriteLine("START");
 				writer.WriteLine();
 
-				foreach (Poly p in Polys)
+				foreach(Poly p in Polys)
 				{
 					writer.Write("\t");
 					p.WriteNJA(writer);
@@ -236,7 +239,7 @@ namespace SonicRetro.SAModel.ModelData.BASIC
 				labels.Add(PolyName);
 			}
 
-			if (!labels.Contains(NormalName) && Normals != null)
+			if(!labels.Contains(NormalName) && Normals != null)
 			{
 				writer.Write("POLYNORMAL ");
 				writer.Write(NormalName);
@@ -245,7 +248,7 @@ namespace SonicRetro.SAModel.ModelData.BASIC
 				writer.WriteLine("START");
 				writer.WriteLine();
 
-				foreach (Vector3 n in Normals)
+				foreach(Vector3 n in Normals)
 				{
 					writer.Write("\tPNORM ");
 					n.WriteNJA(writer, IOType.Float);
@@ -258,7 +261,7 @@ namespace SonicRetro.SAModel.ModelData.BASIC
 				labels.Add(NormalName);
 			}
 
-			if (!labels.Contains(ColorName) && Colors != null)
+			if(!labels.Contains(ColorName) && Colors != null)
 			{
 				writer.Write("VERTCOLOR ");
 				writer.Write(ColorName);
@@ -279,7 +282,7 @@ namespace SonicRetro.SAModel.ModelData.BASIC
 				labels.Add(ColorName);
 			}
 
-			if (!labels.Contains(UVName) && UVs != null)
+			if(!labels.Contains(UVName) && UVs != null)
 			{
 				writer.Write("VERTUV ");
 				writer.Write(UVName);
@@ -288,7 +291,7 @@ namespace SonicRetro.SAModel.ModelData.BASIC
 				writer.WriteLine("START");
 				writer.WriteLine();
 
-				foreach (Vector2 uv in UVs)
+				foreach(Vector2 uv in UVs)
 				{
 					writer.Write("\tUV ");
 					(uv * 256).WriteNJA(writer, IOType.Short);
@@ -311,31 +314,31 @@ namespace SonicRetro.SAModel.ModelData.BASIC
 		public void WriteData(EndianMemoryStream writer, uint imageBase, Dictionary<string, uint> labels)
 		{
 
-			if (!labels.ContainsKey(PolyName))
+			if(!labels.ContainsKey(PolyName))
 			{
 				labels.Add(PolyName, (uint)writer.Stream.Position + imageBase);
-				foreach (Poly p in Polys)
+				foreach(Poly p in Polys)
 					p.Write(writer);
 			}
 
 			if(Normals != null && !labels.ContainsKey(NormalName))
 			{
 				labels.Add(NormalName, (uint)writer.Stream.Position + imageBase);
-				foreach (Vector3 n in Normals)
+				foreach(Vector3 n in Normals)
 					n.Write(writer, IOType.Float);
 			}
 
-			if (Colors != null && !labels.ContainsKey(ColorName))
-			{ 
+			if(Colors != null && !labels.ContainsKey(ColorName))
+			{
 				labels.Add(ColorName, (uint)writer.Stream.Position + imageBase);
-				foreach (Color c in Colors)
+				foreach(Color c in Colors)
 					c.Write(writer, IOType.ARGB8_32);
 			}
 
-			if (UVs != null && !labels.ContainsKey(UVName))
-			{ 
+			if(UVs != null && !labels.ContainsKey(UVName))
+			{
 				labels.Add(UVName, (uint)writer.Stream.Position + imageBase);
-				foreach (Vector2 uv in UVs)
+				foreach(Vector2 uv in UVs)
 					(uv * 256f).Write(writer, IOType.Short);
 			}
 		}
@@ -376,12 +379,13 @@ namespace SonicRetro.SAModel.ModelData.BASIC
 			writer.Write("VertUV \t\t");
 			writer.Write(UVs != null ? UVName : "NULL");
 
-			if (DX)
+			if(DX)
 			{
 				writer.WriteLine(",");
 				writer.WriteLine("NULL");
 			}
-			else writer.WriteLine();
+			else
+				writer.WriteLine();
 			writer.WriteLine("MESHEND");
 		}
 
@@ -392,7 +396,8 @@ namespace SonicRetro.SAModel.ModelData.BASIC
 		/// <param name="DX">Whether the mesh should be written for SADX</param>
 		public void WriteMeshset(EndianMemoryStream writer, bool DX, Dictionary<string, uint> labels)
 		{
-			if (!labels.ContainsKey(PolyName)) throw new NullReferenceException("Data has not been written yet");
+			if(!labels.ContainsKey(PolyName))
+				throw new NullReferenceException("Data has not been written yet");
 
 			ushort header = MaterialID;
 			header |= (ushort)((uint)PolyType << 14);
@@ -403,7 +408,8 @@ namespace SonicRetro.SAModel.ModelData.BASIC
 			writer.WriteUInt32(Normals == null ? 0 : labels[NormalName]);
 			writer.WriteUInt32(Colors == null ? 0 : labels[ColorName]);
 			writer.WriteUInt32(UVs == null ? 0 : labels[UVName]);
-			if (DX) writer.WriteUInt32(0);
+			if(DX)
+				writer.WriteUInt32(0);
 		}
 
 		object ICloneable.Clone() => Clone();

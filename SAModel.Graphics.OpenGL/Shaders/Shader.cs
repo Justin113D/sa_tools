@@ -1,8 +1,8 @@
-﻿using System;
-using System.Collections.Generic;
-using OpenTK;
+﻿using OpenTK;
 using OpenTK.Graphics.OpenGL4;
 using SonicRetro.SAModel.Structs;
+using System;
+using System.Collections.Generic;
 using Vector2 = SonicRetro.SAModel.Structs.Vector2;
 using Vector3 = SonicRetro.SAModel.Structs.Vector3;
 
@@ -73,13 +73,13 @@ namespace SonicRetro.SAModel.Graphics.OpenGL
 			GL.CompileShader(vertexShader);
 
 			string infoLogVert = GL.GetShaderInfoLog(vertexShader);
-			if (infoLogVert != string.Empty)
+			if(infoLogVert != string.Empty)
 				Console.WriteLine("vertex shader couldnt compile: \n" + infoLogVert);
 
 			GL.CompileShader(fragmentShader);
 
 			string infoLogFrag = GL.GetShaderInfoLog(fragmentShader);
-			if (infoLogFrag != string.Empty)
+			if(infoLogFrag != string.Empty)
 				Console.WriteLine("fragment shader couldnt compile: \n" + infoLogFrag);
 
 			//linking the shaders
@@ -108,24 +108,25 @@ namespace SonicRetro.SAModel.Graphics.OpenGL
 			int samplerInt = 0;
 
 			// Loop over all the uniforms,
-			for (var i = 0; i < numberOfUniforms; i++)
+			for(var i = 0; i < numberOfUniforms; i++)
 			{
 				// get the name of this uniform,
 				var key = GL.GetActiveUniform(_handle, i, out _, out ActiveUniformType t);
 
 				// get the location,
 				var location = GL.GetUniformLocation(_handle, key);
-				if (location < 0)
+				if(location < 0)
 					continue;
 
 				// and then add it to the dictionary.
-				if (t == ActiveUniformType.Sampler2D)
+				if(t == ActiveUniformType.Sampler2D)
 				{
 					_uniformLocations.Add(key, new UniformType(location, TextureUnit.Texture0 + samplerInt));
 					SetUniform(key, samplerInt);
 					samplerInt++;
 				}
-				else _uniformLocations.Add(key, new UniformType(location, t));
+				else
+					_uniformLocations.Add(key, new UniformType(location, t));
 			}
 
 
@@ -140,7 +141,8 @@ namespace SonicRetro.SAModel.Graphics.OpenGL
 		public void BindUniformBlock(string blockname, int blockid, int ubo)
 		{
 			int index = GL.GetUniformBlockIndex(_handle, blockname);
-			if (index < 0) throw new ArgumentException("Block name does not exist: " + blockname);
+			if(index < 0)
+				throw new ArgumentException("Block name does not exist: " + blockname);
 
 			GL.UniformBlockBinding(_handle, index, blockid);
 			GL.BindBufferBase(BufferRangeTarget.UniformBuffer, blockid, ubo);
@@ -228,7 +230,8 @@ namespace SonicRetro.SAModel.Graphics.OpenGL
 		/// <param name="data">The data to set</param>
 		public void SetUniform(string name, Vector3 data)
 		{
-			if (!_uniformLocations.ContainsKey(name)) return;
+			if(!_uniformLocations.ContainsKey(name))
+				return;
 			Use();
 			GL.Uniform3(_uniformLocations[name].location, data.ToGL());
 		}

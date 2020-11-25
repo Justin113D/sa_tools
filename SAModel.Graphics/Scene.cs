@@ -1,6 +1,5 @@
 ﻿using SonicRetro.SAModel.ObjData;
 using SonicRetro.SAModel.ObjData.Animation;
-using SonicRetro.SAModel.Structs;
 using System;
 using System.Collections.Generic;
 using System.Linq;
@@ -42,10 +41,11 @@ namespace SonicRetro.SAModel.Graphics
 			NJObject[] objs = file.Model.GetObjects();
 			if(file.Model.HasWeight)
 			{
-				foreach (NJObject obj in objs)
+				foreach(NJObject obj in objs)
 				{
-					if (obj.Attach == null) continue;
-					if (!weightedAttaches.Contains(obj.Attach))
+					if(obj.Attach == null)
+						continue;
+					if(!weightedAttaches.Contains(obj.Attach))
 					{
 						weightedAttaches.Add(obj.Attach);
 						obj.Attach.GenBufferMesh(true);
@@ -56,8 +56,9 @@ namespace SonicRetro.SAModel.Graphics
 			{
 				foreach(NJObject obj in objs)
 				{
-					if (obj.Attach == null) continue;
-					if (!attaches.Contains(obj.Attach))
+					if(obj.Attach == null)
+						continue;
+					if(!attaches.Contains(obj.Attach))
 					{
 						attaches.Add(obj.Attach);
 						obj.Attach.GenBufferMesh(true);
@@ -73,7 +74,7 @@ namespace SonicRetro.SAModel.Graphics
 			DisplayTask tsk = objects.Last() as DisplayTask;
 
 			int mdlCount = tsk.obj.GetObjects().Length;
-			if (motion.ModelCount > mdlCount)
+			if(motion.ModelCount > mdlCount)
 				throw new ArgumentException($"Motion not compatible with model! \n Motion model count: {motion.ModelCount} \n Model count: {mdlCount}");
 			tsk.motion = motion;
 			tsk.animSpeed = animSpeed;
@@ -81,10 +82,10 @@ namespace SonicRetro.SAModel.Graphics
 
 		public void LoadLandtable(ObjData.LandTable table)
 		{
-			foreach (LandEntry le in table.Geometry)
+			foreach(LandEntry le in table.Geometry)
 			{
 				geometry.Add(le);
-				if (!attaches.Contains(le.Attach))
+				if(!attaches.Contains(le.Attach))
 				{
 					attaches.Add(le.Attach);
 					le.Attach.GenBufferMesh(true);

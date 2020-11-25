@@ -1,7 +1,7 @@
 ﻿using SonicRetro.SAModel.Graphics.APIAccess;
-using SonicRetro.SAModel.ObjData;
 using SonicRetro.SAModel.Structs;
 using System;
+using static SonicRetro.SACommon.MathHelper;
 
 namespace SonicRetro.SAModel.Graphics
 {
@@ -67,27 +67,6 @@ namespace SonicRetro.SAModel.Graphics
 		}
 
 		/// <summary>
-		/// The bams rotation of the camera in world space
-		/// </summary>
-		public Rotation BAMSRotation
-		{
-			get
-			{
-				int x = SAModel.Rotation.DegToBAMS(_rotation.X);
-				int y = SAModel.Rotation.DegToBAMS(_rotation.Y);
-				int z = SAModel.Rotation.DegToBAMS(_rotation.Z);
-				return new Rotation(x, y, z);
-			}
-			set
-			{
-				float x = SAModel.Rotation.BAMSToDeg(value.X);
-				float y = SAModel.Rotation.BAMSToDeg(value.Y);
-				float z = SAModel.Rotation.BAMSToDeg(value.Z);
-				Rotation = new Vector3(x, y, z);
-			}
-		}
-
-		/// <summary>
 		/// The Cameras global forward Direction
 		/// </summary>
 		public Vector3 Forward => _forward;
@@ -113,7 +92,8 @@ namespace SonicRetro.SAModel.Graphics
 			}
 			set
 			{
-				if (_orbiting == value) return;
+				if(_orbiting == value)
+					return;
 				_orbiting = value;
 
 				var t = _forward * _distance;
@@ -146,10 +126,10 @@ namespace SonicRetro.SAModel.Graphics
 		/// </summary>
 		public float FieldOfView
 		{
-			get => Structs.Helper.RadToDeg(_fov);
+			get => RadToDeg(_fov);
 			set
 			{
-				_fov = Structs.Helper.DegToRad(value);
+				_fov = DegToRad(value);
 				UpdateProjectionMatrix();
 			}
 		}
@@ -175,7 +155,8 @@ namespace SonicRetro.SAModel.Graphics
 			get => _orthographic;
 			set
 			{
-				if (_orthographic == value) return;
+				if(_orthographic == value)
+					return;
 				_orthographic = value;
 				UpdateViewMatrix();
 				UpdateProjectionMatrix();
@@ -213,7 +194,7 @@ namespace SonicRetro.SAModel.Graphics
 
 			_orbiting = true;
 			_distance = 50;
-			_fov = Structs.Helper.DegToRad(50);
+			_fov = DegToRad(50);
 			_aspect = aspect;
 			_orthographic = false;
 			_viewDist = 3000;

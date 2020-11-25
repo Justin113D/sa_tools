@@ -1,7 +1,5 @@
 ﻿using SonicRetro.SAModel.Graphics.APIAccess;
-using System;
 using System.Collections.Generic;
-using System.Windows;
 using System.Windows.Input;
 using Point = System.Drawing.Point;
 
@@ -68,7 +66,8 @@ namespace SonicRetro.SAModel.Graphics
 		/// </summary>
 		public void Update(bool wasFocused)
 		{
-			if (_apiAccess == null) throw new NotInitializedException("Input was not initialized");
+			if(_apiAccess == null)
+				throw new NotInitializedException("Input was not initialized");
 
 			_keyWasPressed = _keyPressed;
 			_keyPressed = _apiAccess.UpdateKeys();

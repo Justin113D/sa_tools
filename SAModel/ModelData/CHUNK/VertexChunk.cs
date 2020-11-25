@@ -3,8 +3,7 @@ using SonicRetro.SAModel.Structs;
 using System;
 using System.Collections.Generic;
 using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
+using static SonicRetro.SACommon.ByteConverter;
 
 namespace SonicRetro.SAModel.ModelData.CHUNK
 {
@@ -124,7 +123,7 @@ namespace SonicRetro.SAModel.ModelData.CHUNK
 		/// <param name="vertices">Vertex data</param>
 		public VertexChunk(ChunkType type, byte flags, ushort indexOffset, ChunkVertex[] vertices)
 		{
-			if (!type.IsVertex())
+			if(!type.IsVertex())
 				throw new ArgumentException($"Chunktype {type} not a valid vertex type");
 			Type = type;
 			Flags = flags;
@@ -152,12 +151,13 @@ namespace SonicRetro.SAModel.ModelData.CHUNK
 		/// <returns></returns>
 		public static VertexChunk Read(byte[] source, ref uint address)
 		{
-			uint header1 = ByteConverter.ToUInt32(source, address);
-			uint header2 = ByteConverter.ToUInt32(source, address + 4);
+			uint header1 = source.ToUInt32(address);
+			uint header2 = source.ToUInt32(address + 4);
 			address += 8;
 
 			ChunkType type = (ChunkType)(header1 & 0xFF);
-			if (type == ChunkType.End) return null;
+			if(type == ChunkType.End)
+				return null;
 			byte flags = (byte)((header1 >> 8) & 0xFF);
 
 			ushort indexOffset = (ushort)(header2 & 0xFFFF);
@@ -166,7 +166,7 @@ namespace SonicRetro.SAModel.ModelData.CHUNK
 			if(!type.IsVertex())
 				throw new NotSupportedException($"Chunktype {type} at {address.ToString("X8")} not a valid vertex type");
 
-			if (type == ChunkType.Vertex_VertexDiffuseSpecular16 || type > ChunkType.Vertex_VertexNormalDiffuseSpecular4)
+			if(type == ChunkType.Vertex_VertexDiffuseSpecular16 || type > ChunkType.Vertex_VertexNormalDiffuseSpecular4)
 				throw new NotSupportedException($"Unsupported chunk type {type} at {address.ToString("X8")}");
 
 			bool hasNormal = type.HasNormal();
@@ -180,14 +180,15 @@ namespace SonicRetro.SAModel.ModelData.CHUNK
 				};
 				address += vec4;
 
-				if (hasNormal)
+				if(hasNormal)
 				{
 					vtx.Normal = Vector3.Read(source, ref address, IOType.Float);
 					address += vec4;
 				}
-				else vtx.Normal = Vector3.UnitY;
+				else
+					vtx.Normal = Vector3.UnitY;
 
-				switch (type)
+				switch(type)
 				{
 					case ChunkType.Vertex_VertexDiffuse8:
 					case ChunkType.Vertex_VertexNormalDiffuse8:
@@ -207,7 +208,7 @@ namespace SonicRetro.SAModel.ModelData.CHUNK
 					case ChunkType.Vertex_VertexNinjaFlags:
 					case ChunkType.Vertex_VertexNormalUserFlags:
 					case ChunkType.Vertex_VertexNormalNinjaFlags:
-						vtx.Flags = ByteConverter.ToUInt32(source, address);
+						vtx.Flags = source.ToUInt32(address);
 						address += 4;
 						break;
 				}
@@ -224,7 +225,7 @@ namespace SonicRetro.SAModel.ModelData.CHUNK
 		/// <param name="writer">Output stream</param>
 		public void Write(EndianMemoryStream writer)
 		{
-			if (Vertices.Length > short.MaxValue)
+			if(Vertices.Length > short.MaxValue)
 				throw new InvalidOperationException($"Vertex count ({Vertices.Length}) exceeds maximum vertex count (32767)");
 
 			ushort vertSize = Type.Size();
@@ -236,7 +237,7 @@ namespace SonicRetro.SAModel.ModelData.CHUNK
 			bool hasNormal = Type.HasNormal();
 			bool vec4 = Type.IsVec4();
 
-			while (remainingVerts.Count > 0)
+			while(remainingVerts.Count > 0)
 			{
 				ushort vertCount = remainingVerts.Count > vertLimit ? vertLimit : (ushort)remainingVerts.Count;
 				ushort size = (ushort)(vertCount * vertSize + 1);
@@ -245,19 +246,21 @@ namespace SonicRetro.SAModel.ModelData.CHUNK
 				writer.Write(offset | (uint)(vertCount << 16)); // header2
 
 				// writing the vertices
-				for (int i = 0; i < vertCount; i++)
+				for(int i = 0; i < vertCount; i++)
 				{
 					ChunkVertex vtx = remainingVerts[i];
 					vtx.Position.Write(writer, IOType.Float);
-					if (vec4) writer.Write(1u);
+					if(vec4)
+						writer.Write(1u);
 
-					if (hasNormal)
+					if(hasNormal)
 					{
 						vtx.Normal.Write(writer, IOType.Float);
-						if (vec4) writer.Write(1u);
+						if(vec4)
+							writer.Write(1u);
 					}
 
-					switch (Type)
+					switch(Type)
 					{
 						case ChunkType.Vertex_VertexDiffuse8:
 						case ChunkType.Vertex_VertexNormalDiffuse8:
@@ -283,10 +286,10 @@ namespace SonicRetro.SAModel.ModelData.CHUNK
 				}
 
 				// writing the remaining vertices (if there are any)
-				if (vertCount == vertLimit)
+				if(vertCount == vertLimit)
 				{
 					remainingVerts = remainingVerts.Skip(vertCount).ToList();
-					if (Type != ChunkType.Vertex_VertexNinjaFlags && Type != ChunkType.Vertex_VertexNormalNinjaFlags)
+					if(Type != ChunkType.Vertex_VertexNinjaFlags && Type != ChunkType.Vertex_VertexNormalNinjaFlags)
 						offset += vertCount;
 				}
 				else

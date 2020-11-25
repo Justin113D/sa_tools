@@ -1,8 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
 
 namespace SonicRetro.SAModel.Structs
 {
@@ -64,7 +62,8 @@ namespace SonicRetro.SAModel.Structs
 			/// <returns></returns>
 			public Edge IsConnectedWith(Vertex other)
 			{
-				if (edges.ContainsKey(other)) return edges[other];
+				if(edges.ContainsKey(other))
+					return edges[other];
 				return null;
 			}
 
@@ -114,7 +113,7 @@ namespace SonicRetro.SAModel.Structs
 			/// <param name="tri"></param>
 			public void AddTriangle(Triangle tri)
 			{
-				foreach (Triangle t in triangles)
+				foreach(Triangle t in triangles)
 				{
 					t.neighbours.Add(tri);
 					tri.neighbours.Add(t);
@@ -122,7 +121,7 @@ namespace SonicRetro.SAModel.Structs
 				triangles.Add(tri);
 			}
 		}
-		
+
 		/// <summary>
 		/// Triangle between three vertices
 		/// </summary>
@@ -161,8 +160,8 @@ namespace SonicRetro.SAModel.Structs
 				get
 				{
 					List<Triangle> result = new List<Triangle>();
-					foreach (Triangle t in neighbours)
-						if (!t.used)
+					foreach(Triangle t in neighbours)
+						if(!t.used)
 							result.Add(t);
 					return result.ToArray();
 				}
@@ -184,7 +183,7 @@ namespace SonicRetro.SAModel.Structs
 
 				Vertex prevVert = vertices[2];
 				int i = 0;
-				foreach (Vertex v in vertices)
+				foreach(Vertex v in vertices)
 				{
 					v.triangles.Add(this);
 					edges[i] = AddEdge(v, prevVert, outEdges);
@@ -206,12 +205,12 @@ namespace SonicRetro.SAModel.Structs
 			{
 				Edge e = v1.IsConnectedWith(v2);
 
-				if (e == null)
+				if(e == null)
 				{
 					e = v1.Connect(v2);
 					edges.Add(e);
 				}
-				else if (raiseTopoError && e.triangles.Count > 1)
+				else if(raiseTopoError && e.triangles.Count > 1)
 				{
 					throw new TopologyException("Some edge has more than 2 faces! Can't strippify!");
 				}
@@ -240,9 +239,9 @@ namespace SonicRetro.SAModel.Structs
 			/// <returns></returns>
 			public Vertex GetThirdVertex(Vertex v1, Vertex v2)
 			{
-				if (vertices.Contains(v1) && vertices.Contains(v2))
-					foreach (Vertex v in vertices)
-						if (v != v1 && v != v2)
+				if(vertices.Contains(v1) && vertices.Contains(v2))
+					foreach(Vertex v in vertices)
+						if(v != v1 && v != v2)
 							return v;
 				return null;
 			}
@@ -254,8 +253,8 @@ namespace SonicRetro.SAModel.Structs
 			/// <returns></returns>
 			public Edge GetSharedEdge(Triangle other)
 			{
-				foreach (Edge e in edges)
-					if (other.edges.Contains(e))
+				foreach(Edge e in edges)
+					if(other.edges.Contains(e))
 						return e;
 				return null;
 			}
@@ -270,8 +269,10 @@ namespace SonicRetro.SAModel.Structs
 			{
 				Triangle[] trisToUse = AvailableNeighbours;
 
-				if (trisToUse.Length == 0) return null;
-				if (trisToUse.Length == 1) return trisToUse[0];
+				if(trisToUse.Length == 0)
+					return null;
+				if(trisToUse.Length == 1)
+					return trisToUse[0];
 
 				int[] weights = new int[trisToUse.Length];
 				int[] vConnection = new int[trisToUse.Length];
@@ -280,17 +281,18 @@ namespace SonicRetro.SAModel.Structs
 				bool hasBase = v1 != null && v2 != null;
 
 				int i = -1;
-				foreach (Triangle t in trisToUse)
+				foreach(Triangle t in trisToUse)
 				{
 					i++;
 					weights[i] = t.AvailableNeighbours.Length;
 
-					if (weights[i] == 0) return t;
+					if(weights[i] == 0)
+						return t;
 
-					if (hasBase)
+					if(hasBase)
 					{
 						// if swap is needed, add weight
-						if (t.HasVertex(v2))
+						if(t.HasVertex(v2))
 						{
 							weights[i] -= 1;
 							vConnection[i] = v1.AvailableTris;
@@ -307,24 +309,26 @@ namespace SonicRetro.SAModel.Structs
 						vConnection[i] = eVerts[0].AvailableTris + eVerts[1].AvailableTris;
 					}
 
-					if (vConnection[i] > biggestConnection)
+					if(vConnection[i] > biggestConnection)
 						biggestConnection = vConnection[i];
 				}
 
 				i = -1;
-				foreach (int v in vConnection)
+				foreach(int v in vConnection)
 				{
 					i++;
-					if (v < biggestConnection)
+					if(v < biggestConnection)
 						weights[i] -= 1;
-					else weights[i] += 1;
+					else
+						weights[i] += 1;
 				}
 
 				int index = 0;
-				for (int j = 1; j < trisToUse.Length; j++)
+				for(int j = 1; j < trisToUse.Length; j++)
 				{
-					if (weights[j] < weights[index]
-						|| hasBase && weights[j] == weights[index] && trisToUse[j].HasVertex(v2)) index = j;
+					if(weights[j] < weights[index]
+						|| hasBase && weights[j] == weights[index] && trisToUse[j].HasVertex(v2))
+						index = j;
 				}
 
 				return trisToUse[index];
@@ -340,8 +344,8 @@ namespace SonicRetro.SAModel.Structs
 			{
 				Edge e = v1.IsConnectedWith(v2);
 
-				foreach (Triangle t in e.triangles)
-					if (t != this && !t.used)
+				foreach(Triangle t in e.triangles)
+					if(t != this && !t.used)
 						return t;
 				return null;
 			}
@@ -354,9 +358,9 @@ namespace SonicRetro.SAModel.Structs
 			public bool HasBrokenCullFlow(Triangle other)
 			{
 				int t = 0;
-				foreach (Vertex v in vertices)
+				foreach(Vertex v in vertices)
 				{
-					if (other.vertices.Contains(v))
+					if(other.vertices.Contains(v))
 					{
 						int tt = Array.IndexOf(other.vertices, v);
 						return vertices[(t + 1) % 3] == other.vertices[(tt + 1) % 3];
@@ -397,7 +401,7 @@ namespace SonicRetro.SAModel.Structs
 
 				vertices = new Vertex[vertCount];
 
-				for (int i = 0; i < vertCount; i++)
+				for(int i = 0; i < vertCount; i++)
 				{
 					vertices[i] = new Vertex(i);
 				}
@@ -405,7 +409,7 @@ namespace SonicRetro.SAModel.Structs
 				edges = new List<Edge>();
 				triangles = new Triangle[triangleList.Length / 3];
 
-				for (int i = 0; i < triangles.Length; i++)
+				for(int i = 0; i < triangles.Length; i++)
 				{
 					int j = i * 3;
 					triangles[i] = new Triangle(i,
@@ -418,7 +422,7 @@ namespace SonicRetro.SAModel.Structs
 				}
 
 				int triEdgeCount = edges.Count(x => x.triangles.Count > 2);
-				if (triEdgeCount > 0)
+				if(triEdgeCount > 0)
 				{
 					Console.WriteLine("Tripple edges: " + triEdgeCount);
 				}
@@ -454,20 +458,20 @@ namespace SonicRetro.SAModel.Structs
 				int curNCount = int.MaxValue;
 
 				int i = -1;
-				foreach (Triangle t in mesh.triangles)
+				foreach(Triangle t in mesh.triangles)
 				{
 					i++;
-					if (!t.used)
+					if(!t.used)
 					{
 						int tnCount = t.AvailableNeighbours.Length;
-						if (tnCount == 0)
+						if(tnCount == 0)
 						{
 							AddZTriangle(t);
 							continue;
 						}
-						if (tnCount < curNCount)
+						if(tnCount < curNCount)
 						{
-							if (tnCount == 1)
+							if(tnCount == 1)
 								return t;
 							curNCount = tnCount;
 							resultTri = t;
@@ -480,7 +484,7 @@ namespace SonicRetro.SAModel.Structs
 
 			Triangle firstTri = getFirstTri();
 
-			while (written != triCount)
+			while(written != triCount)
 			{
 
 				Triangle currentTri = firstTri;
@@ -488,7 +492,7 @@ namespace SonicRetro.SAModel.Structs
 
 				Triangle newTri = currentTri.NextTriangleS(null, null);
 
-				if (currentTri.HasBrokenCullFlow(newTri))
+				if(currentTri.HasBrokenCullFlow(newTri))
 				{
 					AddZTriangle(currentTri);
 					firstTri = getFirstTri();
@@ -503,7 +507,7 @@ namespace SonicRetro.SAModel.Structs
 				Vertex currentVert;
 				Vertex nextVert;
 
-				if (secNewTri == null)
+				if(secNewTri == null)
 				{
 					currentVert = sharedVerts[1];
 					nextVert = sharedVerts[0];
@@ -514,7 +518,7 @@ namespace SonicRetro.SAModel.Structs
 					firstTri = getFirstTri();
 					continue;
 				}
-				else if (secNewTri.HasVertex(sharedVerts[0]))
+				else if(secNewTri.HasVertex(sharedVerts[0]))
 				{
 					currentVert = sharedVerts[1];
 					nextVert = sharedVerts[0];
@@ -537,26 +541,26 @@ namespace SonicRetro.SAModel.Structs
 				bool reachedEnd = false;
 				bool reversedList = false;
 
-				while (!reachedEnd)
+				while(!reachedEnd)
 				{
 					strip.Add(currentVert.index);
 					written++;
 
-					if (newTri == null)
+					if(newTri == null)
 					{
-						if (!reversedList && firstTri.AvailableNeighbours.Length > 0)
+						if(!reversedList && firstTri.AvailableNeighbours.Length > 0)
 						{
 							reversedList = true;
 							prevVert = mesh.vertices[strip[1]];
 							currentVert = mesh.vertices[strip[0]];
-							if (doSwaps && false) // its broken, so imma disable it rn
+							if(doSwaps && false) // its broken, so imma disable it rn
 							{
 								newTri = firstTri.NextTriangleS(prevVert, currentVert);
 							}
 							else
 							{
 								newTri = firstTri.NextTriangle(prevVert, currentVert);
-								if (newTri == null)
+								if(newTri == null)
 								{
 									reachedEnd = true;
 									continue;
@@ -575,10 +579,10 @@ namespace SonicRetro.SAModel.Structs
 						}
 					}
 
-					if (doSwaps)
+					if(doSwaps)
 					{
 						swapTri = newTri.NextTriangle(prevVert, currentVert);
-						if (swapTri != null && secNewTri.HasVertex(currentVert))
+						if(swapTri != null && secNewTri.HasVertex(currentVert))
 						{
 							strip.Add(prevVert.index);
 
@@ -590,7 +594,7 @@ namespace SonicRetro.SAModel.Structs
 
 					nextVert = newTri.GetThirdVertex(prevVert, currentVert);
 
-					if (nextVert == null)
+					if(nextVert == null)
 					{
 						reachedEnd = true;
 						continue;
@@ -603,18 +607,19 @@ namespace SonicRetro.SAModel.Structs
 					currentTri = newTri;
 					currentTri.used = true;
 
-					if (oldTri.HasBrokenCullFlow(currentTri))
+					if(oldTri.HasBrokenCullFlow(currentTri))
 						newTri = null;
-					else if (doSwaps)
+					else if(doSwaps)
 						newTri = swapTri;
-					else newTri = currentTri.NextTriangle(prevVert, currentVert);
+					else
+						newTri = currentTri.NextTriangle(prevVert, currentVert);
 				}
 
-				for (int i = 0; i < 3; i++)
+				for(int i = 0; i < 3; i++)
 				{
-					if (firstTri.vertices[0].index == strip[i])
+					if(firstTri.vertices[0].index == strip[i])
 					{
-						if (firstTri.vertices[1].index == strip[(i + 1) % 3])
+						if(firstTri.vertices[1].index == strip[(i + 1) % 3])
 						{
 							strip.Insert(0, strip[0]);
 						}
@@ -629,12 +634,12 @@ namespace SonicRetro.SAModel.Structs
 
 			int[][] result;
 
-			if (concat) // broken
+			if(concat) // broken
 			{
 				List<int> tResult = new List<int>(strips[0]);
-				if (strips.Count > 1)
+				if(strips.Count > 1)
 				{
-					for (int i = 1; i < strips.Count; i++)
+					for(int i = 1; i < strips.Count; i++)
 					{
 						tResult.Add(strips[i - 1].Last());
 						tResult.Add(strips[i][0]);
@@ -643,7 +648,8 @@ namespace SonicRetro.SAModel.Structs
 				}
 				result = new int[][] { tResult.ToArray() };
 			}
-			else result = strips.ToArray(); 
+			else
+				result = strips.ToArray();
 
 			return result;
 		}

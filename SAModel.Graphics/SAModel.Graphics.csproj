@@ -55,6 +55,10 @@
     <Compile Include="UI/*.cs" />
   </ItemGroup>
   <ItemGroup>
+    <ProjectReference Include="..\SACommon\SACommon.csproj">
+      <Project>{09f84e28-a7c7-46b1-9b04-97e82799ee1f}</Project>
+      <Name>SACommon</Name>
+    </ProjectReference>
     <ProjectReference Include="..\SAModel\SAModel.csproj">
       <Project>{0ee5d36f-cacf-41e9-8c9a-76ffd946b22d}</Project>
       <Name>SAModel</Name>

@@ -1,7 +1,7 @@
 ﻿using Reloaded.Memory.Streams.Writers;
-using SonicRetro.SAModel.ModelData.BASIC;
 using SonicRetro.SAModel.Structs;
 using System;
+using static SonicRetro.SACommon.ByteConverter;
 
 namespace SonicRetro.SAModel.ModelData.Buffer
 {
@@ -182,8 +182,10 @@ namespace SonicRetro.SAModel.ModelData.Buffer
 		/// <param name="state">New state for the flag/s</param>
 		public void SetFlag(MaterialFlags flag, bool state)
 		{
-			if (state) MaterialFlags |= flag;
-			else MaterialFlags &= ~flag;
+			if(state)
+				MaterialFlags |= flag;
+			else
+				MaterialFlags &= ~flag;
 		}
 
 		/// <summary>
@@ -207,12 +209,18 @@ namespace SonicRetro.SAModel.ModelData.Buffer
 			writer.WriteSingle(MipmapDistanceAdjust);
 
 			MaterialStates states = 0;
-			if (UseAlpha) states |= MaterialStates.UseAlpha;
-			if (Culling) states |= MaterialStates.Culling;
-			if (ClampU) states |= MaterialStates.ClampU;
-			if (ClampV) states |= MaterialStates.ClampV;
-			if (MirrorU) states |= MaterialStates.MirrorU;
-			if (MirrorV) states |= MaterialStates.MirrorV;
+			if(UseAlpha)
+				states |= MaterialStates.UseAlpha;
+			if(Culling)
+				states |= MaterialStates.Culling;
+			if(ClampU)
+				states |= MaterialStates.ClampU;
+			if(ClampV)
+				states |= MaterialStates.ClampV;
+			if(MirrorU)
+				states |= MaterialStates.MirrorU;
+			if(MirrorV)
+				states |= MaterialStates.MirrorV;
 
 			uint flags = (uint)MaterialFlags;
 			flags |= (uint)states << 8;
@@ -233,13 +241,13 @@ namespace SonicRetro.SAModel.ModelData.Buffer
 		{
 			Color diffuse = Color.Read(source, ref address, IOType.ARGB8_32);
 			Color specular = Color.Read(source, ref address, IOType.ARGB8_32);
-			float exponent = ByteConverter.ToSingle(source, address);
+			float exponent = source.ToSingle(address);
 			address += 4;
 			Color ambient = Color.Read(source, ref address, IOType.ARGB8_32);
-			uint texID = ByteConverter.ToUInt32(source, address);
-			float mipmapDA = ByteConverter.ToSingle(source, address + 4);
+			uint texID = source.ToUInt32(address);
+			float mipmapDA = source.ToSingle(address + 4);
 
-			uint flags = ByteConverter.ToUInt32(source, address + 8);
+			uint flags = source.ToUInt32(address + 8);
 			MaterialFlags mFlags = (MaterialFlags)(flags & (uint)MaterialFlags.Mask);
 			MaterialStates states = (MaterialStates)(flags >> 8 & (uint)MaterialStates.Mask);
 			BlendMode sourceAlpha = (BlendMode)((flags >> 16) & 0x07);

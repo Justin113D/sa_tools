@@ -1,5 +1,7 @@
 ﻿using Reloaded.Memory.Streams.Writers;
 using System.IO;
+using static SonicRetro.SACommon.ByteConverter;
+using static SonicRetro.SACommon.StringExtensions;
 
 namespace SonicRetro.SAModel.Structs
 {
@@ -34,7 +36,8 @@ namespace SonicRetro.SAModel.Structs
 			foreach(Vector3 p in points)
 			{
 				float distance = Vector3.Distance(position, p);
-				if (distance > radius) radius = distance;
+				if(distance > radius)
+					radius = distance;
 			}
 			return new Bounds(position, radius);
 		}
@@ -48,7 +51,7 @@ namespace SonicRetro.SAModel.Structs
 		public static Bounds Read(byte[] source, ref uint address)
 		{
 			Vector3 position = Vector3.Read(source, ref address, IOType.Float);
-			float radius = ByteConverter.ToSingle(source, address);
+			float radius = source.ToSingle(address);
 			address += 4;
 			return new Bounds(position, radius);
 		}

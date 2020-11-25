@@ -1,5 +1,4 @@
-﻿using SonicRetro.SAModel;
-using System;
+﻿using System;
 using System.Collections.Generic;
 using System.ComponentModel;
 using System.Globalization;
@@ -83,7 +82,7 @@ namespace SA_Tools
 		public SA1LevelAct(ushort levelact) { Level = (SA1LevelIDs)(levelact >> 8); Act = (byte)(levelact & 0xFF); }
 		public SA1LevelAct(string levelact)
 		{
-			if (levelact.Contains(" "))
+			if(levelact.Contains(" "))
 			{
 				Level = (SA1LevelIDs)Enum.Parse(typeof(SA1LevelIDs), levelact.Split(' ')[0]);
 				Act = byte.Parse(levelact.Split(' ')[1], NumberStyles.Integer, NumberFormatInfo.InvariantInfo);
@@ -106,7 +105,7 @@ namespace SA_Tools
 
 		public int CompareTo(object obj)
 		{
-			if (obj is SA1LevelAct)
+			if(obj is SA1LevelAct)
 				return CompareTo((SA1LevelAct)obj);
 			else
 				return LevelAndAct.CompareTo(obj);
@@ -124,7 +123,7 @@ namespace SA_Tools
 
 		public override bool Equals(object obj)
 		{
-			if (obj is SA1LevelAct)
+			if(obj is SA1LevelAct)
 				return Equals((SA1LevelAct)obj);
 			return base.Equals(obj);
 		}
@@ -189,7 +188,7 @@ namespace SA_Tools
 	{
 		public static ObjectListEntry[] Load(string filename, bool SA2)
 		{
-			if (SA2)
+			if(SA2)
 				return IniSerializer.Deserialize<SA2ObjectListEntry[]>(filename);
 			else
 				return IniSerializer.Deserialize<SA1ObjectListEntry[]>(filename);
@@ -199,10 +198,10 @@ namespace SA_Tools
 		{
 			int numobjs = ByteConverter.ToInt32(file, address);
 			address = file.GetPointer(address + 4, imageBase);
-			if (SA2)
+			if(SA2)
 			{
 				List<SA2ObjectListEntry> objini = new List<SA2ObjectListEntry>(numobjs);
-				for (int i = 0; i < numobjs; i++)
+				for(int i = 0; i < numobjs; i++)
 				{
 					objini.Add(new SA2ObjectListEntry(file, address, imageBase));
 					address += SA2ObjectListEntry.Size;
@@ -212,7 +211,7 @@ namespace SA_Tools
 			else
 			{
 				List<SA1ObjectListEntry> objini = new List<SA1ObjectListEntry>(numobjs);
-				for (int i = 0; i < numobjs; i++)
+				for(int i = 0; i < numobjs; i++)
 				{
 					objini.Add(new SA1ObjectListEntry(file, address, imageBase));
 					address += SA1ObjectListEntry.Size;
@@ -230,7 +229,7 @@ namespace SA_Tools
 		{
 			List<byte> datasection = new List<byte>();
 			List<byte> objents = new List<byte>();
-			for (int i = 0; i < objlist.Length; i++)
+			for(int i = 0; i < objlist.Length; i++)
 			{
 				objents.AddRange(objlist[i].GetBytes(labels, imageBase + (uint)datasection.Count));
 				datasection.AddRange(HelperFunctions.GetEncoding().GetBytes(objlist[i].Name));
@@ -258,7 +257,7 @@ namespace SA_Tools
 		public ushort Flags { get; set; }
 		public float Distance { get; set; }
 		[IniIgnore]
-		public uint Code { get { if (uint.TryParse(CodeString, NumberStyles.HexNumber, NumberFormatInfo.InvariantInfo, out uint code)) return code; else return uint.MaxValue; } set { CodeString = value.ToString("X8"); } }
+		public uint Code { get { if(uint.TryParse(CodeString, NumberStyles.HexNumber, NumberFormatInfo.InvariantInfo, out uint code)) return code; else return uint.MaxValue; } set { CodeString = value.ToString("X8"); } }
 		[IniName("Code")]
 		public string CodeString { get; set; }
 		public string Name { get; set; }
@@ -302,7 +301,7 @@ namespace SA_Tools
 			result.AddRange(ByteConverter.GetBytes(Flags));
 			result.AddRange(ByteConverter.GetBytes(Distance));
 			result.AddRange(ByteConverter.GetBytes(Unknown));
-			if (Code == uint.MaxValue)
+			if(Code == uint.MaxValue)
 				Code = labels[CodeString];
 			result.AddRange(ByteConverter.GetBytes(Code));
 			result.AddRange(ByteConverter.GetBytes(nameAddress));
@@ -359,7 +358,7 @@ namespace SA_Tools
 			};
 			result.AddRange(ByteConverter.GetBytes(Flags));
 			result.AddRange(ByteConverter.GetBytes(Distance));
-			if (Code == uint.MaxValue)
+			if(Code == uint.MaxValue)
 				Code = labels[CodeString];
 			result.AddRange(ByteConverter.GetBytes(Code));
 			result.AddRange(ByteConverter.GetBytes(nameAddress));
@@ -423,7 +422,7 @@ namespace SA_Tools
 		public static Dictionary<SA1LevelAct, SA1StartPosInfo> Load(byte[] file, uint address)
 		{
 			Dictionary<SA1LevelAct, SA1StartPosInfo> result = new Dictionary<SA1LevelAct, SA1StartPosInfo>();
-			while (ByteConverter.ToUInt16(file, address) != (ushort)SA1LevelIDs.Invalid)
+			while(ByteConverter.ToUInt16(file, address) != (ushort)SA1LevelIDs.Invalid)
 			{
 				SA1StartPosInfo objgrp = new SA1StartPosInfo(file, address + 4);
 				result.Add(new SA1LevelAct(ByteConverter.ToUInt16(file, address), ByteConverter.ToUInt16(file, address + 2)), objgrp);
@@ -440,7 +439,7 @@ namespace SA_Tools
 		public static byte[] GetBytes(this Dictionary<SA1LevelAct, SA1StartPosInfo> startpos)
 		{
 			List<byte> result = new List<byte>((int)Size * (startpos.Count + 1));
-			foreach (KeyValuePair<SA1LevelAct, SA1StartPosInfo> item in startpos)
+			foreach(KeyValuePair<SA1LevelAct, SA1StartPosInfo> item in startpos)
 			{
 				result.AddRange(ByteConverter.GetBytes((ushort)item.Key.Level));
 				result.AddRange(ByteConverter.GetBytes((ushort)item.Key.Act));
@@ -504,7 +503,7 @@ namespace SA_Tools
 		public static Dictionary<SA2LevelIDs, SA2StartPosInfo> Load(byte[] file, uint address)
 		{
 			Dictionary<SA2LevelIDs, SA2StartPosInfo> result = new Dictionary<SA2LevelIDs, SA2StartPosInfo>();
-			while (ByteConverter.ToUInt16(file, address) != (ushort)SA2LevelIDs.Invalid)
+			while(ByteConverter.ToUInt16(file, address) != (ushort)SA2LevelIDs.Invalid)
 			{
 				SA2StartPosInfo objgrp = new SA2StartPosInfo(file, address + 2);
 				result.Add((SA2LevelIDs)ByteConverter.ToUInt16(file, address), objgrp);
@@ -521,7 +520,7 @@ namespace SA_Tools
 		public static byte[] GetBytes(this Dictionary<SA2LevelIDs, SA2StartPosInfo> startpos)
 		{
 			List<byte> result = new List<byte>((int)Size * (startpos.Count + 1));
-			foreach (KeyValuePair<SA2LevelIDs, SA2StartPosInfo> item in startpos)
+			foreach(KeyValuePair<SA2LevelIDs, SA2StartPosInfo> item in startpos)
 			{
 				result.AddRange(ByteConverter.GetBytes((ushort)item.Key));
 				result.AddRange(item.Value.GetBytes());
@@ -604,25 +603,25 @@ namespace SA_Tools
 	}
 
 	public class TexnameArray
-	{		
+	{
 		[TypeConverter(typeof(UInt32HexConverter))]
 		public uint TexnameArrayAddr { get; set; }
 		public uint NumTextures { get; set; }
 		public string[] TextureNames { get; set; }
-		public TexnameArray(byte[] file, int address, uint imageBase)
+		public TexnameArray(byte[] file, uint address, uint imageBase)
 		{
 			uint TexnameArrayAddr = ByteConverter.ToUInt32(file, address);
-			if (TexnameArrayAddr == 0)
+			if(TexnameArrayAddr == 0)
 				return;
 			else
 				NumTextures = ByteConverter.ToUInt32(file, address + 4);
-			if (NumTextures <= 300 && NumTextures > 0)
+			if(NumTextures <= 300 && NumTextures > 0)
 			{
 				TextureNames = new string[NumTextures];
-				for (int u = 0; u < NumTextures; u++)
+				for(int u = 0; u < NumTextures; u++)
 				{
-					uint TexnamePointer = ByteConverter.ToUInt32(file, (int)(TexnameArrayAddr + u * 12 - imageBase));
-					TextureNames[u] = file.GetCString((int)(TexnamePointer - imageBase));
+					uint TexnamePointer = ByteConverter.ToUInt32(file, (uint)(TexnameArrayAddr + u * 12u - imageBase));
+					TextureNames[u] = file.GetCString(TexnamePointer - imageBase);
 				}
 			}
 		}
@@ -637,7 +636,7 @@ namespace SA_Tools
 		public static TextureListEntry[] Load(byte[] file, uint address, uint imageBase)
 		{
 			List<TextureListEntry> objini = new List<TextureListEntry>();
-			while (ByteConverter.ToUInt64(file, address) != 0)
+			while(ByteConverter.ToUInt64(file, address) != 0)
 			{
 				objini.Add(new TextureListEntry(file, address, imageBase));
 				address += TextureListEntry.Size;
@@ -654,9 +653,9 @@ namespace SA_Tools
 		{
 			List<byte> datasection = new List<byte>();
 			List<byte> objents = new List<byte>();
-			for (int i = 0; i < texlist.Length; i++)
+			for(int i = 0; i < texlist.Length; i++)
 			{
-				if (string.IsNullOrEmpty(texlist[i].Name))
+				if(string.IsNullOrEmpty(texlist[i].Name))
 					objents.AddRange(new byte[4]);
 				else
 				{
@@ -683,7 +682,7 @@ namespace SA_Tools
 			ushort numobjs = ByteConverter.ToUInt16(file, address + 2);
 			address = file.GetPointer(address + 4, imageBase);
 			TextureList = new TextureListEntry[numobjs];
-			for (int i = 0; i < numobjs; i++)
+			for(int i = 0; i < numobjs; i++)
 			{
 				TextureList[i] = new TextureListEntry(file, address, imageBase);
 				address += TextureListEntry.Size;
@@ -708,9 +707,9 @@ namespace SA_Tools
 		{
 			List<byte> datasection = new List<byte>();
 			List<byte> objents = new List<byte>();
-			for (int i = 0; i < TextureList.Length; i++)
+			for(int i = 0; i < TextureList.Length; i++)
 			{
-				if (string.IsNullOrEmpty(TextureList[i].Name))
+				if(string.IsNullOrEmpty(TextureList[i].Name))
 					objents.AddRange(new byte[4]);
 				else
 				{
@@ -738,7 +737,7 @@ namespace SA_Tools
 		public TextureListEntry(byte[] file, uint address, uint imageBase)
 		{
 			uint nameAddress = ByteConverter.ToUInt32(file, address);
-			if (nameAddress == 0)
+			if(nameAddress == 0)
 				Name = string.Empty;
 			else
 				Name = file.GetCString(nameAddress - imageBase);
@@ -762,12 +761,12 @@ namespace SA_Tools
 		public string ToStruct()
 		{
 			StringBuilder result = new StringBuilder("{ ");
-			if (!string.IsNullOrEmpty(Name))
+			if(!string.IsNullOrEmpty(Name))
 				result.Append(Name.ToC());
 			else
 				result.Append("NULL");
 			result.Append(", ");
-			if (Textures != 0)
+			if(Textures != 0)
 			{
 				result.Append("(TexList *)");
 				result.Append(Textures.ToCHex());
@@ -785,8 +784,8 @@ namespace SA_Tools
 		{
 			string[] data = File.ReadAllLines(filename);
 			List<SA1LevelAct> result = new List<SA1LevelAct>(data.Length);
-			foreach (string item in data)
-				if (!string.IsNullOrEmpty(item))
+			foreach(string item in data)
+				if(!string.IsNullOrEmpty(item))
 					result.Add(new SA1LevelAct(item));
 			return result.ToArray();
 		}
@@ -796,7 +795,7 @@ namespace SA_Tools
 			uint lvlcnt = ByteConverter.ToUInt32(file, address + 4);
 			address = file.GetPointer(address, imageBase);
 			SA1LevelAct[] result = new SA1LevelAct[lvlcnt];
-			for (int i = 0; i < lvlcnt; i++)
+			for(int i = 0; i < lvlcnt; i++)
 			{
 				result[i] = new SA1LevelAct(file[address], file[address + 1]);
 				address += 2;
@@ -807,7 +806,7 @@ namespace SA_Tools
 		public static void Save(SA1LevelAct[] levellist, string filename)
 		{
 			List<string> result = new List<string>(levellist.Length);
-			foreach (SA1LevelAct item in levellist)
+			foreach(SA1LevelAct item in levellist)
 				result.Add(item.ToString());
 			File.WriteAllLines(filename, result.ToArray());
 		}
@@ -819,8 +818,8 @@ namespace SA_Tools
 		{
 			string[] data = File.ReadAllLines(filename);
 			List<SA1LevelAct> result = new List<SA1LevelAct>(data.Length);
-			foreach (string item in data)
-				if (!string.IsNullOrEmpty(item))
+			foreach(string item in data)
+				if(!string.IsNullOrEmpty(item))
 					result.Add(new SA1LevelAct(item));
 			return result.ToArray();
 		}
@@ -828,7 +827,7 @@ namespace SA_Tools
 		public static SA1LevelAct[] Load(byte[] file, uint address)
 		{
 			List<SA1LevelAct> result = new List<SA1LevelAct>();
-			while (ByteConverter.ToUInt16(file, address) != (ushort)SA1LevelIDs.Invalid)
+			while(ByteConverter.ToUInt16(file, address) != (ushort)SA1LevelIDs.Invalid)
 			{
 				result.Add(new SA1LevelAct(ByteConverter.ToUInt16(file, address), ByteConverter.ToUInt16(file, address + 2)));
 				address += 4;
@@ -839,7 +838,7 @@ namespace SA_Tools
 		public static void Save(SA1LevelAct[] levellist, string filename)
 		{
 			List<string> result = new List<string>(levellist.Length);
-			foreach (SA1LevelAct item in levellist)
+			foreach(SA1LevelAct item in levellist)
 				result.Add(item.ToString());
 			File.WriteAllLines(filename, result.ToArray());
 		}
@@ -847,7 +846,7 @@ namespace SA_Tools
 		public static byte[] GetBytes(SA1LevelAct[] levellist)
 		{
 			List<byte> result = new List<byte>(4 * (levellist.Length + 1));
-			foreach (SA1LevelAct item in levellist)
+			foreach(SA1LevelAct item in levellist)
 			{
 				result.AddRange(ByteConverter.GetBytes((ushort)item.Level));
 				result.AddRange(ByteConverter.GetBytes((ushort)item.Act));
@@ -870,7 +869,7 @@ namespace SA_Tools
 		public static Dictionary<SA1LevelIDs, FieldStartPosInfo> Load(byte[] file, uint address)
 		{
 			Dictionary<SA1LevelIDs, FieldStartPosInfo> result = new Dictionary<SA1LevelIDs, FieldStartPosInfo>();
-			while ((SA1LevelIDs)file[address] != SA1LevelIDs.Invalid)
+			while((SA1LevelIDs)file[address] != SA1LevelIDs.Invalid)
 			{
 				FieldStartPosInfo objgrp = new FieldStartPosInfo(file, address + 2);
 				result.Add((SA1LevelIDs)file[address], objgrp);
@@ -887,7 +886,7 @@ namespace SA_Tools
 		public static byte[] GetBytes(this Dictionary<SA1LevelIDs, FieldStartPosInfo> FieldStartPos)
 		{
 			List<byte> result = new List<byte>((int)Size * (FieldStartPos.Count + 1));
-			foreach (KeyValuePair<SA1LevelIDs, FieldStartPosInfo> item in FieldStartPos)
+			foreach(KeyValuePair<SA1LevelIDs, FieldStartPosInfo> item in FieldStartPos)
 			{
 				result.Add((byte)item.Key);
 				result.Add(0);
@@ -960,7 +959,7 @@ namespace SA_Tools
 			int numobjs = ByteConverter.ToInt32(file, address + 4);
 			address = file.GetPointer(address, imageBase);
 			List<SoundTestListEntry> objini = new List<SoundTestListEntry>(numobjs);
-			for (int i = 0; i < numobjs; i++)
+			for(int i = 0; i < numobjs; i++)
 			{
 				objini.Add(new SoundTestListEntry(file, address, imageBase));
 				address += SoundTestListEntry.Size;
@@ -1019,7 +1018,7 @@ namespace SA_Tools
 		public static MusicListEntry[] Load(byte[] file, uint address, uint imageBase, int numsongs)
 		{
 			List<MusicListEntry> objini = new List<MusicListEntry>(numsongs);
-			for (int i = 0; i < numsongs; i++)
+			for(int i = 0; i < numsongs; i++)
 			{
 				objini.Add(new MusicListEntry(file, address, imageBase));
 				address += MusicListEntry.Size;
@@ -1079,7 +1078,7 @@ namespace SA_Tools
 			int numobjs = ByteConverter.ToInt32(file, address);
 			address = file.GetPointer(address + 4, imageBase);
 			List<SoundListEntry> objini = new List<SoundListEntry>(numobjs);
-			for (int i = 0; i < numobjs; i++)
+			for(int i = 0; i < numobjs; i++)
 			{
 				objini.Add(new SoundListEntry(file, address, imageBase));
 				address += SoundListEntry.Size;
@@ -1133,7 +1132,7 @@ namespace SA_Tools
 		public static string[] Load(string filename)
 		{
 			string[] result = File.ReadAllLines(filename);
-			for (int i = 0; i < result.Length; i++)
+			for(int i = 0; i < result.Length; i++)
 				result[i] = result[i].UnescapeNewlines();
 			return result;
 		}
@@ -1151,10 +1150,10 @@ namespace SA_Tools
 		public static string[] Load(byte[] file, uint address, uint imageBase, int length, Encoding encoding)
 		{
 			string[] result = new string[length];
-			for (int i = 0; i < length; i++)
+			for(int i = 0; i < length; i++)
 			{
 				uint straddr = ByteConverter.ToUInt32(file, address);
-				if (straddr == 0)
+				if(straddr == 0)
 					result[i] = string.Empty;
 				else
 					result[i] = file.GetCString(straddr - imageBase, encoding);
@@ -1166,7 +1165,7 @@ namespace SA_Tools
 		public static void Save(this string[] strings, string filename)
 		{
 			string[] result = (string[])strings.Clone();
-			for (int i = 0; i < result.Length; i++)
+			for(int i = 0; i < result.Length; i++)
 				result[i] = result[i].EscapeNewlines();
 			File.WriteAllLines(filename, result);
 		}
@@ -1182,7 +1181,7 @@ namespace SA_Tools
 		public static NextLevelListEntry[] Load(byte[] file, uint address)
 		{
 			List<NextLevelListEntry> result = new List<NextLevelListEntry>();
-			while (file[address + 1] != byte.MaxValue)
+			while(file[address + 1] != byte.MaxValue)
 			{
 				result.Add(new NextLevelListEntry(file, address));
 				address += NextLevelListEntry.Size;
@@ -1198,7 +1197,7 @@ namespace SA_Tools
 		public static byte[] GetBytes(this NextLevelListEntry[] levellist)
 		{
 			List<byte> result = new List<byte>();
-			for (int i = 0; i < levellist.Length; i++)
+			for(int i = 0; i < levellist.Length; i++)
 				result.AddRange(levellist[i].GetBytes());
 			result.AddRange(new NextLevelListEntry() { Level = (SA1LevelIDs)byte.MaxValue }.GetBytes());
 			return result.ToArray();
@@ -1276,14 +1275,14 @@ namespace SA_Tools
 		public CutsceneText(string directory)
 			: this()
 		{
-			for (int i = 0; i < 5; i++)
+			for(int i = 0; i < 5; i++)
 				Text[i] = StringArray.Load(Path.Combine(directory, ((Languages)i).ToString() + ".txt"));
 		}
 
 		public CutsceneText(byte[] file, uint address, uint imageBase, int length)
 			: this()
 		{
-			for (int i = 0; i < 5; i++)
+			for(int i = 0; i < 5; i++)
 			{
 				Text[i] = StringArray.Load(file, file.GetPointer(address, imageBase), imageBase, length,
 					(Languages)i);
@@ -1302,7 +1301,7 @@ namespace SA_Tools
 		{
 			hashes = new string[5];
 			Directory.CreateDirectory(directory);
-			for (int i = 0; i < 5; i++)
+			for(int i = 0; i < 5; i++)
 			{
 				string textname = Path.Combine(directory, ((Languages)i).ToString() + ".txt");
 				Text[i].Save(textname);
@@ -1317,10 +1316,10 @@ namespace SA_Tools
 		public static RecapScreen[][] Load(string directory, int length)
 		{
 			RecapScreen[][] screens = new RecapScreen[length][];
-			for (int i = 0; i < length; i++)
+			for(int i = 0; i < length; i++)
 			{
 				screens[i] = new RecapScreen[5];
-				for (int l = 0; l < 5; l++)
+				for(int l = 0; l < 5; l++)
 					screens[i][l] = IniSerializer.Deserialize<RecapScreen>(Path.Combine(Path.Combine(directory, (i + 1).ToString(NumberFormatInfo.InvariantInfo)), ((Languages)l).ToString() + ".ini"));
 			}
 			return screens;
@@ -1329,10 +1328,10 @@ namespace SA_Tools
 		public static RecapScreen[][] Load(byte[] file, uint address, uint imageBase, int length)
 		{
 			RecapScreen[][] screens = new RecapScreen[length][];
-			for (uint i = 0; i < length; i++)
+			for(uint i = 0; i < length; i++)
 			{
 				screens[i] = new RecapScreen[5];
-				for (uint l = 0; l < 5; l++)
+				for(uint l = 0; l < 5; l++)
 				{
 					uint tmpaddr = file.GetPointer(address + (l * 4), imageBase);
 					tmpaddr += i * 0xC;
@@ -1351,12 +1350,12 @@ namespace SA_Tools
 		{
 			hashes = new string[list.Length][];
 			Directory.CreateDirectory(directory);
-			for (int i = 0; i < list.Length; i++)
+			for(int i = 0; i < list.Length; i++)
 			{
 				string scrname = Path.Combine(directory, (i + 1).ToString(NumberFormatInfo.InvariantInfo));
 				Directory.CreateDirectory(scrname);
 				hashes[i] = new string[5];
-				for (int l = 0; l < 5; l++)
+				for(int l = 0; l < 5; l++)
 				{
 					string textname = Path.Combine(scrname, ((Languages)l).ToString() + ".ini");
 					IniSerializer.Serialize(list[i][l], textname);
@@ -1390,10 +1389,10 @@ namespace SA_Tools
 		public static NPCText[][] Load(string directory, int length)
 		{
 			NPCText[][] screens = new NPCText[5][];
-			for (int l = 0; l < 5; l++)
+			for(int l = 0; l < 5; l++)
 			{
 				screens[l] = new NPCText[length];
-				for (int i = 0; i < length; i++)
+				for(int i = 0; i < length; i++)
 					screens[l][i] = IniSerializer.Deserialize<NPCText>(Path.Combine(Path.Combine(directory, (i + 1).ToString(NumberFormatInfo.InvariantInfo)), ((Languages)l).ToString() + ".ini"));
 			}
 			return screens;
@@ -1402,7 +1401,7 @@ namespace SA_Tools
 		public static NPCText[][] Load(byte[] file, uint address, uint imageBase, int length)
 		{
 			NPCText[][] screens = new NPCText[5][];
-			for (uint l = 0; l < 5; l++)
+			for(uint l = 0; l < 5; l++)
 				screens[l] = Load(file, file.GetPointer(address + (l * 4), imageBase), imageBase, length, (Languages)l, true);
 			return screens;
 		}
@@ -1410,7 +1409,7 @@ namespace SA_Tools
 		public static NPCText[] Load(byte[] file, uint address, uint imageBase, int length, Languages language, bool includeTime)
 		{
 			NPCText[] screen = new NPCText[length];
-			for (int i = 0; i < length; i++)
+			for(int i = 0; i < length; i++)
 			{
 				screen[i] = new NPCText(file, address, imageBase, language, includeTime);
 				address += 8;
@@ -1427,10 +1426,10 @@ namespace SA_Tools
 		{
 			hashes = new string[5][];
 			Directory.CreateDirectory(directory);
-			for (int l = 0; l < 5; l++)
+			for(int l = 0; l < 5; l++)
 			{
 				hashes[l] = new string[list[l].Length];
-				for (int i = 0; i < list[l].Length; i++)
+				for(int i = 0; i < list[l].Length; i++)
 				{
 					string scrname = Path.Combine(directory, (i + 1).ToString(NumberFormatInfo.InvariantInfo));
 					Directory.CreateDirectory(scrname);
@@ -1456,13 +1455,13 @@ namespace SA_Tools
 			uint add = includeTime ? 8u : 4u;
 			bool hasText = ByteConverter.ToUInt32(file, address + 4) != 0;
 			uint textaddr = 0;
-			if (hasText)
+			if(hasText)
 				textaddr = file.GetPointer(address + 4, imageBase);
-			if (ByteConverter.ToUInt32(file, address) == 0)
+			if(ByteConverter.ToUInt32(file, address) == 0)
 			{
-				if (!hasText)
+				if(!hasText)
 					return;
-				while (ByteConverter.ToInt32(file, textaddr) != 0)
+				while(ByteConverter.ToInt32(file, textaddr) != 0)
 				{
 					group.Lines.Add(new NPCTextLine(file, textaddr, imageBase, language, includeTime));
 					textaddr += add;
@@ -1471,21 +1470,21 @@ namespace SA_Tools
 				return;
 			}
 			uint controladdr = file.GetPointer(address, imageBase);
-		newgroup:
-			if (hasText)
+			newgroup:
+			if(hasText)
 			{
-				while (ByteConverter.ToInt32(file, textaddr) != 0)
+				while(ByteConverter.ToInt32(file, textaddr) != 0)
 				{
 					group.Lines.Add(new NPCTextLine(file, textaddr, imageBase, language, includeTime));
 					textaddr += add;
 				}
 				textaddr += add;
 			}
-			while (true)
+			while(true)
 			{
 				NPCTextControl code = (NPCTextControl)ByteConverter.ToInt16(file, controladdr);
 				controladdr += sizeof(short);
-				switch (code)
+				switch(code)
 				{
 					case NPCTextControl.EventFlag:
 						group.EventFlags.Add(ByteConverter.ToUInt16(file, controladdr));
@@ -1526,9 +1525,11 @@ namespace SA_Tools
 		{
 			get
 			{
-				if (Groups.Count > 1) return true;
-				foreach (NPCTextGroup item in Groups)
-					if (item.HasControl) return true;
+				if(Groups.Count > 1)
+					return true;
+				foreach(NPCTextGroup item in Groups)
+					if(item.HasControl)
+						return true;
 				return false;
 			}
 		}
@@ -1538,8 +1539,8 @@ namespace SA_Tools
 		{
 			get
 			{
-				foreach (NPCTextGroup item in Groups)
-					if (item.HasText)
+				foreach(NPCTextGroup item in Groups)
+					if(item.HasText)
 						return true;
 				return false;
 			}
@@ -1569,9 +1570,9 @@ namespace SA_Tools
 			Lines = new List<NPCTextLine>();
 		}
 
-		[IniCollection(IniCollectionMode.SingleLine, Format=", ")]
+		[IniCollection(IniCollectionMode.SingleLine, Format = ", ")]
 		public List<ushort> EventFlags { get; set; }
-		[IniCollection(IniCollectionMode.SingleLine, Format=", ")]
+		[IniCollection(IniCollectionMode.SingleLine, Format = ", ")]
 		public List<ushort> NPCFlags { get; set; }
 		[DefaultValue((SA1CharacterFlags)0xFF)]
 		[IniAlwaysInclude]
@@ -1605,7 +1606,7 @@ namespace SA_Tools
 		public NPCTextLine(byte[] file, uint address, uint imageBase, Languages language, bool includeTime)
 		{
 			Line = file.GetCString(file.GetPointer(address, imageBase), HelperFunctions.GetEncoding(language));
-			if (includeTime)
+			if(includeTime)
 				Time = ByteConverter.ToInt32(file, address + 4);
 		}
 
@@ -1626,9 +1627,10 @@ namespace SA_Tools
 		{
 			string[] tmp = File.ReadAllLines(filename);
 			List<LevelClearFlag> result = new List<LevelClearFlag>(tmp.Length);
-			foreach (string line in tmp)
+			foreach(string line in tmp)
 			{
-				if (string.IsNullOrEmpty(line)) continue;
+				if(string.IsNullOrEmpty(line))
+					continue;
 				result.Add(new LevelClearFlag(line));
 			}
 			return result.ToArray();
@@ -1637,7 +1639,7 @@ namespace SA_Tools
 		public static LevelClearFlag[] Load(byte[] file, uint address)
 		{
 			List<LevelClearFlag> result = new List<LevelClearFlag>();
-			while (ByteConverter.ToUInt16(file, address) != ushort.MaxValue)
+			while(ByteConverter.ToUInt16(file, address) != ushort.MaxValue)
 			{
 				result.Add(new LevelClearFlag(file, address));
 				address += 4;
@@ -1648,7 +1650,7 @@ namespace SA_Tools
 		public static void Save(this LevelClearFlag[] levellist, string filename)
 		{
 			List<string> result = new List<string>(levellist.Length);
-			foreach (LevelClearFlag item in levellist)
+			foreach(LevelClearFlag item in levellist)
 				result.Add(item.ToString());
 			File.WriteAllLines(filename, result.ToArray());
 		}
@@ -1656,7 +1658,7 @@ namespace SA_Tools
 		public static byte[] GetBytes(this LevelClearFlag[] levellist)
 		{
 			List<byte> result = new List<byte>((levellist.Length + 1) * 4);
-			foreach (LevelClearFlag item in levellist)
+			foreach(LevelClearFlag item in levellist)
 				result.AddRange(item.GetBytes());
 			result.AddRange(ByteConverter.GetBytes(uint.MaxValue));
 			return result.ToArray();
@@ -1750,9 +1752,9 @@ namespace SA_Tools
 		public static SkyboxScale[] Load(byte[] file, uint address, uint imageBase, int count)
 		{
 			List<SkyboxScale> result = new List<SkyboxScale>(count);
-			for (int i = 0; i < count; i++)
+			for(int i = 0; i < count; i++)
 			{
-				if (ByteConverter.ToUInt32(file, address) != 0)
+				if(ByteConverter.ToUInt32(file, address) != 0)
 					result.Add(new SkyboxScale(file, file.GetPointer(address, imageBase)));
 				else
 					result.Add(new SkyboxScale());
@@ -1812,7 +1814,7 @@ namespace SA_Tools
 		public static StageSelectLevel[] Load(byte[] file, uint address, int count)
 		{
 			StageSelectLevel[] result = new StageSelectLevel[count];
-			for (int i = 0; i < count; i++)
+			for(int i = 0; i < count; i++)
 			{
 				result[i] = new StageSelectLevel(file, address);
 				address += StageSelectLevel.Size;
@@ -1878,7 +1880,7 @@ namespace SA_Tools
 		public static Dictionary<SA2LevelIDs, LevelRankScores> Load(byte[] file, uint address)
 		{
 			Dictionary<SA2LevelIDs, LevelRankScores> result = new Dictionary<SA2LevelIDs, LevelRankScores>();
-			while (ByteConverter.ToUInt16(file, address) != (ushort)SA2LevelIDs.Invalid)
+			while(ByteConverter.ToUInt16(file, address) != (ushort)SA2LevelIDs.Invalid)
 			{
 				LevelRankScores objgrp = new LevelRankScores(file, address + 2);
 				result.Add((SA2LevelIDs)ByteConverter.ToUInt16(file, address), objgrp);
@@ -1895,7 +1897,7 @@ namespace SA_Tools
 		public static byte[] GetBytes(this Dictionary<SA2LevelIDs, LevelRankScores> startpos)
 		{
 			List<byte> result = new List<byte>((int)Size * startpos.Count + 2);
-			foreach (KeyValuePair<SA2LevelIDs, LevelRankScores> item in startpos)
+			foreach(KeyValuePair<SA2LevelIDs, LevelRankScores> item in startpos)
 			{
 				result.AddRange(ByteConverter.GetBytes((ushort)item.Key));
 				result.AddRange(item.Value.GetBytes());
@@ -1957,7 +1959,7 @@ namespace SA_Tools
 		public static Dictionary<SA2LevelIDs, LevelRankTimes> Load(byte[] file, uint address)
 		{
 			Dictionary<SA2LevelIDs, LevelRankTimes> result = new Dictionary<SA2LevelIDs, LevelRankTimes>();
-			while (file[address] != (byte)SA2LevelIDs.Invalid)
+			while(file[address] != (byte)SA2LevelIDs.Invalid)
 			{
 				LevelRankTimes objgrp = new LevelRankTimes(file, address + 1);
 				result.Add((SA2LevelIDs)file[address], objgrp);
@@ -1974,7 +1976,7 @@ namespace SA_Tools
 		public static byte[] GetBytes(this Dictionary<SA2LevelIDs, LevelRankTimes> startpos)
 		{
 			List<byte> result = new List<byte>((int)Size * startpos.Count + 1);
-			foreach (KeyValuePair<SA2LevelIDs, LevelRankTimes> item in startpos)
+			foreach(KeyValuePair<SA2LevelIDs, LevelRankTimes> item in startpos)
 			{
 				result.Add((byte)item.Key);
 				result.AddRange(item.Value.GetBytes());
@@ -2080,7 +2082,7 @@ namespace SA_Tools
 		public static Dictionary<SA2LevelIDs, SA2EndPosInfo> Load(byte[] file, uint address)
 		{
 			Dictionary<SA2LevelIDs, SA2EndPosInfo> result = new Dictionary<SA2LevelIDs, SA2EndPosInfo>();
-			while (ByteConverter.ToUInt16(file, address) != (ushort)SA2LevelIDs.Invalid)
+			while(ByteConverter.ToUInt16(file, address) != (ushort)SA2LevelIDs.Invalid)
 			{
 				SA2EndPosInfo objgrp = new SA2EndPosInfo(file, address + 2);
 				result.Add((SA2LevelIDs)ByteConverter.ToUInt16(file, address), objgrp);
@@ -2097,7 +2099,7 @@ namespace SA_Tools
 		public static byte[] GetBytes(this Dictionary<SA2LevelIDs, SA2EndPosInfo> EndPos)
 		{
 			List<byte> result = new List<byte>((int)Size * (EndPos.Count + 1));
-			foreach (KeyValuePair<SA2LevelIDs, SA2EndPosInfo> item in EndPos)
+			foreach(KeyValuePair<SA2LevelIDs, SA2EndPosInfo> item in EndPos)
 			{
 				result.AddRange(ByteConverter.GetBytes((ushort)item.Key));
 				result.AddRange(item.Value.GetBytes());
@@ -2171,7 +2173,7 @@ namespace SA_Tools
 		public static SA2AnimationInfo[] Load(byte[] file, uint address, int count)
 		{
 			SA2AnimationInfo[] result = new SA2AnimationInfo[count];
-			for (int i = 0; i < count; i++)
+			for(int i = 0; i < count; i++)
 			{
 				result[i] = new SA2AnimationInfo(file, address);
 				address += SA2AnimationInfo.Size;
@@ -2187,7 +2189,7 @@ namespace SA_Tools
 		public static byte[] GetBytes(this SA2AnimationInfo[] levellist)
 		{
 			List<byte> result = new List<byte>((int)SA2AnimationInfo.Size * levellist.Length);
-			foreach (SA2AnimationInfo item in levellist)
+			foreach(SA2AnimationInfo item in levellist)
 				result.AddRange(item.GetBytes());
 			return result.ToArray();
 		}
@@ -2200,10 +2202,10 @@ namespace SA_Tools
 		public ushort Animation { get; set; }
 		[IniAlwaysInclude]
 		public ushort Model { get; set; }
-		public ushort? Unknown1 { get { return null; } set { if (value.HasValue) Model = value.Value; } }
+		public ushort? Unknown1 { get { return null; } set { if(value.HasValue) Model = value.Value; } }
 		[IniAlwaysInclude]
 		public ushort Property { get; set; }
-		public ushort? Unknown2 { get { return null; } set { if (value.HasValue) Property = value.Value; } }
+		public ushort? Unknown2 { get { return null; } set { if(value.HasValue) Property = value.Value; } }
 		[IniAlwaysInclude]
 		public ushort NextAnimation { get; set; }
 		[IniAlwaysInclude]
@@ -2257,7 +2259,7 @@ namespace SA_Tools
 			List<PathData> result = new List<PathData>();
 			int i = 0;
 			string filename = Path.Combine(directory, string.Format("{0}.ini", i++));
-			while (File.Exists(filename))
+			while(File.Exists(filename))
 			{
 				result.Add(PathData.Load(filename));
 				filename = Path.Combine(directory, string.Format("{0}.ini", i++));
@@ -2270,7 +2272,7 @@ namespace SA_Tools
 			List<PathData> result = new List<PathData>();
 			uint ptr = ByteConverter.ToUInt32(file, address);
 			address += 4;
-			while (ptr != 0)
+			while(ptr != 0)
 			{
 				ptr = ptr - imageBase;
 				result.Add(new PathData(file, ptr, imageBase));
@@ -2284,7 +2286,7 @@ namespace SA_Tools
 		{
 			Directory.CreateDirectory(directory);
 			hashes = new string[paths.Count];
-			for (int i = 0; i < paths.Count; i++)
+			for(int i = 0; i < paths.Count; i++)
 			{
 				string filename = Path.Combine(directory, string.Format("{0}.ini", i));
 				IniSerializer.Serialize(paths[i], filename);
@@ -2296,13 +2298,13 @@ namespace SA_Tools
 		{
 			List<byte> result = new List<byte>();
 			List<uint> pointers = new List<uint>();
-			foreach (PathData path in paths)
+			foreach(PathData path in paths)
 			{
 				result.AddRange(path.GetBytes(imageBase, out uint ptr));
 				pointers.Add(ptr);
 			}
 			dataaddr = imageBase + (uint)result.Count;
-			foreach (uint item in pointers)
+			foreach(uint item in pointers)
 				result.AddRange(ByteConverter.GetBytes(item));
 			result.AddRange(new byte[4]);
 			return result.ToArray();
@@ -2337,10 +2339,10 @@ namespace SA_Tools
 			Path = new List<PathDataEntry>();
 			uint ptr = ByteConverter.ToUInt32(file, address);
 			address += sizeof(int);
-			if (ptr != 0)
+			if(ptr != 0)
 			{
 				ptr = ptr - imageBase;
-				for (int i = 0; i < count; i++)
+				for(int i = 0; i < count; i++)
 				{
 					Path.Add(new PathDataEntry(file, ptr));
 					ptr += PathDataEntry.Size;
@@ -2357,7 +2359,7 @@ namespace SA_Tools
 		public byte[] GetBytes(uint imageBase, out uint dataaddr)
 		{
 			List<byte> result = new List<byte>((int)PathDataEntry.Size * Path.Count);
-			foreach (PathDataEntry entry in Path)
+			foreach(PathDataEntry entry in Path)
 				result.AddRange(entry.GetBytes());
 			dataaddr = imageBase + (uint)result.Count;
 			result.AddRange(ByteConverter.GetBytes(Unknown));
@@ -2377,7 +2379,7 @@ namespace SA_Tools
 		[TypeConverter(typeof(UInt16HexConverter))]
 		public ushort ZRotation { get; set; }
 		[TypeConverter(typeof(UInt16HexConverter))]
-		public ushort? YRotation { get { return null; } set { if (value.HasValue) ZRotation = value.Value; } }
+		public ushort? YRotation { get { return null; } set { if(value.HasValue) ZRotation = value.Value; } }
 		public float Distance { get; set; }
 		public Vertex Position { get; set; }
 
@@ -2428,7 +2430,7 @@ namespace SA_Tools
 		public static List<SA1StageLightData> Load(byte[] file, uint address)
 		{
 			List<SA1StageLightData> result = new List<SA1StageLightData>();
-			while (file[address] != 0xFF)
+			while(file[address] != 0xFF)
 			{
 				result.Add(new SA1StageLightData(file, address));
 				address += SA1StageLightData.Size;
@@ -2444,7 +2446,7 @@ namespace SA_Tools
 		public static byte[] GetBytes(this List<SA1StageLightData> startpos)
 		{
 			List<byte> result = new List<byte>((int)SA1StageLightData.Size * (startpos.Count + 1));
-			foreach (SA1StageLightData item in startpos)
+			foreach(SA1StageLightData item in startpos)
 				result.AddRange(item.GetBytes());
 			result.Add(0xFF);
 			result.AddRange(new byte[SA1StageLightData.Size - 1]);
@@ -2543,7 +2545,7 @@ namespace SA_Tools
 		{
 			List<WeldInfo> result = new List<WeldInfo>();
 			int ptr = ByteConverter.ToInt32(file, address);
-			while (ptr != 0)
+			while(ptr != 0)
 			{
 				result.Add(new WeldInfo(file, address, imageBase));
 				address += WeldInfo.Size;
@@ -2567,7 +2569,7 @@ namespace SA_Tools
 		[IniAlwaysInclude]
 		public byte WeldType { get; set; }
 		public short Unknown { get; set; }
-		[IniCollection(IniCollectionMode.SingleLine,Format=", ")]
+		[IniCollection(IniCollectionMode.SingleLine, Format = ", ")]
 		public List<ushort> VertIndexes { get; set; }
 		public string VertIndexName { get; set; }
 
@@ -2579,22 +2581,22 @@ namespace SA_Tools
 		{
 			uint ptr = ByteConverter.ToUInt32(file, address);
 			address += sizeof(int);
-			if (ptr != 0)
-				if (ptr >= imageBase && (ptr < file.Length + imageBase))
+			if(ptr != 0)
+				if(ptr >= imageBase && (ptr < file.Length + imageBase))
 					BaseModel = "object_" + ((uint)ptr - imageBase).ToString("X8");
 				else
 					BaseModel = ptr.ToCHex();
 			ptr = ByteConverter.ToUInt32(file, address);
 			address += sizeof(int);
-			if (ptr != 0)
-				if (ptr >= imageBase && (ptr < file.Length + imageBase))
+			if(ptr != 0)
+				if(ptr >= imageBase && (ptr < file.Length + imageBase))
 					ModelA = "object_" + ((uint)ptr - imageBase).ToString("X8");
 				else
 					ModelA = ptr.ToCHex();
 			ptr = ByteConverter.ToUInt32(file, address);
 			address += sizeof(int);
-			if (ptr != 0)
-				if (ptr >= imageBase && (ptr < file.Length + imageBase))
+			if(ptr != 0)
+				if(ptr >= imageBase && (ptr < file.Length + imageBase))
 					ModelB = "object_" + ((uint)ptr - imageBase).ToString("X8");
 				else
 					ModelB = ptr.ToCHex();
@@ -2604,12 +2606,12 @@ namespace SA_Tools
 			address += sizeof(short);
 			address += sizeof(int);
 			ptr = ByteConverter.ToUInt32(file, address);
-			if (ptr != 0)
+			if(ptr != 0)
 			{
 				ptr = ptr - imageBase;
 				VertIndexName = "vi_" + ptr.ToString("X8");
 				VertIndexes = new List<ushort>(cnt);
-				for (int i = 0; i < cnt; i++)
+				for(int i = 0; i < cnt; i++)
 				{
 					VertIndexes.Add(ByteConverter.ToUInt16(file, ptr));
 					ptr += sizeof(ushort);
@@ -2631,7 +2633,7 @@ namespace SA_Tools
 			sb.Append(", ");
 			sb.Append(ModelB ?? "nullptr");
 			sb.Append(", ");
-			if (VertIndexes != null)
+			if(VertIndexes != null)
 				sb.AppendFormat("(uint8_t)(LengthOfArray({0}) / 2)", VertIndexName);
 			else
 				sb.Append("0");
@@ -2656,16 +2658,16 @@ namespace SA_Tools
 		public static Dictionary<ChaoItemCategory, List<BlackMarketItemAttributes>> Load(byte[] file, uint address, uint imageBase)
 		{
 			Dictionary<ChaoItemCategory, List<BlackMarketItemAttributes>> result = new Dictionary<ChaoItemCategory, List<BlackMarketItemAttributes>>();
-			for (int i = 0; i < 11; i++)
+			for(int i = 0; i < 11; i++)
 			{
 				uint ptr = ByteConverter.ToUInt32(file, address);
 				address += sizeof(int);
-				if (ptr != 0)
+				if(ptr != 0)
 				{
 					ptr = ptr - imageBase;
 					int cnt = ByteConverter.ToInt32(file, address);
 					List<BlackMarketItemAttributes> attrs = new List<BlackMarketItemAttributes>();
-					for (int j = 0; j < cnt; j++)
+					for(int j = 0; j < cnt; j++)
 					{
 						attrs.Add(new BlackMarketItemAttributes(file, ptr));
 						ptr += BlackMarketItemAttributes.Size;
@@ -2736,7 +2738,7 @@ namespace SA_Tools
 			int numobjs = ByteConverter.ToInt32(file, address + 4);
 			address = file.GetPointer(address, imageBase);
 			List<CreditsTextListEntry> objini = new List<CreditsTextListEntry>(numobjs);
-			for (int i = 0; i < numobjs; i++)
+			for(int i = 0; i < numobjs; i++)
 			{
 				objini.Add(new CreditsTextListEntry(file, address, imageBase));
 				address += CreditsTextListEntry.Size;
@@ -2789,7 +2791,7 @@ namespace SA_Tools
 		public static List<SA2StoryEntry> Load(byte[] file, uint address)
 		{
 			List<SA2StoryEntry> result = new List<SA2StoryEntry>();
-			while (file[address] != 2)
+			while(file[address] != 2)
 			{
 				result.Add(new SA2StoryEntry(file, address));
 				address += SA2StoryEntry.Size;
@@ -2805,7 +2807,7 @@ namespace SA_Tools
 		public static byte[] GetBytes(this List<SA2StoryEntry> startpos)
 		{
 			List<byte> result = new List<byte>((int)SA2StoryEntry.Size * (startpos.Count + 1));
-			foreach (SA2StoryEntry item in startpos)
+			foreach(SA2StoryEntry item in startpos)
 				result.AddRange(item.GetBytes());
 			result.Add(2);
 			result.AddRange(new byte[SA2StoryEntry.Size - 1]);
@@ -2825,15 +2827,16 @@ namespace SA_Tools
 			Level = (SA2LevelIDs)ByteConverter.ToInt16(file, address);
 			address += sizeof(short);
 			Events = new List<int>();
-			for (int i = 0; i < 4; i++)
+			for(int i = 0; i < 4; i++)
 			{
 				int tmp = ByteConverter.ToInt16(file, address);
 				address += sizeof(short);
-				if (tmp == -1)
+				if(tmp == -1)
 					break;
 				Events.Add(tmp);
 			}
-			if (Events.Count == 0) Events = null;
+			if(Events.Count == 0)
+				Events = null;
 		}
 
 		[IniAlwaysInclude]
@@ -2855,8 +2858,8 @@ namespace SA_Tools
 				(byte)Character
 			};
 			result.AddRange(ByteConverter.GetBytes((short)Level));
-			if (Events != null)
-				for (int i = 0; i < 4; i++)
+			if(Events != null)
+				for(int i = 0; i < 4; i++)
 					result.AddRange(ByteConverter.GetBytes((short)(i < Events.Count ? Events[i] : -1)));
 			else
 				result.AddRange(System.Linq.Enumerable.Repeat((byte)0xFF, 8));
@@ -2871,8 +2874,8 @@ namespace SA_Tools
 			result.Append(Character.ToC("Characters"));
 			result.Append(", ");
 			result.Append(Level.ToC("LevelIDs"));
-			if (Events != null)
-				for (int i = 0; i < 4; i++)
+			if(Events != null)
+				for(int i = 0; i < 4; i++)
 				{
 					result.Append(", ");
 					result.Append(i < Events.Count ? Events[i] : -1);
@@ -3016,14 +3019,14 @@ namespace SA_Tools
 			sb.AppendFormat("{0}, ", Animation1);
 			sb.AppendFormat("{0}, ", Animation2);
 			sb.AppendFormat("{0}, ", Animation3);
-			if (!string.IsNullOrEmpty(AccessoryModel))
+			if(!string.IsNullOrEmpty(AccessoryModel))
 			{
 				sb.AppendFormat("{0}, ", AccessoryModel);
 				sb.AppendFormat("{0}, ", AccessoryAttachNode);
 			}
 			else
 				sb.Append("NULL, NULL, ");
-			if (!string.IsNullOrEmpty(SuperModel))
+			if(!string.IsNullOrEmpty(SuperModel))
 			{
 				sb.AppendFormat("{0}, ", SuperModel);
 				sb.AppendFormat("{0}, ", SuperAnimation1);
@@ -3058,7 +3061,7 @@ namespace SA_Tools
 			StringBuilder sb = new StringBuilder("{ ");
 			sb.AppendFormat("{0}, ", ID);
 			sb.AppendFormat("{0}, ", Model);
-			if (!string.IsNullOrEmpty(LowModel))
+			if(!string.IsNullOrEmpty(LowModel))
 			{
 				sb.AppendFormat("{0}, ", LowModel);
 			}
@@ -3078,7 +3081,7 @@ namespace SA_Tools
 		public string Motion { get; set; }
 		[TypeConverter(typeof(UInt32HexConverter))]
 		public ushort Flag1 { get; set; }
-		public ushort Pose{ get; set; }
+		public ushort Pose { get; set; }
 		public int TransitionID { get; set; }
 		[TypeConverter(typeof(UInt32HexConverter))]
 		public uint Flag2 { get; set; }
@@ -3089,7 +3092,7 @@ namespace SA_Tools
 		public string ToStruct()
 		{
 			StringBuilder sb = new StringBuilder("{ ");
-			if (!string.IsNullOrEmpty(Motion))
+			if(!string.IsNullOrEmpty(Motion))
 			{
 				sb.AppendFormat("{0}, ", Motion);
 			}
@@ -3114,28 +3117,28 @@ namespace SA_Tools
 	{
 		public override bool CanConvertTo(ITypeDescriptorContext context, Type destinationType)
 		{
-			if (destinationType == typeof(string))
+			if(destinationType == typeof(string))
 				return true;
 			return base.CanConvertTo(context, destinationType);
 		}
 
 		public override object ConvertTo(ITypeDescriptorContext context, CultureInfo culture, object value, Type destinationType)
 		{
-			if (destinationType == typeof(string) && value is T)
+			if(destinationType == typeof(string) && value is T)
 				return ((T)value).ToString();
 			return base.ConvertTo(context, culture, value, destinationType);
 		}
 
 		public override bool CanConvertFrom(ITypeDescriptorContext context, Type sourceType)
 		{
-			if (sourceType == typeof(string))
+			if(sourceType == typeof(string))
 				return true;
 			return base.CanConvertFrom(context, sourceType);
 		}
 
 		public override object ConvertFrom(ITypeDescriptorContext context, CultureInfo culture, object value)
 		{
-			if (value is string)
+			if(value is string)
 				return Activator.CreateInstance(typeof(T), (string)value);
 			return base.ConvertFrom(context, culture, value);
 		}
@@ -3145,37 +3148,37 @@ namespace SA_Tools
 	{
 		public override bool CanConvertTo(ITypeDescriptorContext context, Type destinationType)
 		{
-			if (destinationType == typeof(string))
+			if(destinationType == typeof(string))
 				return true;
 			return base.CanConvertTo(context, destinationType);
 		}
 
 		public override object ConvertTo(ITypeDescriptorContext context, CultureInfo culture, object value, Type destinationType)
 		{
-			if (destinationType == typeof(string) && value is uint)
+			if(destinationType == typeof(string) && value is uint)
 				return ((uint)value).ToString("X");
 			return base.ConvertTo(context, culture, value, destinationType);
 		}
 
 		public override bool CanConvertFrom(ITypeDescriptorContext context, Type sourceType)
 		{
-			if (sourceType == typeof(string))
+			if(sourceType == typeof(string))
 				return true;
 			return base.CanConvertFrom(context, sourceType);
 		}
 
 		public override object ConvertFrom(ITypeDescriptorContext context, CultureInfo culture, object value)
 		{
-			if (value is string)
+			if(value is string)
 				return uint.Parse((string)value, NumberStyles.HexNumber);
 			return base.ConvertFrom(context, culture, value);
 		}
 
 		public override bool IsValid(ITypeDescriptorContext context, object value)
 		{
-			if (value is uint)
+			if(value is uint)
 				return true;
-			if (value is string)
+			if(value is string)
 				return uint.TryParse((string)value, NumberStyles.HexNumber, NumberFormatInfo.InvariantInfo, out uint i);
 			return base.IsValid(context, value);
 		}
@@ -3185,37 +3188,37 @@ namespace SA_Tools
 	{
 		public override bool CanConvertTo(ITypeDescriptorContext context, Type destinationType)
 		{
-			if (destinationType == typeof(string))
+			if(destinationType == typeof(string))
 				return true;
 			return base.CanConvertTo(context, destinationType);
 		}
 
 		public override object ConvertTo(ITypeDescriptorContext context, CultureInfo culture, object value, Type destinationType)
 		{
-			if (destinationType == typeof(string) && value is int)
+			if(destinationType == typeof(string) && value is int)
 				return ((int)value).ToString("X");
 			return base.ConvertTo(context, culture, value, destinationType);
 		}
 
 		public override bool CanConvertFrom(ITypeDescriptorContext context, Type sourceType)
 		{
-			if (sourceType == typeof(string))
+			if(sourceType == typeof(string))
 				return true;
 			return base.CanConvertFrom(context, sourceType);
 		}
 
 		public override object ConvertFrom(ITypeDescriptorContext context, CultureInfo culture, object value)
 		{
-			if (value is string)
+			if(value is string)
 				return int.Parse((string)value, NumberStyles.HexNumber);
 			return base.ConvertFrom(context, culture, value);
 		}
 
 		public override bool IsValid(ITypeDescriptorContext context, object value)
 		{
-			if (value is int)
+			if(value is int)
 				return true;
-			if (value is string)
+			if(value is string)
 				return int.TryParse((string)value, NumberStyles.HexNumber, NumberFormatInfo.InvariantInfo, out int i);
 			return base.IsValid(context, value);
 		}
@@ -3225,37 +3228,37 @@ namespace SA_Tools
 	{
 		public override bool CanConvertTo(ITypeDescriptorContext context, Type destinationType)
 		{
-			if (destinationType == typeof(string))
+			if(destinationType == typeof(string))
 				return true;
 			return base.CanConvertTo(context, destinationType);
 		}
 
 		public override object ConvertTo(ITypeDescriptorContext context, CultureInfo culture, object value, Type destinationType)
 		{
-			if (destinationType == typeof(string) && value is ushort)
+			if(destinationType == typeof(string) && value is ushort)
 				return ((ushort)value).ToString("X");
 			return base.ConvertTo(context, culture, value, destinationType);
 		}
 
 		public override bool CanConvertFrom(ITypeDescriptorContext context, Type sourceType)
 		{
-			if (sourceType == typeof(string))
+			if(sourceType == typeof(string))
 				return true;
 			return base.CanConvertFrom(context, sourceType);
 		}
 
 		public override object ConvertFrom(ITypeDescriptorContext context, CultureInfo culture, object value)
 		{
-			if (value is string)
+			if(value is string)
 				return ushort.Parse((string)value, NumberStyles.HexNumber);
 			return base.ConvertFrom(context, culture, value);
 		}
 
 		public override bool IsValid(ITypeDescriptorContext context, object value)
 		{
-			if (value is ushort)
+			if(value is ushort)
 				return true;
-			if (value is string)
+			if(value is string)
 				return ushort.TryParse((string)value, NumberStyles.HexNumber, NumberFormatInfo.InvariantInfo, out ushort i);
 			return base.IsValid(context, value);
 		}

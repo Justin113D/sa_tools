@@ -1,7 +1,8 @@
-﻿using System;
-using System.Collections.Generic;
-using Reloaded.Memory.Streams.Writers;
+﻿using Reloaded.Memory.Streams.Writers;
 using SonicRetro.SAModel.Structs;
+using System;
+using System.Collections.Generic;
+using static SonicRetro.SACommon.ByteConverter;
 
 namespace SonicRetro.SAModel.ModelData.GC
 {
@@ -14,7 +15,7 @@ namespace SonicRetro.SAModel.ModelData.GC
 		/// <summary>
 		/// The type of vertex data that is stored
 		/// </summary>
-		public VertexAttribute Attribute { get;  }
+		public VertexAttribute Attribute { get; }
 
 		/// <summary>
 		/// The datatype as which the data is stored
@@ -49,7 +50,7 @@ namespace SonicRetro.SAModel.ModelData.GC
 		{
 			Attribute = attributeType;
 
-			switch (Attribute)
+			switch(Attribute)
 			{
 				case VertexAttribute.Position:
 					DataType = DataType.Float32;
@@ -100,40 +101,41 @@ namespace SonicRetro.SAModel.ModelData.GC
 		public static VertexSet Read(byte[] source, uint address, uint imageBase)
 		{
 			VertexAttribute attribute = (VertexAttribute)source[address];
-			if (attribute == VertexAttribute.Null) return new VertexSet(VertexAttribute.Null, new IDataStructOut[0]);
+			if(attribute == VertexAttribute.Null)
+				return new VertexSet(VertexAttribute.Null, new IDataStructOut[0]);
 
-			uint structure = ByteConverter.ToUInt32(source, address + 4);
+			uint structure = source.ToUInt32(address + 4);
 			StructType structType = (StructType)(structure & 0x0F);
 			DataType dataType = (DataType)((structure >> 4) & 0x0F);
 			uint structSize = GCExtensions.GetStructSize(structType, dataType);
-			if (source[address + 1] != structSize)
+			if(source[address + 1] != structSize)
 			{
 				throw new Exception($"Read structure size doesnt match calculated structure size: {source[address + 1]} != {structSize}");
 			}
 
 			// reading the data
-			int count = ByteConverter.ToUInt16(source, address + 2);
-			uint tmpaddr = ByteConverter.ToUInt32(source, address + 8) - imageBase;
+			int count = source.ToUInt16(address + 2);
+			uint tmpaddr = source.ToUInt32(address + 8) - imageBase;
 
 			List<IDataStructOut> data = new List<IDataStructOut>();
 
-			switch (attribute)
+			switch(attribute)
 			{
 				case VertexAttribute.Position:
 				case VertexAttribute.Normal:
-					for (int i = 0; i < count; i++)
+					for(int i = 0; i < count; i++)
 					{
 						data.Add(Vector3.Read(source, ref tmpaddr, IOType.Float));
 					}
 					break;
 				case VertexAttribute.Color0:
-					for (int i = 0; i < count; i++)
+					for(int i = 0; i < count; i++)
 					{
 						data.Add(Color.Read(source, ref tmpaddr, IOType.RGBA8));
 					}
 					break;
 				case VertexAttribute.Tex0:
-					for (int i = 0; i < count; i++)
+					for(int i = 0; i < count; i++)
 					{
 						data.Add(Vector2.Read(source, ref tmpaddr, IOType.Short) / 256f);
 					}
@@ -155,9 +157,10 @@ namespace SonicRetro.SAModel.ModelData.GC
 			_dataAddress = (uint)writer.Stream.Position;
 
 			if(Attribute == VertexAttribute.Tex0)
-				foreach (Vector2 uv in Data)
+				foreach(Vector2 uv in Data)
 					(uv * 256).Write(writer, DataType.ToStructType());
-			else foreach (IDataStructOut dso in Data)
+			else
+				foreach(IDataStructOut dso in Data)
 					dso.Write(writer, DataType.ToStructType());
 		}
 
@@ -169,7 +172,7 @@ namespace SonicRetro.SAModel.ModelData.GC
 		/// <param name="imagebase">The imagebase</param>
 		public void WriteAttribute(EndianMemoryStream writer, uint imagebase)
 		{
-			if (_dataAddress == 0)
+			if(_dataAddress == 0)
 				throw new Exception("Data has not been written yet!");
 			byte[] bytes = new byte[] { (byte)Attribute, (byte)StructSize };
 			writer.Write(bytes);

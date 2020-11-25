@@ -94,9 +94,9 @@
     <None Include="App.config" />
   </ItemGroup>
   <ItemGroup>
-    <ProjectReference Include="..\SA Tools\SA Tools.csproj">
+    <ProjectReference Include="..\SA Tools\SASplit.csproj">
       <Project>{50847bdb-699d-4a2e-aaf7-1ea58e1ec48e}</Project>
-      <Name>SA Tools</Name>
+      <Name>SASplit</Name>
     </ProjectReference>
     <ProjectReference Include="..\SAEditorCommon\SAEditorCommon.csproj">
       <Project>{0d72870c-29a2-4b16-b016-2f2e266a0e64}</Project>

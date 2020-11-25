@@ -1,9 +1,8 @@
 ﻿using System;
 using System.Diagnostics;
-using System.IO;
 using System.Text;
 
-namespace SonicRetro.SAModel
+namespace SonicRetro.SACommon
 {
 	/// <summary>
 	/// Converts between numbers and bytes
@@ -17,60 +16,68 @@ namespace SonicRetro.SAModel
 		public static byte[] GetBytes(ushort value)
 		{
 			byte[] y = BitConverter.GetBytes(value);
-			if (BigEndian) y = new byte[] { y[1], y[0] };
+			if(BigEndian)
+				y = new byte[] { y[1], y[0] };
 			return y;
 		}
 
 		public static byte[] GetBytes(short value)
 		{
 			byte[] y = BitConverter.GetBytes(value);
-			if (BigEndian) y = new byte[] { y[1], y[0] };
+			if(BigEndian)
+				y = new byte[] { y[1], y[0] };
 			return y;
 		}
 
 		public static byte[] GetBytes(uint value)
 		{
 			byte[] y = BitConverter.GetBytes(value);
-			if (BigEndian) y = new byte[] { y[3], y[2], y[1], y[0] };
+			if(BigEndian)
+				y = new byte[] { y[3], y[2], y[1], y[0] };
 			return y;
 		}
 
 		public static byte[] GetBytes(int value)
 		{
 			byte[] y = BitConverter.GetBytes(value);
-			if (BigEndian) y = new byte[] { y[3], y[2], y[1], y[0] };
+			if(BigEndian)
+				y = new byte[] { y[3], y[2], y[1], y[0] };
 			return y;
 		}
 
 		public static byte[] GetBytes(ulong value)
 		{
 			byte[] y = BitConverter.GetBytes(value);
-			if (BigEndian) y = new byte[] { y[7], y[6], y[5], y[4], y[3], y[2], y[1], y[0] };
+			if(BigEndian)
+				y = new byte[] { y[7], y[6], y[5], y[4], y[3], y[2], y[1], y[0] };
 			return y;
 		}
 
 		public static byte[] GetBytes(long value)
 		{
 			byte[] y = BitConverter.GetBytes(value);
-			if (BigEndian) y = new byte[] { y[7], y[6], y[5], y[4], y[3], y[2], y[1], y[0] };
+			if(BigEndian)
+				y = new byte[] { y[7], y[6], y[5], y[4], y[3], y[2], y[1], y[0] };
 			return y;
 		}
 
 		public static byte[] GetBytes(float value)
 		{
 			byte[] y = BitConverter.GetBytes(value);
-			if (BigEndian) y = new byte[] { y[3], y[2], y[1], y[0] };
+			if(BigEndian)
+				y = new byte[] { y[3], y[2], y[1], y[0] };
 			return y;
 		}
 
 		public static byte[] GetBytes(double value)
 		{
 			byte[] y = BitConverter.GetBytes(value);
-			if (BigEndian) y = new byte[] { y[7], y[6], y[5], y[4], y[3], y[2], y[1], y[0] };
+			if(BigEndian)
+				y = new byte[] { y[7], y[6], y[5], y[4], y[3], y[2], y[1], y[0] };
 			return y;
 		}
 
-		public static ushort ToUInt16(byte[] value, uint startIndex)
+		public static ushort ToUInt16(this byte[] value, uint startIndex)
 		{
 			byte[] y = BigEndian
 				? new byte[] { value[startIndex + 1], value[startIndex] }
@@ -78,7 +85,7 @@ namespace SonicRetro.SAModel
 			return BitConverter.ToUInt16(y, 0);
 		}
 
-		public static short ToInt16(byte[] value, uint startIndex)
+		public static short ToInt16(this byte[] value, uint startIndex)
 		{
 			byte[] y = BigEndian
 				? new byte[] { value[startIndex + 1], value[startIndex] }
@@ -86,7 +93,7 @@ namespace SonicRetro.SAModel
 			return BitConverter.ToInt16(y, 0);
 		}
 
-		public static uint ToUInt32(byte[] value, uint startIndex)
+		public static uint ToUInt32(this byte[] value, uint startIndex)
 		{
 			byte[] y = BigEndian
 				? new byte[] { value[startIndex += 3], value[--startIndex], value[--startIndex], value[--startIndex] }
@@ -94,7 +101,7 @@ namespace SonicRetro.SAModel
 			return BitConverter.ToUInt32(y, 0);
 		}
 
-		public static int ToInt32(byte[] value, uint startIndex)
+		public static int ToInt32(this byte[] value, uint startIndex)
 		{
 			byte[] y = BigEndian
 				? new byte[] { value[startIndex += 3], value[--startIndex], value[--startIndex], value[--startIndex] }
@@ -102,7 +109,7 @@ namespace SonicRetro.SAModel
 			return BitConverter.ToInt32(y, 0);
 		}
 
-		public static ulong ToUInt64(byte[] value, uint startIndex)
+		public static ulong ToUInt64(this byte[] value, uint startIndex)
 		{
 			byte[] y = BigEndian
 				? new byte[] { value[startIndex += 3], value[--startIndex], value[--startIndex], value[--startIndex], value[--startIndex], value[--startIndex], value[--startIndex], value[--startIndex] }
@@ -110,7 +117,7 @@ namespace SonicRetro.SAModel
 			return BitConverter.ToUInt64(y, 0);
 		}
 
-		public static long ToInt64(byte[] value, uint startIndex)
+		public static long ToInt64(this byte[] value, uint startIndex)
 		{
 			byte[] y = BigEndian
 				? new byte[] { value[startIndex += 3], value[--startIndex], value[--startIndex], value[--startIndex], value[--startIndex], value[--startIndex], value[--startIndex], value[--startIndex] }
@@ -118,7 +125,7 @@ namespace SonicRetro.SAModel
 			return BitConverter.ToInt64(y, 0);
 		}
 
-		public static float ToSingle(byte[] value, uint startIndex)
+		public static float ToSingle(this byte[] value, uint startIndex)
 		{
 			byte[] y = BigEndian
 				? new byte[] { value[startIndex += 3], value[--startIndex], value[--startIndex], value[--startIndex] }
@@ -126,48 +133,37 @@ namespace SonicRetro.SAModel
 			return BitConverter.ToSingle(y, 0);
 		}
 
-		public static double ToDouble(byte[] value, uint startIndex)
+		public static double ToDouble(this byte[] value, uint startIndex)
 		{
 			byte[] y = BigEndian
 				? new byte[] { value[startIndex += 3], value[--startIndex], value[--startIndex], value[--startIndex], value[--startIndex], value[--startIndex], value[--startIndex], value[--startIndex] }
 				: new byte[] { value[startIndex], value[++startIndex], value[++startIndex], value[++startIndex], value[++startIndex], value[++startIndex], value[++startIndex], value[++startIndex] };
 			return BitConverter.ToDouble(y, 0);
 		}
-	}
 
-	/// <summary>
-	/// A writer class to support big and small endian <br/>
-	/// Uses the <see cref="ByteConverter"/> and thus the <see cref="ByteConverter.BigEndian"/> variable
-	/// </summary>
-	public class ByteWriter : BinaryWriter
-	{
-		public ByteWriter()
-			: base() { }
+		public static string GetCString(this byte[] file, uint address, Encoding encoding, uint count)
+		{
+			return encoding.GetString(file, (int)address, (int)count);
+		}
 
-		public ByteWriter(Stream output)
-			: base(output) { }
+		public static string GetCString(this byte[] file, uint address, uint count)
+			=> file.GetCString(address, Encoding.UTF8, count);
 
-		public ByteWriter(Stream output, Encoding encoding)
-			: base(output, encoding) { }
+		public static string GetCString(this byte[] file, uint address, Encoding encoding)
+		{
+			int count = 0;
+			while(file[address + count] != 0)
+				count++;
+			return encoding.GetString(file, (int)address, count);
+		}
 
-		public uint Position => (uint)BaseStream.Position;
+		public static string GetCString(this byte[] file, uint address)
+			=> file.GetCString(address, Encoding.UTF8);
 
-		public override void Write(decimal value)	=> throw new NotSupportedException();
-
-		public override void Write(short value)		=> Write(ByteConverter.GetBytes(value));
-
-		public override void Write(ushort value)	=> Write(ByteConverter.GetBytes(value));
-
-		public override void Write(int value)		=> Write(ByteConverter.GetBytes(value));
-
-		public override void Write(uint value)		=> Write(ByteConverter.GetBytes(value));
-
-		public override void Write(float value)		=> Write(ByteConverter.GetBytes(value));
-
-		public override void Write(long value)		=> Write(ByteConverter.GetBytes(value));
-
-		public override void Write(ulong value)		=> Write(ByteConverter.GetBytes(value));
-
-		public override void Write(double value)	=> Write(ByteConverter.GetBytes(value));
+		public static uint GetPointer(this byte[] file, uint address, uint imageBase)
+		{
+			uint tmp = file.ToUInt32(address);
+			return tmp == 0 ? 0 : tmp - imageBase;
+		}
 	}
 }

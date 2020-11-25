@@ -2,13 +2,12 @@
 using Reloaded.Memory.Streams.Writers;
 using SonicRetro.SAModel.ModelData;
 using SonicRetro.SAModel.ObjData.Animation;
-using System;
 using System.Collections.Generic;
 using System.IO;
 using System.Linq;
-using System.Reflection;
 using System.Text;
-using System.Threading.Tasks;
+using static SonicRetro.SACommon.ByteConverter;
+using static SonicRetro.SACommon.StringExtensions;
 
 namespace SonicRetro.SAModel.ObjData
 {
@@ -128,9 +127,9 @@ namespace SonicRetro.SAModel.ObjData
 			Format = format;
 			MetaData = new MetaData();
 
-			Name = "landtable_" + Extensions.GenerateIdentifier();
-			GeoName = "collist_" + Extensions.GenerateIdentifier();
-			GeoAnimName = "animlist_" + Extensions.GenerateIdentifier();
+			Name = "landtable_" + GenerateIdentifier();
+			GeoName = "collist_" + GenerateIdentifier();
+			GeoAnimName = "animlist_" + GenerateIdentifier();
 		}
 
 		/// <summary>
@@ -169,19 +168,19 @@ namespace SonicRetro.SAModel.ObjData
 		/// <returns></returns>
 		public static LandTable ReadFile(byte[] source)
 		{
-			bool be = ByteConverter.BigEndian;
-			ByteConverter.BigEndian = false;
+			bool be = BigEndian;
+			BigEndian = false;
 
-			ulong header = ByteConverter.ToUInt64(source, 0) & HeaderMask;
+			ulong header = source.ToUInt64(0) & HeaderMask;
 			byte version = source[7];
-			switch (header)
+			switch(header)
 			{
 				case SA1LVL:
 				case SA2LVL:
 				case SA2BLVL:
-					if (version > CurrentVersion)
+					if(version > CurrentVersion)
 					{
-						ByteConverter.BigEndian = be;
+						BigEndian = be;
 						return null;
 						//throw new FormatException("Not a valid SA1LVL/SA2LVL file.");
 					}
@@ -194,8 +193,8 @@ namespace SonicRetro.SAModel.ObjData
 			Dictionary<uint, string> labels = new Dictionary<uint, string>(metaData.Labels);
 
 			LandTable table;
-			uint ltblAddress = ByteConverter.ToUInt32(source, 8);
-			switch (header)
+			uint ltblAddress = source.ToUInt32(8);
+			switch(header)
 			{
 				case SA1LVL:
 					table = Read(source, ltblAddress, 0, LandtableFormat.SA1, labels);
@@ -211,7 +210,7 @@ namespace SonicRetro.SAModel.ObjData
 			}
 			table.MetaData = metaData;
 
-			ByteConverter.BigEndian = be;
+			BigEndian = be;
 			return table;
 		}
 
@@ -229,71 +228,72 @@ namespace SonicRetro.SAModel.ObjData
 			string name = labels.ContainsKey(address) ? labels[address] : "landtable_" + address.ToString("X8");
 			float radius;
 			uint flags = 0;
-		
+
 			List<LandEntry> geometry = new List<LandEntry>();
 			string geomName;
 			List<LandEntryMotion> anim = new List<LandEntryMotion>();
-			string animName ;
+			string animName;
 			Dictionary<uint, ModelData.Attach> attaches = new Dictionary<uint, ModelData.Attach>();
 			string texName = "";
 			uint texListPtr;
 
 			uint tmpaddr;
-			ushort geoCount = ByteConverter.ToUInt16(source, address);
-			switch (format)
+			ushort geoCount = source.ToUInt16(address);
+			switch(format)
 			{
 				case LandtableFormat.SA1:
 				case LandtableFormat.SADX:
-					short anicnt = ByteConverter.ToInt16(source, address + 2);
-					flags = ByteConverter.ToUInt32(source, address + 4);
-					radius = ByteConverter.ToSingle(source, address + 8);
+					short anicnt = source.ToInt16(address + 2);
+					flags = source.ToUInt32(address + 4);
+					radius = source.ToSingle(address + 8);
 
-					tmpaddr = ByteConverter.ToUInt32(source, address + 0xC);
-					if (tmpaddr != 0)
+					tmpaddr = source.ToUInt32(address + 0xC);
+					if(tmpaddr != 0)
 					{
 						tmpaddr -= imageBase;
 						geomName = labels.ContainsKey(tmpaddr) ? labels[tmpaddr] : "collist_" + tmpaddr.ToString("X8");
 
-						for (int i = 0; i < geoCount; i++)
+						for(int i = 0; i < geoCount; i++)
 						{
 							geometry.Add(LandEntry.Read(source, tmpaddr, imageBase, AttachFormat.BASIC, format, labels, attaches));
 							tmpaddr += 0x24;
 						}
 					}
 					else
-						geomName = "collist_" + Extensions.GenerateIdentifier();
+						geomName = "collist_" + GenerateIdentifier();
 
-					tmpaddr = ByteConverter.ToUInt32(source, address + 0x10);
-					if (tmpaddr != 0)
+					tmpaddr = source.ToUInt32(address + 0x10);
+					if(tmpaddr != 0)
 					{
 						tmpaddr -= imageBase;
 						animName = labels.ContainsKey(tmpaddr) ? labels[tmpaddr] : "animlist_" + tmpaddr.ToString("X8");
 
-						for (int i = 0; i < anicnt; i++)
+						for(int i = 0; i < anicnt; i++)
 						{
 							anim.Add(LandEntryMotion.Read(source, tmpaddr, imageBase, AttachFormat.BASIC, format == LandtableFormat.SADX, labels, attaches));
 							tmpaddr += LandEntryMotion.Size;
 						}
 					}
-					else animName = "animlist_" + Extensions.GenerateIdentifier();
+					else
+						animName = "animlist_" + GenerateIdentifier();
 
-					tmpaddr = ByteConverter.ToUInt32(source, address + 0x14);
-					if (tmpaddr != 0)
+					tmpaddr = source.ToUInt32(address + 0x14);
+					if(tmpaddr != 0)
 					{
 						tmpaddr -= imageBase;
 						texName = source.GetCString(tmpaddr, Encoding.ASCII);
 					}
-					texListPtr = ByteConverter.ToUInt32(source, address + 0x18);
+					texListPtr = source.ToUInt32(address + 0x18);
 
 					break;
 				case LandtableFormat.SA2:
 				case LandtableFormat.SA2B:
 					AttachFormat atcFmt = format == LandtableFormat.SA2 ? AttachFormat.CHUNK : AttachFormat.GC;
 
-					ushort visualCount = ByteConverter.ToUInt16(source, address + 2);
-					radius = ByteConverter.ToSingle(source, address + 0xC);
+					ushort visualCount = source.ToUInt16(address + 2);
+					radius = source.ToSingle(address + 0xC);
 
-					tmpaddr = ByteConverter.ToUInt32(source, address + 0x10);
+					tmpaddr = source.ToUInt32(address + 0x10);
 					if(tmpaddr != 0)
 					{
 						tmpaddr -= imageBase;
@@ -305,17 +305,18 @@ namespace SonicRetro.SAModel.ObjData
 							tmpaddr += 0x20;
 						}
 					}
-					else geomName = "collist_" + Extensions.GenerateIdentifier();
+					else
+						geomName = "collist_" + GenerateIdentifier();
 
-					animName = "animlist_" + Extensions.GenerateIdentifier();
+					animName = "animlist_" + GenerateIdentifier();
 
-					tmpaddr = ByteConverter.ToUInt32(source, address + 0x18);
-					if (tmpaddr != 0)
+					tmpaddr = source.ToUInt32(address + 0x18);
+					if(tmpaddr != 0)
 					{
 						tmpaddr -= imageBase;
 						texName = source.GetCString(tmpaddr, Encoding.ASCII);
 					}
-					texListPtr = ByteConverter.ToUInt32(source, address + 0x1C);
+					texListPtr = source.ToUInt32(address + 0x1C);
 
 					break;
 				default:
@@ -355,7 +356,7 @@ namespace SonicRetro.SAModel.ObjData
 				LittleEndianMemoryStream writer = new LittleEndianMemoryStream(stream);
 
 				// writing indicator
-				switch (Format)
+				switch(Format)
 				{
 					case LandtableFormat.SA1:
 					case LandtableFormat.SADX:
@@ -404,8 +405,10 @@ namespace SonicRetro.SAModel.ObjData
 
 				foreach(LandEntry le in Geometry)
 				{
-					if (le.Attach.Format == AttachFormat.BASIC) basic.Add(le);
-					else visual.Add(le);
+					if(le.Attach.Format == AttachFormat.BASIC)
+						basic.Add(le);
+					else
+						visual.Add(le);
 					attaches.Add(le.Attach);
 				}
 
@@ -414,15 +417,17 @@ namespace SonicRetro.SAModel.ObjData
 				Geometry.AddRange(basic);
 				visCount = (ushort)visual.Count;
 			}
-			else foreach (LandEntry le in Geometry)
+			else
+				foreach(LandEntry le in Geometry)
 					attaches.Add(le.Attach);
 
-			foreach (LandEntryMotion lem in GeometryAnimations)
+			foreach(LandEntryMotion lem in GeometryAnimations)
 			{
 				NJObject[] models = lem.Model.GetObjects();
 				foreach(NJObject mdl in models)
 				{
-					if (mdl.Attach != null) attaches.Add(mdl.Attach);
+					if(mdl.Attach != null)
+						attaches.Add(mdl.Attach);
 				}
 			}
 
@@ -437,18 +442,19 @@ namespace SonicRetro.SAModel.ObjData
 				le.WriteModel(writer, imageBase, labels);
 
 			// write the landentry motion models
-			foreach (LandEntryMotion lem in GeometryAnimations)
+			foreach(LandEntryMotion lem in GeometryAnimations)
 				lem.Model.Write(writer, imageBase, labels);
 
 			// write the landentry motion animations
-			foreach (LandEntryMotion lem in GeometryAnimations)
+			foreach(LandEntryMotion lem in GeometryAnimations)
 				lem.Write(writer, labels);
 
 			// writing the geometry list
 			uint geomAddr = 0;
 			if(Geometry.Count > 0)
 			{
-				if (labels.ContainsKey(GeoName)) geomAddr = labels[GeoName];
+				if(labels.ContainsKey(GeoName))
+					geomAddr = labels[GeoName];
 				else
 				{
 					geomAddr = (uint)writer.Stream.Position + imageBase;
@@ -464,7 +470,8 @@ namespace SonicRetro.SAModel.ObjData
 			uint animAddr = 0;
 			if(GeometryAnimations.Count > 0)
 			{
-				if (labels.ContainsKey(GeoAnimName)) animAddr = labels[GeoAnimName];
+				if(labels.ContainsKey(GeoAnimName))
+					animAddr = labels[GeoAnimName];
 				else
 				{
 					animAddr = (uint)writer.Stream.Position + imageBase;
@@ -478,7 +485,7 @@ namespace SonicRetro.SAModel.ObjData
 
 			// write the texture name
 			uint texNameAddr = 0;
-			if (TextureFileName != null)
+			if(TextureFileName != null)
 			{
 				texNameAddr = (uint)writer.Stream.Position + imageBase;
 				writer.Write(Encoding.ASCII.GetBytes(TextureFileName));

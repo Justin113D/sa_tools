@@ -3,6 +3,8 @@ using SonicRetro.SAModel.Structs;
 using System;
 using System.Collections.Generic;
 using System.Linq;
+using static SonicRetro.SACommon.ByteConverter;
+using static SonicRetro.SACommon.MathHelper;
 
 namespace SonicRetro.SAModel.ObjData.Animation
 {
@@ -115,9 +117,11 @@ namespace SonicRetro.SAModel.ObjData.Animation
 				uint count = 0;
 				foreach(var v in Frames)
 				{
-					if (v.Count() == 0) continue;
+					if(v.Count() == 0)
+						continue;
 					uint val = v.Last();
-					if (val > count) count = val;
+					if(val > count)
+						count = val;
 				}
 				return count + 1;
 			}
@@ -132,19 +136,32 @@ namespace SonicRetro.SAModel.ObjData.Animation
 			{
 				AnimFlags flags = 0;
 
-				if (Position.Count > 0) flags |= AnimFlags.Position;
-				if (Rotation.Count > 0) flags |= AnimFlags.Rotation;
-				if (Scale.Count > 0) flags |= AnimFlags.Scale;
-				if (Vector.Count > 0) flags |= AnimFlags.Vector;
-				if (Vertex.Count > 0) flags |= AnimFlags.Vertex;
-				if (Normal.Count > 0) flags |= AnimFlags.Normal;
-				if (Target.Count > 0) flags |= AnimFlags.Target;
-				if (Roll.Count > 0) flags |= AnimFlags.Roll;
-				if (Angle.Count > 0) flags |= AnimFlags.Angle;
-				if (LightColor.Count > 0) flags |= AnimFlags.LightColor;
-				if (Intensity.Count > 0) flags |= AnimFlags.Intensity;
-				if (Spot.Count > 0) flags |= AnimFlags.Spot;
-				if (Point.Count > 0) flags |= AnimFlags.Point;
+				if(Position.Count > 0)
+					flags |= AnimFlags.Position;
+				if(Rotation.Count > 0)
+					flags |= AnimFlags.Rotation;
+				if(Scale.Count > 0)
+					flags |= AnimFlags.Scale;
+				if(Vector.Count > 0)
+					flags |= AnimFlags.Vector;
+				if(Vertex.Count > 0)
+					flags |= AnimFlags.Vertex;
+				if(Normal.Count > 0)
+					flags |= AnimFlags.Normal;
+				if(Target.Count > 0)
+					flags |= AnimFlags.Target;
+				if(Roll.Count > 0)
+					flags |= AnimFlags.Roll;
+				if(Angle.Count > 0)
+					flags |= AnimFlags.Angle;
+				if(LightColor.Count > 0)
+					flags |= AnimFlags.LightColor;
+				if(Intensity.Count > 0)
+					flags |= AnimFlags.Intensity;
+				if(Spot.Count > 0)
+					flags |= AnimFlags.Spot;
+				if(Point.Count > 0)
+					flags |= AnimFlags.Point;
 
 				return flags;
 			}
@@ -183,13 +200,14 @@ namespace SonicRetro.SAModel.ObjData.Animation
 		/// <returns></returns>
 		public static float GetNearestFrames<T>(SortedDictionary<uint, T> keyframes, float frame, out T before, out T next)
 		{
-			if (frame < 0) frame = 0;
+			if(frame < 0)
+				frame = 0;
 
 			// if there is only one frame, we can take that one
 			next = default;
 
-			if (keyframes.Count == 1)
-				foreach (T val in keyframes.Values) // faster than converting to an array and accessing the first index
+			if(keyframes.Count == 1)
+				foreach(T val in keyframes.Values) // faster than converting to an array and accessing the first index
 				{
 					before = val;
 					return 0;
@@ -197,7 +215,7 @@ namespace SonicRetro.SAModel.ObjData.Animation
 
 			// if the given frame is spot on and exists, then we can use it
 			uint baseFrame = (uint)Math.Floor(frame);
-			if (frame == baseFrame && keyframes.ContainsKey(baseFrame))
+			if(frame == baseFrame && keyframes.ContainsKey(baseFrame))
 			{
 				before = keyframes[baseFrame];
 				return 0;
@@ -210,14 +228,14 @@ namespace SonicRetro.SAModel.ObjData.Animation
 
 			// getting the first frame index
 			var keys = keyframes.Keys;
-			foreach (uint key in keys) // faster than converting to an array and accessing the first index
+			foreach(uint key in keys) // faster than converting to an array and accessing the first index
 			{
 				nextSmallestFrame = key;
 				break;
 			}
 
 			// if the smallest frame is greater than the frame we are at right now, then we can just return the frame
-			if (nextSmallestFrame > baseFrame)
+			if(nextSmallestFrame > baseFrame)
 			{
 				before = keyframes[nextSmallestFrame];
 				return 0;
@@ -225,11 +243,11 @@ namespace SonicRetro.SAModel.ObjData.Animation
 
 			// getting the actual next smallest and biggest frames
 			uint nextBiggestFrame = baseFrame;
-			foreach (uint key in keyframes.Keys)
+			foreach(uint key in keyframes.Keys)
 			{
-				if (key > nextSmallestFrame && key <= baseFrame)
+				if(key > nextSmallestFrame && key <= baseFrame)
 					nextSmallestFrame = key;
-				else if (key > baseFrame)
+				else if(key > baseFrame)
 				{
 					// the first bigger value must be the next biggest frame
 					nextBiggestFrame = key;
@@ -239,7 +257,8 @@ namespace SonicRetro.SAModel.ObjData.Animation
 
 			// if the next biggest frame hasnt changed, then that means we are past the last frame
 			before = keyframes[nextSmallestFrame];
-			if (nextBiggestFrame == baseFrame) return 0;
+			if(nextBiggestFrame == baseFrame)
+				return 0;
 
 			// the regular result
 			next = keyframes[nextBiggestFrame];
@@ -252,17 +271,20 @@ namespace SonicRetro.SAModel.ObjData.Animation
 		private static Vector3 ValueAtFrame(SortedDictionary<uint, Vector3> keyframes, float frame)
 		{
 			float interpolation = GetNearestFrames(keyframes, frame, out Vector3 before, out Vector3 next);
-			if (interpolation == 0) return before;
-			else return Vector3.Lerp(before, next, interpolation);
+			if(interpolation == 0)
+				return before;
+			else
+				return Vector3.Lerp(before, next, interpolation);
 		}
 
 		private static Vector3[] ValueAtFrame(SortedDictionary<uint, Vector3[]> keyframes, float frame)
 		{
 			float interpolation = GetNearestFrames(keyframes, frame, out Vector3[] before, out Vector3[] next);
-			if (interpolation == 0) return (Vector3[])before.Clone();
+			if(interpolation == 0)
+				return (Vector3[])before.Clone();
 
 			Vector3[] result = new Vector3[before.Length];
-			for (int i = 0; i < result.Length; i++)
+			for(int i = 0; i < result.Length; i++)
 			{
 				result[i] = Vector3.Lerp(before[i], next[i], interpolation);
 			}
@@ -272,29 +294,37 @@ namespace SonicRetro.SAModel.ObjData.Animation
 		private static Vector2 ValueAtFrame(SortedDictionary<uint, Vector2> keyframes, float frame)
 		{
 			float interpolation = GetNearestFrames(keyframes, frame, out Vector2 before, out Vector2 next);
-			if (interpolation == 0) return before;
-			else return Vector2.Lerp(before, next, interpolation);
+			if(interpolation == 0)
+				return before;
+			else
+				return Vector2.Lerp(before, next, interpolation);
 		}
 
 		private static Color ValueAtFrame(SortedDictionary<uint, Color> keyframes, float frame)
 		{
 			float interpolation = GetNearestFrames(keyframes, frame, out Color before, out Color next);
-			if (interpolation == 0) return before;
-			else return Color.Lerp(before, next, interpolation);
+			if(interpolation == 0)
+				return before;
+			else
+				return Color.Lerp(before, next, interpolation);
 		}
 
 		private static float ValueAtFrame(SortedDictionary<uint, float> keyframes, float frame)
 		{
 			float interpolation = GetNearestFrames(keyframes, frame, out float before, out float next);
-			if (interpolation == 0) return before;
-			else return next * interpolation + before * (1 - interpolation);
+			if(interpolation == 0)
+				return before;
+			else
+				return next * interpolation + before * (1 - interpolation);
 		}
 
 		private static Spotlight ValueAtFrame(SortedDictionary<uint, Spotlight> keyframes, float frame)
 		{
 			float interpolation = GetNearestFrames(keyframes, frame, out Spotlight before, out Spotlight next);
-			if (interpolation == 0) return before;
-			else return Spotlight.Lerp(before, next, interpolation);
+			if(interpolation == 0)
+				return before;
+			else
+				return Spotlight.Lerp(before, next, interpolation);
 		}
 
 		/// <summary>
@@ -309,43 +339,43 @@ namespace SonicRetro.SAModel.ObjData.Animation
 				frame = frame,
 			};
 
-			if (Position.Count > 0)
+			if(Position.Count > 0)
 				result.position = ValueAtFrame(Position, frame);
 
-			if (Rotation.Count > 0)
+			if(Rotation.Count > 0)
 				result.rotation = ValueAtFrame(Rotation, frame);
 
-			if (Scale.Count > 0)
+			if(Scale.Count > 0)
 				result.scale = ValueAtFrame(Scale, frame);
 
-			if (Vector.Count > 0)
+			if(Vector.Count > 0)
 				result.vector = ValueAtFrame(Vector, frame);
 
-			if (Vertex.Count > 0)
+			if(Vertex.Count > 0)
 				result.vertex = ValueAtFrame(Vertex, frame);
 
-			if (Normal.Count > 0)
+			if(Normal.Count > 0)
 				result.normal = ValueAtFrame(Normal, frame);
 
-			if (Target.Count > 0)
+			if(Target.Count > 0)
 				result.target = ValueAtFrame(Target, frame);
 
-			if (Roll.Count > 0)
+			if(Roll.Count > 0)
 				result.roll = ValueAtFrame(Roll, frame);
 
-			if (Angle.Count > 0)
+			if(Angle.Count > 0)
 				result.angle = ValueAtFrame(Angle, frame);
 
-			if (LightColor.Count > 0)
+			if(LightColor.Count > 0)
 				result.color = ValueAtFrame(LightColor, frame);
 
-			if (Intensity.Count > 0)
+			if(Intensity.Count > 0)
 				result.Intensity = ValueAtFrame(Intensity, frame);
 
-			if (Spot.Count > 0)
+			if(Spot.Count > 0)
 				result.spot = ValueAtFrame(Spot, frame);
 
-			if (Point.Count > 0)
+			if(Point.Count > 0)
 				result.point = ValueAtFrame(Point, frame);
 
 			return result;
@@ -354,9 +384,9 @@ namespace SonicRetro.SAModel.ObjData.Animation
 
 		private static void ReadVector3Set(byte[] source, uint address, uint count, SortedDictionary<uint, Vector3> dictionary, IOType type)
 		{
-			for (int i = 0; i < count; i++)
+			for(int i = 0; i < count; i++)
 			{
-				uint frame = ByteConverter.ToUInt32(source, address);
+				uint frame = source.ToUInt32(address);
 				address += 4;
 				dictionary.Add(frame, Vector3.Read(source, ref address, type));
 			}
@@ -368,20 +398,21 @@ namespace SonicRetro.SAModel.ObjData.Animation
 
 			// <address, frame>
 			SortedDictionary<uint, uint> ptrs = new SortedDictionary<uint, uint>();
-			for (int i = 0; i < count; i++)
+			for(int i = 0; i < count; i++)
 			{
-				uint frame = ByteConverter.ToUInt32(source, address);
-				uint ptr = ByteConverter.ToUInt32(source, address + 4) - imageBase;
+				uint frame = source.ToUInt32(address);
+				uint ptr = source.ToUInt32(address + 4) - imageBase;
 				address += 8;
 
 				ptrs.Add(ptr, frame);
 			}
 
-			if (ptrs.Count == 0) return;
+			if(ptrs.Count == 0)
+				return;
 
 			var values = ptrs.ToArray();
 			uint size = (origAddr - values[values.Length - 1].Key) / 12;
-			for (int i = values.Length - 1; i >= 0; i--)
+			for(int i = values.Length - 1; i >= 0; i--)
 			{
 				uint ptr = values[i].Key;
 				Vector3[] vectors = new Vector3[size];
@@ -393,9 +424,9 @@ namespace SonicRetro.SAModel.ObjData.Animation
 
 		private static void ReadVector2Set(byte[] source, uint address, uint count, SortedDictionary<uint, Vector2> dictionary, IOType type)
 		{
-			for (int i = 0; i < count; i++)
+			for(int i = 0; i < count; i++)
 			{
-				uint frame = ByteConverter.ToUInt32(source, address);
+				uint frame = source.ToUInt32(address);
 				address += 4;
 				dictionary.Add(frame, Vector2.Read(source, ref address, type));
 			}
@@ -403,9 +434,9 @@ namespace SonicRetro.SAModel.ObjData.Animation
 
 		private static void ReadColorSet(byte[] source, uint address, uint count, SortedDictionary<uint, Color> dictionary, IOType type)
 		{
-			for (int i = 0; i < count; i++)
+			for(int i = 0; i < count; i++)
 			{
-				uint frame = ByteConverter.ToUInt32(source, address);
+				uint frame = source.ToUInt32(address);
 				address += 4;
 				dictionary.Add(frame, Color.Read(source, ref address, type));
 			}
@@ -413,10 +444,10 @@ namespace SonicRetro.SAModel.ObjData.Animation
 
 		private static void ReadFloatSet(byte[] source, uint address, uint count, SortedDictionary<uint, float> dictionary, bool BAMS)
 		{
-			for (int i = 0; i < count; i++)
+			for(int i = 0; i < count; i++)
 			{
-				uint frame = ByteConverter.ToUInt32(source, address);
-				float value = BAMS ? Helper.BAMSToDeg(ByteConverter.ToInt32(source, address + 4)) : ByteConverter.ToSingle(source, address + 4);
+				uint frame = source.ToUInt32(address);
+				float value = BAMS ? BAMSToDeg(source.ToInt32(address + 4)) : source.ToSingle(address + 4);
 				address += 8;
 				dictionary.Add(frame, value);
 			}
@@ -424,9 +455,9 @@ namespace SonicRetro.SAModel.ObjData.Animation
 
 		private static void ReadSpotSet(byte[] source, uint address, uint count, SortedDictionary<uint, Spotlight> dictionary)
 		{
-			for (int i = 0; i < count; i++)
+			for(int i = 0; i < count; i++)
 			{
-				uint frame = ByteConverter.ToUInt32(source, address);
+				uint frame = source.ToUInt32(address);
 				Spotlight value = Spotlight.Read(source, address + 4);
 				address += 8 + Spotlight.Size;
 				dictionary.Add(frame, value);
@@ -449,106 +480,107 @@ namespace SonicRetro.SAModel.ObjData.Animation
 			uint[] frameCounts = new uint[channels];
 			for(int i = 0; i < channels; i++)
 			{
-				uint val = ByteConverter.ToUInt32(source, address);
-				if(val > 0) addresses[i] = val - imageBase;
+				uint val = source.ToUInt32(address);
+				if(val > 0)
+					addresses[i] = val - imageBase;
 				address += 4;
 			}
-			for (int i = 0; i < channels; i++)
+			for(int i = 0; i < channels; i++)
 			{
-				frameCounts[i] = ByteConverter.ToUInt32(source, address);
+				frameCounts[i] = source.ToUInt32(address);
 				address += 4;
 			}
 
 			int channelIndex = 0;
 			Keyframes result = new Keyframes();
 
-			if (type.HasFlag(AnimFlags.Position))
+			if(type.HasFlag(AnimFlags.Position))
 			{
 				if(addresses[channelIndex] != 0)
 					ReadVector3Set(source, addresses[channelIndex], frameCounts[channelIndex], result.Position, IOType.Float);
 				channelIndex++;
 			}
 
-			if (type.HasFlag(AnimFlags.Rotation))
+			if(type.HasFlag(AnimFlags.Rotation))
 			{
-				if (addresses[channelIndex] != 0)
+				if(addresses[channelIndex] != 0)
 					ReadVector3Set(source, addresses[channelIndex], frameCounts[channelIndex], result.Rotation, shortRot ? IOType.BAMS16 : IOType.BAMS32);
 				channelIndex++;
 			}
 
-			if (type.HasFlag(AnimFlags.Scale))
+			if(type.HasFlag(AnimFlags.Scale))
 			{
-				if (addresses[channelIndex] != 0)
+				if(addresses[channelIndex] != 0)
 					ReadVector3Set(source, addresses[channelIndex], frameCounts[channelIndex], result.Scale, IOType.Float);
 				channelIndex++;
 			}
 
-			if (type.HasFlag(AnimFlags.Vector))
+			if(type.HasFlag(AnimFlags.Vector))
 			{
-				if (addresses[channelIndex] != 0)
+				if(addresses[channelIndex] != 0)
 					ReadVector3Set(source, addresses[channelIndex], frameCounts[channelIndex], result.Vector, IOType.Float);
 				channelIndex++;
 			}
 
-			if (type.HasFlag(AnimFlags.Vertex))
+			if(type.HasFlag(AnimFlags.Vertex))
 			{
-				if (addresses[channelIndex] != 0)
+				if(addresses[channelIndex] != 0)
 					ReadVector3ArraySet(source, addresses[channelIndex], imageBase, frameCounts[channelIndex], result.Vertex);
 				channelIndex++;
 			}
 
-			if (type.HasFlag(AnimFlags.Normal))
+			if(type.HasFlag(AnimFlags.Normal))
 			{
-				if (addresses[channelIndex] != 0)
+				if(addresses[channelIndex] != 0)
 					ReadVector3ArraySet(source, addresses[channelIndex], imageBase, frameCounts[channelIndex], result.Normal);
 				channelIndex++;
 			}
 
-			if (type.HasFlag(AnimFlags.Target))
+			if(type.HasFlag(AnimFlags.Target))
 			{
-				if (addresses[channelIndex] != 0)
+				if(addresses[channelIndex] != 0)
 					ReadVector3Set(source, addresses[channelIndex], frameCounts[channelIndex], result.Target, IOType.Float);
 				channelIndex++;
 			}
 
-			if (type.HasFlag(AnimFlags.Roll))
+			if(type.HasFlag(AnimFlags.Roll))
 			{
-				if (addresses[channelIndex] != 0)
+				if(addresses[channelIndex] != 0)
 					ReadFloatSet(source, addresses[channelIndex], frameCounts[channelIndex], result.Roll, true);
 				channelIndex++;
 			}
 
-			if (type.HasFlag(AnimFlags.Angle))
+			if(type.HasFlag(AnimFlags.Angle))
 			{
-				if (addresses[channelIndex] != 0)
+				if(addresses[channelIndex] != 0)
 					ReadFloatSet(source, addresses[channelIndex], frameCounts[channelIndex], result.Angle, true);
 				channelIndex++;
 			}
 
-			if (type.HasFlag(AnimFlags.LightColor))
+			if(type.HasFlag(AnimFlags.LightColor))
 			{
-				if (addresses[channelIndex] != 0)
+				if(addresses[channelIndex] != 0)
 					ReadColorSet(source, addresses[channelIndex], frameCounts[channelIndex], result.LightColor, IOType.ARGB8_32);
 				channelIndex++;
 			}
 
-			if (type.HasFlag(AnimFlags.Intensity))
+			if(type.HasFlag(AnimFlags.Intensity))
 			{
-				if (addresses[channelIndex] != 0)
+				if(addresses[channelIndex] != 0)
 					ReadFloatSet(source, addresses[channelIndex], frameCounts[channelIndex], result.Intensity, false);
 				channelIndex++;
 			}
 
-			if (type.HasFlag(AnimFlags.Spot))
+			if(type.HasFlag(AnimFlags.Spot))
 			{
-				if (addresses[channelIndex] != 0)
+				if(addresses[channelIndex] != 0)
 					ReadSpotSet(source, addresses[channelIndex], frameCounts[channelIndex], result.Spot);
 				channelIndex++;
 			}
 
-			if (type.HasFlag(AnimFlags.Point))
+			if(type.HasFlag(AnimFlags.Point))
 			{
-				if (addresses[channelIndex] != 0)
+				if(addresses[channelIndex] != 0)
 					ReadVector2Set(source, addresses[channelIndex], frameCounts[channelIndex], result.Point, IOType.Float);
 			}
 
@@ -570,9 +602,9 @@ namespace SonicRetro.SAModel.ObjData.Animation
 
 			bool ContinueWrite(int count, AnimFlags flag)
 			{
-				if (type.HasFlag(flag))
+				if(type.HasFlag(flag))
 				{
-					if (count == 0)
+					if(count == 0)
 					{
 						channelIndex++;
 						return false;
@@ -586,8 +618,9 @@ namespace SonicRetro.SAModel.ObjData.Animation
 
 			void WriteDataStruct(Dictionary<uint, IDataStructOut> dict, IOType ioType, AnimFlags flag)
 			{
-				if (!ContinueWrite(dict.Count, flag)) return;
-				
+				if(!ContinueWrite(dict.Count, flag))
+					return;
+
 				foreach(var pair in dict)
 				{
 					writer.WriteUInt32(pair.Key);
@@ -597,9 +630,9 @@ namespace SonicRetro.SAModel.ObjData.Animation
 
 			void WriteVector3Array(SortedDictionary<uint, Vector3[]> dict, AnimFlags flag)
 			{
-				if (type.HasFlag(flag))
+				if(type.HasFlag(flag))
 				{
-					if (dict.Count == 0)
+					if(dict.Count == 0)
 					{
 						channelIndex++;
 						return;
@@ -609,13 +642,13 @@ namespace SonicRetro.SAModel.ObjData.Animation
 					foreach(var pair in dict)
 					{
 						ptrs.Add(pair.Key, (uint)writer.Stream.Position + imageBase);
-						foreach (Vector3 v in pair.Value)
+						foreach(Vector3 v in pair.Value)
 							v.Write(writer, IOType.Float);
 					}
 
 					keyframeLocs[channelIndex] = ((uint)writer.Stream.Position + imageBase, (uint)dict.Count);
 
-					foreach (var pair in dict)
+					foreach(var pair in dict)
 					{
 						writer.WriteUInt32(pair.Key);
 						writer.WriteUInt32(ptrs[pair.Key]);
@@ -627,21 +660,25 @@ namespace SonicRetro.SAModel.ObjData.Animation
 
 			void WriteFloat(SortedDictionary<uint, float> dict, bool BAMS, AnimFlags flag)
 			{
-				if (!ContinueWrite(dict.Count, flag)) return;
+				if(!ContinueWrite(dict.Count, flag))
+					return;
 
-				foreach (var pair in dict)
+				foreach(var pair in dict)
 				{
 					writer.WriteUInt32(pair.Key);
-					if (BAMS) writer.WriteInt32(Helper.DegToBAMS(pair.Value));
-					else writer.WriteSingle(pair.Value);
+					if(BAMS)
+						writer.WriteInt32(DegToBAMS(pair.Value));
+					else
+						writer.WriteSingle(pair.Value);
 				}
 			}
 
 			void WriteSpotlight(SortedDictionary<uint, Spotlight> dict, AnimFlags flag)
 			{
-				if (!ContinueWrite(dict.Count, flag)) return;
+				if(!ContinueWrite(dict.Count, flag))
+					return;
 
-				foreach (var pair in dict)
+				foreach(var pair in dict)
 				{
 					writer.WriteUInt32(pair.Key);
 					pair.Value.Write(writer);
@@ -752,7 +789,7 @@ namespace SonicRetro.SAModel.ObjData.Animation
 		/// <summary>
 		/// Closest light distance
 		/// </summary>
-		/// 
+		///
 		public float near;
 
 		/// <summary>
@@ -761,12 +798,12 @@ namespace SonicRetro.SAModel.ObjData.Animation
 		public float far;
 
 		/// <summary>
-		/// 
+		///
 		/// </summary>
 		public float insideAngle;
 
 		/// <summary>
-		/// 
+		///
 		/// </summary>
 		public float outsideAngle;
 
@@ -799,10 +836,10 @@ namespace SonicRetro.SAModel.ObjData.Animation
 		{
 			return new Spotlight()
 			{
-				near = ByteConverter.ToSingle(source, address),
-				far = ByteConverter.ToSingle(source, address + 4),
-				insideAngle = Helper.BAMSToDeg(ByteConverter.ToInt32(source, address + 8)),
-				outsideAngle = Helper.BAMSToDeg(ByteConverter.ToInt32(source, address + 12))
+				near = source.ToSingle(address),
+				far = source.ToSingle(address + 4),
+				insideAngle = BAMSToDeg(source.ToInt32(address + 8)),
+				outsideAngle = BAMSToDeg(source.ToInt32(address + 12))
 			};
 		}
 
@@ -814,8 +851,8 @@ namespace SonicRetro.SAModel.ObjData.Animation
 		{
 			writer.WriteSingle(near);
 			writer.WriteSingle(far);
-			writer.WriteInt32(Helper.DegToBAMS(insideAngle));
-			writer.WriteInt32(Helper.DegToBAMS(outsideAngle));
+			writer.WriteInt32(DegToBAMS(insideAngle));
+			writer.WriteInt32(DegToBAMS(outsideAngle));
 		}
 	}
 }

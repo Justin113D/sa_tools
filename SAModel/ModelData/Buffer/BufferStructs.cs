@@ -1,6 +1,6 @@
 ﻿using Reloaded.Memory.Streams.Writers;
 using SonicRetro.SAModel.Structs;
-using System.Collections.Generic;
+using static SonicRetro.SACommon.ByteConverter;
 
 namespace SonicRetro.SAModel.ModelData.Buffer
 {
@@ -90,8 +90,8 @@ namespace SonicRetro.SAModel.ModelData.Buffer
 		{
 			Vector3 pos = Vector3.Read(source, ref address, IOType.Float);
 			Vector3 nrm = Vector3.Read(source, ref address, IOType.Float);
-			ushort index = ByteConverter.ToUInt16(source, address);
-			ushort weight = ByteConverter.ToUInt16(source, address + 2);
+			ushort index = source.ToUInt16(address);
+			ushort weight = source.ToUInt16(address + 2);
 			address += 4;
 
 			return new BufferVertex(pos, nrm, index, weight / (float)ushort.MaxValue);
@@ -178,7 +178,7 @@ namespace SonicRetro.SAModel.ModelData.Buffer
 		/// <returns></returns>
 		public static BufferCorner Read(byte[] source, ref uint address)
 		{
-			ushort index = ByteConverter.ToUInt16(source, address);
+			ushort index = source.ToUInt16(address);
 			address += 2;
 			Color col = Color.Read(source, ref address, IOType.ARGB8_32);
 			Vector2 uv = Vector2.Read(source, ref address, IOType.Float);

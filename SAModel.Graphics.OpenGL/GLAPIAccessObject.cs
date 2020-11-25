@@ -1,28 +1,26 @@
-﻿using System;
+﻿using OpenTK;
+using OpenTK.Graphics;
+using OpenTK.Graphics.OpenGL4;
+using OpenTK.Input;
+using OpenTK.Platform;
+using OpenTK.Wpf;
+using SonicRetro.SAModel.Graphics.APIAccess;
+using SonicRetro.SAModel.Graphics.OpenGL.Properties;
+using SonicRetro.SAModel.ModelData.Buffer;
+using SonicRetro.SAModel.ObjData;
+using SonicRetro.SAModel.Structs;
+using System;
 using System.Collections.Generic;
 using System.Drawing;
+using System.Drawing.Imaging;
 using System.Linq;
 using System.Text;
-using System.Drawing.Imaging;
 using System.Windows;
 using System.Windows.Interop;
 using Key = System.Windows.Input.Key;
 using Point = System.Drawing.Point;
-
-using OpenTK;
-using OpenTK.Input;
-using OpenTK.Graphics.OpenGL4;
-using OpenTK.Wpf;
-using OpenTK.Platform;
-using OpenTK.Graphics;
 using TKey = OpenTK.Input.Key;
-
-using SonicRetro.SAModel.Graphics.APIAccess;
-using SonicRetro.SAModel.ModelData.Buffer;
-using SonicRetro.SAModel.Graphics.OpenGL.Properties;
 using UIElement = SonicRetro.SAModel.Graphics.UI.UIElement;
-using SonicRetro.SAModel.ObjData;
-using SonicRetro.SAModel.Structs;
 
 namespace SonicRetro.SAModel.Graphics.OpenGL
 {

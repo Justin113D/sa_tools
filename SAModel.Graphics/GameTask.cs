@@ -44,7 +44,8 @@ namespace SonicRetro.SAModel.Graphics
 
 		public void UpdateAnim(double time)
 		{
-			if (motion == null) return;
+			if(motion == null)
+				return;
 
 			float f = (float)(time % (motion.Frames - 1));
 
@@ -54,13 +55,14 @@ namespace SonicRetro.SAModel.Graphics
 				if(motion.Keyframes.ContainsKey(i))
 				{
 					NJObject mdl = models[i];
-					if (!mdl.Animate) continue;
+					if(!mdl.Animate)
+						continue;
 					Frame frame = motion.Keyframes[i].GetFrameAt(f);
 					if(frame.position.HasValue)
 						mdl.Position = frame.position.Value;
-					if (frame.rotation.HasValue)
+					if(frame.rotation.HasValue)
 						mdl.Rotation = frame.rotation.Value;
-					if (frame.scale.HasValue)
+					if(frame.scale.HasValue)
 						mdl.Scale = frame.scale.Value;
 				}
 			}

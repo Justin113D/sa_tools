@@ -1,6 +1,7 @@
 ﻿using Reloaded.Memory.Streams.Writers;
 using System;
 using System.Collections.Generic;
+using static SonicRetro.SACommon.ByteConverter;
 
 namespace SonicRetro.SAModel.ModelData.GC
 {
@@ -66,11 +67,11 @@ namespace SonicRetro.SAModel.ModelData.GC
 		/// <param name="indexFlags">How the indices of the loops are structured</param>
 		public static Poly Read(byte[] source, ref uint address, IndexAttributeFlags indexFlags)
 		{
-			bool wasBigEndian = ByteConverter.BigEndian;
-			ByteConverter.BigEndian = true;
+			bool wasBigEndian = BigEndian;
+			BigEndian = true;
 
 			PolyType type = (PolyType)source[address];
-			ushort vtxCount = ByteConverter.ToUInt16(source, address + 1);
+			ushort vtxCount = source.ToUInt16(address + 1);
 
 			// checking the flags
 			bool hasFlag(IndexAttributeFlags flag) => indexFlags.HasFlag(flag);
@@ -90,14 +91,14 @@ namespace SonicRetro.SAModel.ModelData.GC
 
 			List<Corner> corners = new List<Corner>();
 
-			for (ushort i = 0; i < vtxCount; i++)
+			for(ushort i = 0; i < vtxCount; i++)
 			{
 				Corner l = new Corner();
 
 				// reading position, which should always exist
-				if (shortPos)
+				if(shortPos)
 				{
-					l.PositionIndex = ByteConverter.ToUInt16(source, address);
+					l.PositionIndex = source.ToUInt16(address);
 					address += 2;
 				}
 				else
@@ -107,11 +108,11 @@ namespace SonicRetro.SAModel.ModelData.GC
 				}
 
 				// reading normals
-				if (hasNrm)
+				if(hasNrm)
 				{
-					if (shortNrm)
+					if(shortNrm)
 					{
-						l.NormalIndex = ByteConverter.ToUInt16(source, address);
+						l.NormalIndex = source.ToUInt16(address);
 						address += 2;
 					}
 					else
@@ -122,11 +123,11 @@ namespace SonicRetro.SAModel.ModelData.GC
 				}
 
 				// reading colors
-				if (hasCol)
+				if(hasCol)
 				{
-					if (shortCol)
+					if(shortCol)
 					{
-						l.Color0Index = ByteConverter.ToUInt16(source, address);
+						l.Color0Index = source.ToUInt16(address);
 						address += 2;
 					}
 					else
@@ -137,11 +138,11 @@ namespace SonicRetro.SAModel.ModelData.GC
 				}
 
 				// reading uvs
-				if (hasUV)
+				if(hasUV)
 				{
-					if (shortUV)
+					if(shortUV)
 					{
-						l.UV0Index = ByteConverter.ToUInt16(source, address);
+						l.UV0Index = source.ToUInt16(address);
 						address += 2;
 					}
 					else
@@ -154,7 +155,7 @@ namespace SonicRetro.SAModel.ModelData.GC
 				corners.Add(l);
 			}
 
-			ByteConverter.BigEndian = wasBigEndian;
+			BigEndian = wasBigEndian;
 			return new Poly(type, corners.ToArray());
 		}
 
@@ -167,7 +168,7 @@ namespace SonicRetro.SAModel.ModelData.GC
 		{
 			// has to be big endian
 			BigEndianMemoryStream bWriter = new BigEndianMemoryStream(writer.Stream);
-			
+
 			bWriter.Write((byte)Type);
 			bWriter.Write((ushort)Corners.Length);
 
@@ -184,25 +185,33 @@ namespace SonicRetro.SAModel.ModelData.GC
 			bool shortNrm = hasFlag(IndexAttributeFlags.Normal16BitIndex);
 			bool shortUV = hasFlag(IndexAttributeFlags.UV16BitIndex);
 
-			foreach (Corner v in Corners)
+			foreach(Corner v in Corners)
 			{
 				// Position should always exist
-				if (shortPos) bWriter.Write(v.PositionIndex);
-				else bWriter.Write((byte)v.PositionIndex);
+				if(shortPos)
+					bWriter.Write(v.PositionIndex);
+				else
+					bWriter.Write((byte)v.PositionIndex);
 
-				if (hasNrm)
-					if (shortNrm) bWriter.Write(v.NormalIndex);
-					else bWriter.Write((byte)v.NormalIndex);
+				if(hasNrm)
+					if(shortNrm)
+						bWriter.Write(v.NormalIndex);
+					else
+						bWriter.Write((byte)v.NormalIndex);
 
-				if (hasCol)
-					if (shortCol) bWriter.Write(v.Color0Index);
-					else bWriter.Write((byte)v.Color0Index);
+				if(hasCol)
+					if(shortCol)
+						bWriter.Write(v.Color0Index);
+					else
+						bWriter.Write((byte)v.Color0Index);
 
-				if (hasUV)
-					if (shortUV) bWriter.Write(v.UV0Index);
-					else bWriter.Write((byte)v.UV0Index);
+				if(hasUV)
+					if(shortUV)
+						bWriter.Write(v.UV0Index);
+					else
+						bWriter.Write((byte)v.UV0Index);
 			}
-			
+
 		}
 
 		public override string ToString() => $"{Type}: {Corners.Length}";

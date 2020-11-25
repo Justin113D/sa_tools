@@ -1,8 +1,8 @@
 ﻿using Reloaded.Memory.Streams.Writers;
-using SonicRetro.SAModel.ModelData.GC;
 using SonicRetro.SAModel.Structs;
 using System;
 using System.Collections.Generic;
+using static SonicRetro.SACommon.ByteConverter;
 
 namespace SonicRetro.SAModel.ModelData.Buffer
 {
@@ -111,24 +111,24 @@ namespace SonicRetro.SAModel.ModelData.Buffer
 			List<uint> triangles = new List<uint>();
 			if(!useVertices)
 			{
-				for (int i = 0; i < TriangleList.Length; i += 3)
+				for(int i = 0; i < TriangleList.Length; i += 3)
 				{
 					ushort index1 = Corners[(int)TriangleList[i]].vertexIndex;
 					ushort index2 = Corners[(int)TriangleList[i + 1]].vertexIndex;
 					ushort index3 = Corners[(int)TriangleList[i + 2]].vertexIndex;
 
-					if (index1 != index2 && index2 != index3 && index3 != index1)
+					if(index1 != index2 && index2 != index3 && index3 != index1)
 						triangles.AddRange(new uint[] { TriangleList[i], TriangleList[i + 1], TriangleList[i + 2] });
 				}
 			}
 			else
 			{
-				for (int i = 0; i < TriangleList.Length; i += 3)
+				for(int i = 0; i < TriangleList.Length; i += 3)
 				{
 					Vector3 pos1 = vertices[Corners[(int)TriangleList[i]].vertexIndex].position;
 					Vector3 pos2 = vertices[Corners[(int)TriangleList[i + 1]].vertexIndex].position;
 					Vector3 pos3 = vertices[Corners[(int)TriangleList[i + 2]].vertexIndex].position;
-					if (pos1 != pos2 && pos2 != pos3 && pos3 != pos1)
+					if(pos1 != pos2 && pos2 != pos3 && pos3 != pos1)
 						triangles.AddRange(new uint[] { TriangleList[i], TriangleList[i + 1], TriangleList[i + 2] });
 				}
 			}
@@ -140,31 +140,37 @@ namespace SonicRetro.SAModel.ModelData.Buffer
 			// filtering the double Corners
 			List<BufferCorner> distCorners = new List<BufferCorner>();
 			uint[] cIDs = new uint[Corners.Length];
-			for (int i = 0; i < Corners.Length; i++)
+			for(int i = 0; i < Corners.Length; i++)
 			{
-				if (!removedCorners[i]) continue;
+				if(!removedCorners[i])
+					continue;
 				int index = distCorners.FindIndex(x => x == Corners[i]);
-				if (index < 0)
+				if(index < 0)
 				{
 					cIDs[i] = (uint)distCorners.Count;
 					distCorners.Add(Corners[i]);
 				}
-				else cIDs[i] = (uint)index;
+				else
+					cIDs[i] = (uint)index;
 			}
 
 			// updating indices of the triangle list
-			for (int i = 0; i < triangles.Count; i++)
+			for(int i = 0; i < triangles.Count; i++)
 				triangles[i] = cIDs[triangles[i]];
 
-			if (useVertices)
+			if(useVertices)
 			{
-				if (ownsVertices) return new BufferMesh(vertices, false, distCorners.ToArray(), triangles.ToArray(), Material);
-				else return new BufferMesh(distCorners.ToArray(), triangles.ToArray(), Material);
+				if(ownsVertices)
+					return new BufferMesh(vertices, false, distCorners.ToArray(), triangles.ToArray(), Material);
+				else
+					return new BufferMesh(distCorners.ToArray(), triangles.ToArray(), Material);
 			}
 			else
-			{ 
-				if(Vertices == null) return new BufferMesh(distCorners.ToArray(), triangles.ToArray(), Material);
-				else return new BufferMesh(Vertices, ContinueWeight, distCorners.ToArray(), triangles.ToArray(), Material);
+			{
+				if(Vertices == null)
+					return new BufferMesh(distCorners.ToArray(), triangles.ToArray(), Material);
+				else
+					return new BufferMesh(Vertices, ContinueWeight, distCorners.ToArray(), triangles.ToArray(), Material);
 			}
 		}
 
@@ -178,19 +184,21 @@ namespace SonicRetro.SAModel.ModelData.Buffer
 			writer.WriteUInt16((ushort)(ContinueWeight ? 1u : 0u));
 			writer.WriteUInt32((uint)(Corners == null ? 0 : Corners.Length));
 			writer.WriteUInt32((uint)(TriangleList == null ? 0 : TriangleList.Length));
-			if (Material == null) writer.Write(new byte[28]);
-			else Material.Write(writer);
+			if(Material == null)
+				writer.Write(new byte[28]);
+			else
+				Material.Write(writer);
 
 			if(Vertices != null)
-				foreach (BufferVertex vtx in Vertices)
+				foreach(BufferVertex vtx in Vertices)
 					vtx.Write(writer);
 
 			if(Corners != null)
-				foreach (BufferCorner c in Corners)
+				foreach(BufferCorner c in Corners)
 					c.Write(writer);
 
 			if(TriangleList != null)
-				foreach (uint t in TriangleList)
+				foreach(uint t in TriangleList)
 					writer.WriteUInt32(t);
 		}
 
@@ -201,29 +209,32 @@ namespace SonicRetro.SAModel.ModelData.Buffer
 		/// <param name="address">Address at which the buffermesh is located</param>
 		public static BufferMesh Read(byte[] source, ref uint address)
 		{
-			BufferVertex[] vertices = new BufferVertex[ByteConverter.ToUInt16(source, address)];
-			bool continueWeight = ByteConverter.ToUInt16(source, address + 2) != 0;
-			BufferCorner[] corners = new BufferCorner[ByteConverter.ToUInt32(source, address + 4)];
-			uint[] triangles = new uint[ByteConverter.ToUInt32(source, address + 8)];
+			BufferVertex[] vertices = new BufferVertex[source.ToUInt16(address)];
+			bool continueWeight = source.ToUInt16(address + 2) != 0;
+			BufferCorner[] corners = new BufferCorner[source.ToUInt32(address + 4)];
+			uint[] triangles = new uint[source.ToUInt32(address + 8)];
 
 			address += 12;
 			BufferMaterial material = BufferMaterial.Read(source, ref address);
 
-			for (int i = 0; i < vertices.Length; i++)
+			for(int i = 0; i < vertices.Length; i++)
 				vertices[i] = BufferVertex.Read(source, ref address);
 
-			for (int i = 0; i < corners.Length; i++)
+			for(int i = 0; i < corners.Length; i++)
 				corners[i] = BufferCorner.Read(source, ref address);
 
 			for(int i = 0; i < triangles.Length; i++)
 			{
-				triangles[i] = ByteConverter.ToUInt32(source, address);
+				triangles[i] = source.ToUInt32(address);
 				address += 4;
 			}
 
-			if(vertices.Length == 0) return new BufferMesh(corners, triangles, material);
-			else if(corners.Length == 0) return new BufferMesh(vertices, continueWeight);
-			else return new BufferMesh(vertices, continueWeight, corners, triangles, material);
+			if(vertices.Length == 0)
+				return new BufferMesh(corners, triangles, material);
+			else if(corners.Length == 0)
+				return new BufferMesh(vertices, continueWeight);
+			else
+				return new BufferMesh(vertices, continueWeight, corners, triangles, material);
 		}
 
 		object ICloneable.Clone() => Clone();

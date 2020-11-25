@@ -2,6 +2,7 @@
 using SonicRetro.SAModel.ModelData;
 using System;
 using System.Collections.Generic;
+using static SonicRetro.SACommon.ByteConverter;
 
 namespace SonicRetro.SAModel.ObjData.Animation
 {
@@ -76,20 +77,20 @@ namespace SonicRetro.SAModel.ObjData.Animation
 		/// <param name="models">Models that have already been read</param>
 		/// <param name="attaches">Attaches that have already been read</param>
 		/// <returns></returns>
-		public static LandEntryMotion Read(byte[] source, uint address, uint imageBase, AttachFormat format, bool DX, 
+		public static LandEntryMotion Read(byte[] source, uint address, uint imageBase, AttachFormat format, bool DX,
 			Dictionary<uint, string> labels, Dictionary<uint, ModelData.Attach> attaches)
 		{
-			float frame = ByteConverter.ToSingle(source, address);
-			float step = ByteConverter.ToSingle(source, address + 4);
-			float maxFrame = ByteConverter.ToSingle(source, address + 8);
+			float frame = source.ToSingle(address);
+			float step = source.ToSingle(address + 4);
+			float maxFrame = source.ToSingle(address + 8);
 
-			uint modelAddress = ByteConverter.ToUInt32(source, address + 0xC) - imageBase;
+			uint modelAddress = source.ToUInt32(address + 0xC) - imageBase;
 			NJObject model = NJObject.Read(source, modelAddress, imageBase, format, DX, labels, attaches);
-			
-			uint motionAddress = ByteConverter.ToUInt32(source, address + 0x10) - imageBase;
+
+			uint motionAddress = source.ToUInt32(address + 0x10) - imageBase;
 			Motion motion = Motion.Read(source, ref motionAddress, imageBase, (uint)model.Count(), labels);
 
-			uint texListPtr = ByteConverter.ToUInt32(source, address + 0x14);
+			uint texListPtr = source.ToUInt32(address + 0x14);
 
 			return new LandEntryMotion(frame, step, maxFrame, model, motion, texListPtr);
 		}

@@ -1,8 +1,9 @@
-﻿using System;
+﻿using Reloaded.Memory.Streams.Writers;
+using System;
 using System.Collections.Generic;
 using System.Linq;
-using Reloaded.Memory.Streams.Writers;
-using SonicRetro.SAModel.Structs;
+using static SonicRetro.SACommon.ByteConverter;
+using static SonicRetro.SACommon.Helper;
 
 namespace SonicRetro.SAModel.ModelData.GC
 {
@@ -59,15 +60,15 @@ namespace SonicRetro.SAModel.ModelData.GC
 		public static Mesh Read(byte[] source, uint address, uint imageBase, ref IndexAttributeFlags indexFlags)
 		{
 			// getting the addresses and sizes
-			uint parameters_addr = ByteConverter.ToUInt32(source, address) - imageBase;
-			int parameters_count = ByteConverter.ToInt32(source, address + 4);
+			uint parameters_addr = source.ToUInt32(address) - imageBase;
+			int parameters_count = source.ToInt32(address + 4);
 
-			uint primitives_addr = ByteConverter.ToUInt32(source, address + 8) - imageBase;
-			int primitives_size = ByteConverter.ToInt32(source, address + 12);
+			uint primitives_addr = source.ToUInt32(address + 8) - imageBase;
+			int primitives_size = source.ToInt32(address + 12);
 
 			// reading the parameters
 			List<Parameter> parameters = new List<Parameter>();
-			for (int i = 0; i < parameters_count; i++)
+			for(int i = 0; i < parameters_count; i++)
 			{
 				parameters.Add(Parameter.Read(source, parameters_addr));
 				parameters_addr += 8;
@@ -75,17 +76,18 @@ namespace SonicRetro.SAModel.ModelData.GC
 
 			// getting the index attribute parameter
 			IndexAttributeFlags? flags = ((IndexAttributeParameter)parameters.Find(x => x.Type == ParameterType.IndexAttributeFlags))?.IndexAttributes;
-			if (flags.HasValue)
+			if(flags.HasValue)
 				indexFlags = flags.Value;
 
 			// reading the primitives
 			List<Poly> primitives = new List<Poly>();
 			uint end_pos = (uint)(primitives_addr + primitives_size);
 
-			while (primitives_addr < end_pos)
+			while(primitives_addr < end_pos)
 			{
 				// if the primitive isnt valid
-				if (source[primitives_addr] == 0) break;
+				if(source[primitives_addr] == 0)
+					break;
 				primitives.Add(Poly.Read(source, ref primitives_addr, indexFlags));
 			}
 
@@ -101,14 +103,14 @@ namespace SonicRetro.SAModel.ModelData.GC
 		{
 			_ParamAddress = (uint)writer.Stream.Position;
 
-			foreach (Parameter param in Parameters)
+			foreach(Parameter param in Parameters)
 			{
 				param.Write(writer);
 			}
 
 			_PolyAddress = (uint)writer.Stream.Position;
 
-			foreach (Poly prim in Polys)
+			foreach(Poly prim in Polys)
 			{
 				prim.Write(writer, indexFlags);
 			}
@@ -123,7 +125,7 @@ namespace SonicRetro.SAModel.ModelData.GC
 		/// <param name="imagebase">The imagebase</param>
 		public void WriteProperties(EndianMemoryStream writer, uint imagebase)
 		{
-			if (!_PolyAddress.HasValue)
+			if(!_PolyAddress.HasValue)
 				throw new NullReferenceException("Data has not been written yet");
 
 			writer.WriteUInt32(_ParamAddress.Value + imagebase);

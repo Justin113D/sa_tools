@@ -1,11 +1,12 @@
-﻿using System;
-using System.Collections.Generic;
-using System.IO;
-using OpenTK;
+﻿using OpenTK;
 using OpenTK.Graphics.OpenGL4;
 using SonicRetro.SAModel.ModelData;
 using SonicRetro.SAModel.ModelData.Buffer;
 using SonicRetro.SAModel.ObjData;
+using System;
+using System.Collections.Generic;
+using System.IO;
+using static SonicRetro.SACommon.MathHelper;
 using Color = SonicRetro.SAModel.Structs.Color;
 using SAVector2 = SonicRetro.SAModel.Structs.Vector2;
 using SAVector3 = SonicRetro.SAModel.Structs.Vector3;
@@ -46,6 +47,8 @@ namespace SonicRetro.SAModel.Graphics.OpenGL
 		private static readonly float[] weights = new float[0xFFFF];
 		private static readonly Dictionary<BufferMesh, BufferMeshHandle> meshHandles = new Dictionary<BufferMesh, BufferMeshHandle>();
 
+		//private static Random rand;
+
 		public static void ClearWeights()
 		{
 			Array.Clear(weights, 0, weights.Length);
@@ -56,15 +59,15 @@ namespace SonicRetro.SAModel.Graphics.OpenGL
 			Matrix4 rotMtx;
 			if(rotateZYX)
 			{
-				rotMtx = Matrix4.CreateRotationZ(Structs.Helper.DegToRad(rotation.Z)) *
-						Matrix4.CreateRotationY(Structs.Helper.DegToRad(rotation.Y)) *
-						Matrix4.CreateRotationX(Structs.Helper.DegToRad(rotation.X));
+				rotMtx = Matrix4.CreateRotationZ(DegToRad(rotation.Z)) *
+						Matrix4.CreateRotationY(DegToRad(rotation.Y)) *
+						Matrix4.CreateRotationX(DegToRad(rotation.X));
 			}
 			else
 			{
-				rotMtx = Matrix4.CreateRotationX(Structs.Helper.DegToRad(rotation.X)) *
-						Matrix4.CreateRotationY(Structs.Helper.DegToRad(rotation.Y)) *
-						Matrix4.CreateRotationZ(Structs.Helper.DegToRad(rotation.Z));
+				rotMtx = Matrix4.CreateRotationX(DegToRad(rotation.X)) *
+						Matrix4.CreateRotationY(DegToRad(rotation.Y)) *
+						Matrix4.CreateRotationZ(DegToRad(rotation.Z));
 			}
 
 
@@ -92,6 +95,16 @@ namespace SonicRetro.SAModel.Graphics.OpenGL
 
 			foreach(BufferMesh mesh in atc.MeshData)
 			{
+				// Material testing
+				//if(mesh.Material?.Diffuse == Color.White)
+				//{
+				//	if(rand == null)
+				//		rand = new Random();
+				//	var col = mesh.Material.Diffuse;
+				//	col.RGBA = (uint)rand.Next(int.MinValue, int.MaxValue) | 0xFFu;
+				//	mesh.Material.Diffuse = col;
+				//}
+
 				if(mesh.Vertices != null)
 				{
 					if(worldMtx == null)

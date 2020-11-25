@@ -1,6 +1,7 @@
 ﻿using Reloaded.Memory.Streams.Writers;
 using System;
 using System.IO;
+using static SonicRetro.SACommon.ByteConverter;
 
 namespace SonicRetro.SAModel.ModelData.BASIC
 {
@@ -33,7 +34,7 @@ namespace SonicRetro.SAModel.ModelData.BASIC
 		/// <param name="writer">Output stream</param>
 		public virtual void Write(EndianMemoryStream writer)
 		{
-			foreach (ushort i in Indices)
+			foreach(ushort i in Indices)
 				writer.WriteUInt16(i);
 		}
 
@@ -43,7 +44,7 @@ namespace SonicRetro.SAModel.ModelData.BASIC
 		/// <param name="writer">The output stream</param>
 		public virtual void WriteNJA(TextWriter writer)
 		{
-			foreach (ushort i in Indices)
+			foreach(ushort i in Indices)
 			{
 				writer.Write(i);
 				writer.Write(", ");
@@ -59,7 +60,7 @@ namespace SonicRetro.SAModel.ModelData.BASIC
 		/// <returns></returns>
 		public static Poly Read(BASICPolyType type, byte[] source, ref uint address)
 		{
-			switch (type)
+			switch(type)
 			{
 				case BASICPolyType.Triangles:
 					return Triangle.Read(source, ref address);
@@ -110,9 +111,9 @@ namespace SonicRetro.SAModel.ModelData.BASIC
 		public static Triangle Read(byte[] source, ref uint address)
 		{
 			Triangle t = new Triangle();
-			t.Indices[0] = ByteConverter.ToUInt16(source, address);
-			t.Indices[1] = ByteConverter.ToUInt16(source, address + 2);
-			t.Indices[2] = ByteConverter.ToUInt16(source, address + 4);
+			t.Indices[0] = source.ToUInt16(address);
+			t.Indices[1] = source.ToUInt16(address + 2);
+			t.Indices[2] = source.ToUInt16(address + 4);
 			address += 6;
 			return t;
 		}
@@ -143,10 +144,10 @@ namespace SonicRetro.SAModel.ModelData.BASIC
 		public static Quad Read(byte[] source, ref uint address)
 		{
 			Quad t = new Quad();
-			t.Indices[0] = ByteConverter.ToUInt16(source, address);
-			t.Indices[1] = ByteConverter.ToUInt16(source, address + 2);
-			t.Indices[2] = ByteConverter.ToUInt16(source, address + 4);
-			t.Indices[3] = ByteConverter.ToUInt16(source, address + 6);
+			t.Indices[0] = source.ToUInt16(address);
+			t.Indices[1] = source.ToUInt16(address + 2);
+			t.Indices[2] = source.ToUInt16(address + 4);
+			t.Indices[3] = source.ToUInt16(address + 6);
 			address += 8;
 			return t;
 		}
@@ -197,13 +198,13 @@ namespace SonicRetro.SAModel.ModelData.BASIC
 		/// <returns></returns>
 		public static Strip Read(byte[] source, ref uint address)
 		{
-			ushort header = ByteConverter.ToUInt16(source, address);
+			ushort header = source.ToUInt16(address);
 			ushort[] indices = new ushort[header & 0x7FFF];
 			bool reversed = (header & 0x8000) != 0;
 			address += 2;
-			for (int i = 0; i < indices.Length; i++)
+			for(int i = 0; i < indices.Length; i++)
 			{
-				indices[i] = ByteConverter.ToUInt16(source, address);
+				indices[i] = source.ToUInt16(address);
 				address += 2;
 			}
 			return new Strip(indices, reversed);
@@ -211,7 +212,7 @@ namespace SonicRetro.SAModel.ModelData.BASIC
 
 		public override void Write(EndianMemoryStream writer)
 		{
-			writer.WriteUInt16((ushort)((Indices.Length & 0x7FFF )| (Reversed ? 0x8000 : 0)));
+			writer.WriteUInt16((ushort)((Indices.Length & 0x7FFF) | (Reversed ? 0x8000 : 0)));
 			base.Write(writer);
 		}
 

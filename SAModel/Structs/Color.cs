@@ -1,6 +1,7 @@
 ﻿using Reloaded.Memory.Streams.Writers;
 using System;
 using System.IO;
+using static SonicRetro.SACommon.ByteConverter;
 
 namespace SonicRetro.SAModel.Structs
 {
@@ -236,28 +237,28 @@ namespace SonicRetro.SAModel.Structs
 		public static Color Read(byte[] source, ref uint address, IOType type)
 		{
 			Color col = default;
-			switch (type)
+			switch(type)
 			{
 				case IOType.RGBA8:
-					col.RGBA = ByteConverter.ToUInt32(source, address);
+					col.RGBA = source.ToUInt32(address);
 					address += 4;
 					break;
 				case IOType.ARGB8_32:
-					col.ARGB = ByteConverter.ToUInt32(source, address);
+					col.ARGB = source.ToUInt32(address);
 					address += 4;
 					break;
 				case IOType.ARGB8_16:
-					ushort GB = ByteConverter.ToUInt16(source, address);
-					ushort AR = ByteConverter.ToUInt16(source, address + 2);
+					ushort GB = source.ToUInt16(address);
+					ushort AR = source.ToUInt16(address + 2);
 					col.ARGB = (uint)(GB | (AR << 16));
 					address += 4;
 					break;
 				case IOType.ARGB4:
-					col.ARGB4 = ByteConverter.ToUInt16(source, address);
+					col.ARGB4 = source.ToUInt16(address);
 					address += 2;
 					break;
 				case IOType.RGB565:
-					col.RGB565 = ByteConverter.ToUInt16(source, address);
+					col.RGB565 = source.ToUInt16(address);
 					address += 2;
 					break;
 				default:
@@ -268,7 +269,7 @@ namespace SonicRetro.SAModel.Structs
 
 		public void WriteNJA(TextWriter writer, IOType type)
 		{
-			switch (type)
+			switch(type)
 			{
 				case IOType.ARGB8_32:
 					writer.Write("( ");
@@ -288,7 +289,7 @@ namespace SonicRetro.SAModel.Structs
 
 		public void Write(EndianMemoryStream writer, IOType type)
 		{
-			switch (type)
+			switch(type)
 			{
 				case IOType.RGBA8:
 					writer.WriteUInt32(RGBA);
@@ -372,12 +373,5 @@ namespace SonicRetro.SAModel.Structs
 
 		public static bool operator ==(Color l, Color r) => l.Equals(r);
 		public static bool operator !=(Color l, Color r) => !l.Equals(r);
-
-
-		// tmp
-		public void Write(ByteWriter writer, IOType type)
-		{
-			throw new NotImplementedException();
-		}
 	}
 }

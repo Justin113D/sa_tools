@@ -4,6 +4,9 @@ using SonicRetro.SAModel.Structs;
 using System;
 using System.Collections.Generic;
 using System.IO;
+using static SonicRetro.SACommon.ByteConverter;
+using static SonicRetro.SACommon.Helper;
+using static SonicRetro.SACommon.StringExtensions;
 
 namespace SonicRetro.SAModel.ModelData.BASIC
 {
@@ -72,15 +75,16 @@ namespace SonicRetro.SAModel.ModelData.BASIC
 			Meshes = meshes;
 			Materials = materials;
 
-			if (positions.Length != normals.Length) throw new ArgumentException("Position and Normal count doesnt match!");
+			if(positions.Length != normals.Length)
+				throw new ArgumentException("Position and Normal count doesnt match!");
 
 			MeshBounds = Bounds.FromPoints(positions);
 
-			Name = "attach_" + Extensions.GenerateIdentifier();
-			MaterialName = "matlist_" + Extensions.GenerateIdentifier();
-			MeshName = "meshlist_" + Extensions.GenerateIdentifier();
-			PositionName = "vertex_" + Extensions.GenerateIdentifier();
-			NormalName = "normal_" + Extensions.GenerateIdentifier();
+			Name = "attach_" + GenerateIdentifier();
+			MaterialName = "matlist_" + GenerateIdentifier();
+			MeshName = "meshlist_" + GenerateIdentifier();
+			PositionName = "vertex_" + GenerateIdentifier();
+			NormalName = "normal_" + GenerateIdentifier();
 		}
 
 		public BasicAttach(BufferMesh[] meshData) : base(meshData)
@@ -100,76 +104,80 @@ namespace SonicRetro.SAModel.ModelData.BASIC
 		public static BasicAttach Read(byte[] source, uint address, uint imageBase, bool DX, Dictionary<uint, string> labels)
 		{
 			string name;
-			if (labels.ContainsKey(address))
+			if(labels.ContainsKey(address))
 				name = labels[address];
 			else
 				name = "attach_" + address.ToString("X8");
 
 			// creating the data sets
-			Vector3[] positions = new Vector3[ByteConverter.ToUInt32(source, address + 8)];
+			Vector3[] positions = new Vector3[source.ToUInt32(address + 8)];
 			Vector3[] normals = new Vector3[positions.Length];
-			Mesh[] meshes = new Mesh[ByteConverter.ToUInt16(source, address + 20)];
+			Mesh[] meshes = new Mesh[source.ToUInt16(address + 20)];
 
 			// reading positions
-			uint posAddr = ByteConverter.ToUInt32(source, address);
+			uint posAddr = source.ToUInt32(address);
 			string posName;
-			if (posAddr != 0)
+			if(posAddr != 0)
 			{
 				posAddr -= imageBase;
 				posName = labels.ContainsKey(posAddr) ? labels[posAddr] : "vertex_" + posAddr.ToString("X8");
-				for (int i = 0; i < positions.Length; i++)
+				for(int i = 0; i < positions.Length; i++)
 					positions[i] = Vector3.Read(source, ref posAddr, IOType.Float);
 			}
-			else posName = "vertex_" + Extensions.GenerateIdentifier();
+			else
+				posName = "vertex_" + GenerateIdentifier();
 
 			// reading normals
-			uint nrmAddr = ByteConverter.ToUInt32(source, address + 4);
+			uint nrmAddr = source.ToUInt32(address + 4);
 			string nrmName;
-			if (nrmAddr != 0)
+			if(nrmAddr != 0)
 			{
 				nrmAddr -= imageBase;
 				nrmName = labels.ContainsKey(nrmAddr) ? labels[nrmAddr] : "normal_" + nrmAddr.ToString("X8");
-				for (int i = 0; i < normals.Length; i++)
+				for(int i = 0; i < normals.Length; i++)
 					normals[i] = Vector3.Read(source, ref nrmAddr, IOType.Float);
 			}
 			else
 			{
-				nrmName = "normal_" + Extensions.GenerateIdentifier();
-				for (int i = 0; i < normals.Length; i++)
+				nrmName = "normal_" + GenerateIdentifier();
+				for(int i = 0; i < normals.Length; i++)
 					normals[i] = Vector3.UnitY;
 			}
 
 			// reading meshes
 			uint maxMat = 0;
-			uint meshAddr = ByteConverter.ToUInt32(source, address + 0xC);
+			uint meshAddr = source.ToUInt32(address + 0xC);
 			string meshName;
-			if (meshAddr != 0)
+			if(meshAddr != 0)
 			{
 				meshAddr -= imageBase;
 				meshName = labels.ContainsKey(meshAddr) ? labels[meshAddr] : "meshlist_" + meshAddr.ToString("X8");
 
-				for (int i = 0; i < meshes.Length; i++)
+				for(int i = 0; i < meshes.Length; i++)
 				{
 					meshes[i] = Mesh.Read(source, ref meshAddr, imageBase, labels);
-					if (DX) meshAddr += 4;
+					if(DX)
+						meshAddr += 4;
 					maxMat = Math.Max(maxMat, meshes[i].MaterialID);
 				}
 			}
-			else meshName = "meshlist_" + Extensions.GenerateIdentifier();
+			else
+				meshName = "meshlist_" + GenerateIdentifier();
 
 			// reading materials
 			// fixes case where model declares material array as shorter than it really is
-			Material[] materials = new Material[Math.Max(ByteConverter.ToUInt16(source, address + 22), maxMat + 1)];
-			uint matAddr = ByteConverter.ToUInt32(source, address + 16);
+			Material[] materials = new Material[Math.Max(source.ToUInt16(address + 22), maxMat + 1)];
+			uint matAddr = source.ToUInt32(address + 16);
 			string matName;
-			if (matAddr != 0)
+			if(matAddr != 0)
 			{
 				matAddr -= imageBase;
 				matName = labels.ContainsKey(matAddr) ? labels[matAddr] : "matlist_" + matAddr.ToString("X8");
-				for (int i = 0; i < materials.Length; i++)
+				for(int i = 0; i < materials.Length; i++)
 					materials[i] = Material.Read(source, ref matAddr);
 			}
-			else matName = "matlist_" + Extensions.GenerateIdentifier();
+			else
+				matName = "matlist_" + GenerateIdentifier();
 
 			address += 24;
 			Bounds bounds = Bounds.Read(source, ref address);
@@ -189,49 +197,53 @@ namespace SonicRetro.SAModel.ModelData.BASIC
 		{
 			// writing positions
 			uint posAddress;
-			if (labels.ContainsKey(PositionName)) posAddress = labels[PositionName];
+			if(labels.ContainsKey(PositionName))
+				posAddress = labels[PositionName];
 			else
 			{
 				posAddress = (uint)writer.Stream.Position + imageBase;
 				labels.Add(PositionName, posAddress);
-				foreach (Vector3 p in Positions)
+				foreach(Vector3 p in Positions)
 					p.Write(writer, IOType.Float);
 			}
 
 			// writing normals
 			uint nrmAddress;
-			if (labels.ContainsKey(NormalName)) nrmAddress = labels[NormalName];
+			if(labels.ContainsKey(NormalName))
+				nrmAddress = labels[NormalName];
 			else
 			{
 				nrmAddress = (uint)writer.Stream.Position + imageBase;
 				labels.Add(NormalName, nrmAddress);
-				foreach (Vector3 p in Normals)
+				foreach(Vector3 p in Normals)
 					p.Write(writer, IOType.Float);
 			}
 
 			// writing meshsets
 			uint meshAddress;
-			if (labels.ContainsKey(MeshName)) meshAddress = labels[MeshName];
+			if(labels.ContainsKey(MeshName))
+				meshAddress = labels[MeshName];
 			else
 			{
 				// writing meshset data
-				foreach (Mesh m in Meshes)
+				foreach(Mesh m in Meshes)
 					m.WriteData(writer, imageBase, labels);
 
 				meshAddress = (uint)writer.Stream.Position + imageBase;
 				labels.Add(MeshName, meshAddress);
-				foreach (Mesh m in Meshes)
+				foreach(Mesh m in Meshes)
 					m.WriteMeshset(writer, DX, labels);
 			}
 
 			// writing materials
 			uint materialAddress;
-			if (labels.ContainsKey(MaterialName)) materialAddress = labels[MaterialName];
+			if(labels.ContainsKey(MaterialName))
+				materialAddress = labels[MaterialName];
 			else
 			{
 				materialAddress = (uint)writer.Stream.Position + imageBase;
 				labels.Add(MaterialName, materialAddress);
-				foreach (Material m in Materials)
+				foreach(Material m in Materials)
 					m.Write(writer);
 			}
 
@@ -248,7 +260,8 @@ namespace SonicRetro.SAModel.ModelData.BASIC
 			writer.WriteUInt16((ushort)Meshes.Length);
 			writer.WriteUInt16((ushort)Materials.Length);
 			MeshBounds.Write(writer);
-			if (DX) writer.WriteUInt32(0);
+			if(DX)
+				writer.WriteUInt32(0);
 
 			return outAddress;
 		}
@@ -256,7 +269,7 @@ namespace SonicRetro.SAModel.ModelData.BASIC
 		public override void WriteNJA(TextWriter writer, bool DX, List<string> labels, string[] textures)
 		{
 			// write position data
-			if (!labels.Contains(PositionName))
+			if(!labels.Contains(PositionName))
 			{
 				writer.Write("POINT ");
 				writer.Write(PositionName);
@@ -265,7 +278,7 @@ namespace SonicRetro.SAModel.ModelData.BASIC
 				writer.WriteLine("START");
 				writer.WriteLine();
 
-				foreach (Vector3 p in Positions)
+				foreach(Vector3 p in Positions)
 				{
 					writer.Write("\tVERT ");
 					p.WriteNJA(writer, IOType.Float);
@@ -279,7 +292,7 @@ namespace SonicRetro.SAModel.ModelData.BASIC
 			}
 
 			// write normal data
-			if (!labels.Contains(NormalName))
+			if(!labels.Contains(NormalName))
 			{
 				writer.Write("NORMAL ");
 				writer.Write(NormalName);
@@ -288,7 +301,7 @@ namespace SonicRetro.SAModel.ModelData.BASIC
 				writer.WriteLine("START");
 				writer.WriteLine();
 
-				foreach (Vector3 p in Normals)
+				foreach(Vector3 p in Normals)
 				{
 					writer.Write("\tNORM ");
 					p.WriteNJA(writer, IOType.Float);
@@ -302,11 +315,11 @@ namespace SonicRetro.SAModel.ModelData.BASIC
 			}
 
 			// writing meshset data
-			foreach (Mesh m in Meshes)
+			foreach(Mesh m in Meshes)
 				m.WriteDataNJA(writer, labels);
 
 			// write meshsets
-			if (!labels.Contains(MeshName))
+			if(!labels.Contains(MeshName))
 			{
 				writer.Write(DX ? "MESHSET " : "MESHSET_SADX ");
 				writer.Write(MeshName);
@@ -315,7 +328,7 @@ namespace SonicRetro.SAModel.ModelData.BASIC
 				writer.WriteLine("START");
 				writer.WriteLine();
 
-				foreach (Mesh m in Meshes)
+				foreach(Mesh m in Meshes)
 				{
 					m.WriteMeshsetNJA(writer, DX);
 					writer.WriteLine();
@@ -328,7 +341,7 @@ namespace SonicRetro.SAModel.ModelData.BASIC
 			}
 
 			// write materials
-			if (!labels.Contains(MaterialName))
+			if(!labels.Contains(MaterialName))
 			{
 				writer.Write("MATERIAL ");
 				writer.Write(MaterialName);
@@ -337,7 +350,7 @@ namespace SonicRetro.SAModel.ModelData.BASIC
 				writer.WriteLine("START");
 				writer.WriteLine();
 
-				foreach (Material m in Materials)
+				foreach(Material m in Materials)
 				{
 					m.WriteNJA(writer, textures);
 					writer.WriteLine();
@@ -395,19 +408,19 @@ namespace SonicRetro.SAModel.ModelData.BASIC
 			List<BufferMesh> meshes = new List<BufferMesh>();
 			List<BufferVertex> vertices = new List<BufferVertex>();
 
-			for (ushort i = 0; i < Positions.Length; i++)
+			for(ushort i = 0; i < Positions.Length; i++)
 				vertices.Add(new BufferVertex(Positions[i], Normals[i], i));
 
 			BufferVertex[] verts = vertices.ToArray();
 
 			bool first = true;
-			foreach (Mesh mesh in Meshes)
+			foreach(Mesh mesh in Meshes)
 			{
 
 				// creating the material
 				Material mat = Materials != null && mesh.MaterialID < Materials.Length ? Materials[mesh.MaterialID] : null;
 				BufferMaterial bMat;
-				if (mat == null)
+				if(mat == null)
 				{
 					bMat = new BufferMaterial()
 					{
@@ -448,10 +461,10 @@ namespace SonicRetro.SAModel.ModelData.BASIC
 				List<uint> triangles = new List<uint>();
 				int polyIndex = 0;
 
-				foreach (Poly p in mesh.Polys)
+				foreach(Poly p in mesh.Polys)
 				{
 					uint l = (uint)corners.Count;
-					switch (mesh.PolyType)
+					switch(mesh.PolyType)
 					{
 						case BASICPolyType.Triangles:
 							triangles.AddRange(new uint[] { l, l + 1, l + 2 });
@@ -466,8 +479,10 @@ namespace SonicRetro.SAModel.ModelData.BASIC
 							for(uint i = 2; i < s.Indices.Length; i++)
 							{
 								uint li = l + i;
-								if (!rev) triangles.AddRange(new uint[] { li - 2, li - 1, li });
-								else triangles.AddRange(new uint[] { li - 1, li - 2, li });
+								if(!rev)
+									triangles.AddRange(new uint[] { li - 2, li - 1, li });
+								else
+									triangles.AddRange(new uint[] { li - 1, li - 2, li });
 								rev = !rev;
 							}
 							break;
@@ -475,7 +490,7 @@ namespace SonicRetro.SAModel.ModelData.BASIC
 							break;
 					}
 
-					for (int i = 0; i < p.Indices.Length; i++)
+					for(int i = 0; i < p.Indices.Length; i++)
 					{
 						corners.Add(new BufferCorner(p.Indices[i], mesh.Colors?[polyIndex] ?? Color.White, mesh.UVs?[polyIndex] ?? Vector2.Zero));
 						polyIndex++;
@@ -487,13 +502,14 @@ namespace SonicRetro.SAModel.ModelData.BASIC
 					meshes.Add(new BufferMesh(verts, false, corners.ToArray(), triangles.ToArray(), bMat));
 					first = false;
 				}
-				else meshes.Add(new BufferMesh(corners.ToArray(), triangles.ToArray(), bMat));
+				else
+					meshes.Add(new BufferMesh(corners.ToArray(), triangles.ToArray(), bMat));
 			}
 
 			if(optimize)
 			{
 				meshes[0] = meshes[0].Optimize(verts, true);
-				for (int i = 1; i < meshes.Count; i++)
+				for(int i = 1; i < meshes.Count; i++)
 				{
 					meshes[i] = meshes[i].Optimize(verts, false);
 				}

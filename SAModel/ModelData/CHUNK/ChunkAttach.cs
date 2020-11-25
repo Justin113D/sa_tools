@@ -5,6 +5,9 @@ using System;
 using System.Collections.Generic;
 using System.IO;
 using System.Linq;
+using static SonicRetro.SACommon.ByteConverter;
+using static SonicRetro.SACommon.Helper;
+using static SonicRetro.SACommon.StringExtensions;
 
 namespace SonicRetro.SAModel.ModelData.CHUNK
 {
@@ -33,7 +36,7 @@ namespace SonicRetro.SAModel.ModelData.CHUNK
 		/// <summary>
 		/// C struct name for the polygon chunk array
 		/// </summary>
-		public string PolyName { get; set;  }
+		public string PolyName { get; set; }
 
 		public override AttachFormat Format => AttachFormat.CHUNK;
 
@@ -47,15 +50,15 @@ namespace SonicRetro.SAModel.ModelData.CHUNK
 			PolyChunks = polyChunks;
 			List<Vector3> pos = new List<Vector3>();
 			if(VertexChunks != null)
-				foreach (VertexChunk cnk in VertexChunks)
-					foreach (ChunkVertex vtx in cnk.Vertices)
+				foreach(VertexChunk cnk in VertexChunks)
+					foreach(ChunkVertex vtx in cnk.Vertices)
 						pos.Add(vtx.Position);
 			MeshBounds = Bounds.FromPoints(pos.ToArray());
 			UpdateWeight();
 
-			Name = "attach_" + Extensions.GenerateIdentifier();
-			VertexName = "vertex_" + Extensions.GenerateIdentifier();
-			PolyName = "poly_" + Extensions.GenerateIdentifier();
+			Name = "attach_" + GenerateIdentifier();
+			VertexName = "vertex_" + GenerateIdentifier();
+			PolyName = "poly_" + GenerateIdentifier();
 		}
 
 		public ChunkAttach(BufferMesh[] meshdata) : base(meshdata)
@@ -68,16 +71,16 @@ namespace SonicRetro.SAModel.ModelData.CHUNK
 		/// </summary>
 		public void UpdateWeight()
 		{
-			if (PolyChunks == null || !PolyChunks.Any(a => a is PolyChunkStrip))
-			{ 
+			if(PolyChunks == null || !PolyChunks.Any(a => a is PolyChunkStrip))
+			{
 				hasWeight = VertexChunks != null && VertexChunks.Any(a => a.HasWeight);
 				return;
 			}
 			List<int> ids = new List<int>();
-			if (VertexChunks != null)
-				foreach (var vc in VertexChunks)
+			if(VertexChunks != null)
+				foreach(var vc in VertexChunks)
 				{
-					if (vc.HasWeight)
+					if(vc.HasWeight)
 					{
 						hasWeight = true;
 						return;
@@ -99,8 +102,8 @@ namespace SonicRetro.SAModel.ModelData.CHUNK
 		{
 			string name = labels.ContainsKey(address) ? labels[address] : "attach_" + address.ToString("X8");
 
-			uint vertexAddress = ByteConverter.ToUInt32(source, address);
-			string vertexName = "vertex_" + Extensions.GenerateIdentifier();
+			uint vertexAddress = source.ToUInt32(address);
+			string vertexName = "vertex_" + GenerateIdentifier();
 			VertexChunk[] vertexChunks = null;
 			if(vertexAddress != 0)
 			{
@@ -117,8 +120,8 @@ namespace SonicRetro.SAModel.ModelData.CHUNK
 				vertexChunks = chunks.ToArray();
 			}
 
-			uint polyAddress = ByteConverter.ToUInt32(source, address + 4);
-			string polyName = "poly_" + Extensions.GenerateIdentifier();
+			uint polyAddress = source.ToUInt32(address + 4);
+			string polyName = "poly_" + GenerateIdentifier();
 			PolyChunk[] polyChunks = null;
 			if(polyAddress != 0)
 			{
@@ -127,7 +130,7 @@ namespace SonicRetro.SAModel.ModelData.CHUNK
 
 				List<PolyChunk> chunks = new List<PolyChunk>();
 				PolyChunk cnk = PolyChunk.Read(source, ref polyAddress);
-				while (cnk != null && cnk.Type != ChunkType.End)
+				while(cnk != null && cnk.Type != ChunkType.End)
 				{
 					chunks.Add(cnk);
 					cnk = PolyChunk.Read(source, ref polyAddress);
@@ -151,11 +154,12 @@ namespace SonicRetro.SAModel.ModelData.CHUNK
 			uint vertexAddress = 0;
 			if(VertexChunks != null && VertexChunks.Length > 0)
 			{
-				if (labels.ContainsKey(VertexName)) vertexAddress = labels[VertexName];
+				if(labels.ContainsKey(VertexName))
+					vertexAddress = labels[VertexName];
 				else
 				{
 					vertexAddress = (uint)writer.Stream.Position + imageBase;
-					foreach (VertexChunk cnk in VertexChunks)
+					foreach(VertexChunk cnk in VertexChunks)
 					{
 						cnk.Write(writer);
 					}
@@ -168,7 +172,8 @@ namespace SonicRetro.SAModel.ModelData.CHUNK
 			uint polyAddress = 0;
 			if(PolyChunks != null && PolyChunks.Length > 0)
 			{
-				if(labels.ContainsKey(PolyName)) polyAddress = labels[PolyName];
+				if(labels.ContainsKey(PolyName))
+					polyAddress = labels[PolyName];
 				else
 				{
 					polyAddress = (uint)writer.Stream.Position + imageBase;
@@ -203,9 +208,9 @@ namespace SonicRetro.SAModel.ModelData.CHUNK
 			BufferVertex[] vertices = null;
 			bool continueWeight = false;
 
-			if (VertexChunks != null)
+			if(VertexChunks != null)
 			{
-				for (int i = 0; i < VertexChunks.Length; i++)
+				for(int i = 0; i < VertexChunks.Length; i++)
 				{
 					VertexChunk cnk = VertexChunks[i];
 
@@ -220,7 +225,7 @@ namespace SonicRetro.SAModel.ModelData.CHUNK
 					}
 					else
 					{
-						for (int j = 0; j < cnk.Vertices.Length; j++)
+						for(int j = 0; j < cnk.Vertices.Length; j++)
 						{
 							ChunkVertex vtx = cnk.Vertices[j];
 							vertexList.Add(new BufferVertex(vtx.Position, vtx.Normal, (ushort)(vtx.Index + cnk.IndexOffset), vtx.Weight));
@@ -229,7 +234,7 @@ namespace SonicRetro.SAModel.ModelData.CHUNK
 					vertices = vertexList.ToArray();
 					continueWeight = cnk.WeightStatus != WeightStatus.Start;
 
-					if (i < VertexChunks.Length - 1)
+					if(i < VertexChunks.Length - 1)
 					{
 						meshes.Add(new BufferMesh(vertices, continueWeight));
 					}
@@ -244,7 +249,7 @@ namespace SonicRetro.SAModel.ModelData.CHUNK
 				int cacheID = -1;
 				foreach(PolyChunk cnk in PolyChunks)
 				{
-					switch (cnk.Type)
+					switch(cnk.Type)
 					{
 						case ChunkType.Bits_CachePolygonList:
 							PolyChunkCachePolygonList cacheListCnk = (PolyChunkCachePolygonList)cnk;
@@ -260,15 +265,17 @@ namespace SonicRetro.SAModel.ModelData.CHUNK
 							active.AddRange(PolyChunkCache[drawListCnk.List]);
 							break;
 						default:
-							if (cacheID > -1) PolyChunkCache[cacheID].Add(cnk);
-							else active.Add(cnk);
+							if(cacheID > -1)
+								PolyChunkCache[cacheID].Add(cnk);
+							else
+								active.Add(cnk);
 							break;
 					}
 				}
 			}
 
 
-			if (active.Count > 0)
+			if(active.Count > 0)
 			{
 				BufferMaterial material = new BufferMaterial()
 				{
@@ -276,9 +283,9 @@ namespace SonicRetro.SAModel.ModelData.CHUNK
 					Ambient = Color.White,
 					MaterialFlags = MaterialFlags.useTexture
 				};
-				foreach (PolyChunk cnk in active)
+				foreach(PolyChunk cnk in active)
 				{
-					switch (cnk.Type)
+					switch(cnk.Type)
 					{
 						case ChunkType.Bits_BlendAlpha:
 							PolyChunkBlendAlpha blendCnk = (PolyChunkBlendAlpha)cnk;
@@ -322,9 +329,11 @@ namespace SonicRetro.SAModel.ModelData.CHUNK
 							PolyChunkMaterial materialCnk = (PolyChunkMaterial)cnk;
 							material.SourceBlendMode = materialCnk.SourceAlpha;
 							material.DestinationBlendmode = materialCnk.DestinationAlpha;
-							if (materialCnk.Diffuse.HasValue) material.Diffuse = materialCnk.Diffuse.Value;
-							if (materialCnk.Ambient.HasValue) material.Ambient = materialCnk.Ambient.Value;
-							if (materialCnk.Specular.HasValue)
+							if(materialCnk.Diffuse.HasValue)
+								material.Diffuse = materialCnk.Diffuse.Value;
+							if(materialCnk.Ambient.HasValue)
+								material.Ambient = materialCnk.Ambient.Value;
+							if(materialCnk.Specular.HasValue)
 							{
 								material.Specular = materialCnk.Specular.Value;
 								material.SpecularExponent = materialCnk.SpecularExponent;
@@ -360,15 +369,17 @@ namespace SonicRetro.SAModel.ModelData.CHUNK
 								uint l = (uint)corners.Count;
 
 								bool rev = s.Reversed;
-								for (uint i = 2; i < s.Corners.Length; i++)
+								for(uint i = 2; i < s.Corners.Length; i++)
 								{
 									uint li = l + i;
-									if (!rev) triangles.AddRange(new uint[] { li - 2, li - 1, li });
-									else triangles.AddRange(new uint[] { li - 1, li - 2, li });
+									if(!rev)
+										triangles.AddRange(new uint[] { li - 2, li - 1, li });
+									else
+										triangles.AddRange(new uint[] { li - 1, li - 2, li });
 									rev = !rev;
 								}
 
-								foreach (var c in s.Corners)
+								foreach(var c in s.Corners)
 									corners.Add(new BufferCorner(c.index, c.color, c.uv));
 							}
 
@@ -377,12 +388,13 @@ namespace SonicRetro.SAModel.ModelData.CHUNK
 								meshes.Add(new BufferMesh(vertices, continueWeight, corners.ToArray(), triangles.ToArray(), material.Clone()));
 								vertices = null;
 							}
-							else meshes.Add(new BufferMesh(corners.ToArray(), triangles.ToArray(), material.Clone()));
+							else
+								meshes.Add(new BufferMesh(corners.ToArray(), triangles.ToArray(), material.Clone()));
 							break;
 					}
 				}
 			}
-			else if (vertices != null)
+			else if(vertices != null)
 			{
 				meshes.Add(new BufferMesh(vertices, continueWeight));
 			}

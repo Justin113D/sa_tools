@@ -1,10 +1,12 @@
-﻿using System;
+﻿using Reloaded.Memory.Streams.Writers;
+using SonicRetro.SAModel.ModelData.Buffer;
+using SonicRetro.SAModel.Structs;
+using System;
 using System.Collections.Generic;
 using System.IO;
 using System.Linq;
-using Reloaded.Memory.Streams.Writers;
-using SonicRetro.SAModel.ModelData.Buffer;
-using SonicRetro.SAModel.Structs;
+using static SonicRetro.SACommon.Helper;
+using static SonicRetro.SACommon.StringExtensions;
 
 namespace SonicRetro.SAModel.ModelData
 {
@@ -63,7 +65,7 @@ namespace SonicRetro.SAModel.ModelData
 		public Attach(BufferMesh[] meshdata)
 		{
 			MeshData = meshdata;
-			Name = "attach_" + Extensions.GenerateIdentifier();
+			Name = "attach_" + GenerateIdentifier();
 		}
 
 		/// <summary>
@@ -87,7 +89,7 @@ namespace SonicRetro.SAModel.ModelData
 		/// <returns></returns>
 		public static Attach Read(AttachFormat format, byte[] source, uint address, uint imageBase, bool DX, Dictionary<uint, string> labels)
 		{
-			switch (format)
+			switch(format)
 			{
 				case AttachFormat.BASIC:
 					return BASIC.BasicAttach.Read(source, address, imageBase, DX, labels);

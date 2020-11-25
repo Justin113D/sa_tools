@@ -1,9 +1,9 @@
-﻿using System.Collections.Generic;
+﻿using SA_Tools;
+using System.Collections.Generic;
 using System.ComponentModel;
 using System.Text;
-using SA_Tools;
 
-namespace SA_Tools.SplitDLL
+namespace SASplit.SplitDLL
 {
 	public class IniData
 	{
@@ -225,7 +225,7 @@ namespace SA_Tools.SplitDLL
 		{
 			string[] split = data.Split(',');
 			Export = split[0];
-			if (split.Length > 1)
+			if(split.Length > 1)
 				Index = int.Parse(split[1]);
 		}
 
@@ -237,7 +237,7 @@ namespace SA_Tools.SplitDLL
 
 		public override string ToString()
 		{
-			if (Index.HasValue)
+			if(Index.HasValue)
 				return $"{Export},{Index}";
 			else
 				return Export;
@@ -254,9 +254,9 @@ namespace SA_Tools.SplitDLL
 		public override string ToString()
 		{
 			StringBuilder sb = new StringBuilder(Export);
-			if (Index.HasValue)
+			if(Index.HasValue)
 				sb.AppendFormat("[{0}]", Index.Value);
-			if (!string.IsNullOrEmpty(Field))
+			if(!string.IsNullOrEmpty(Field))
 				sb.AppendFormat("->{0}", Field);
 			return sb.ToString();
 		}

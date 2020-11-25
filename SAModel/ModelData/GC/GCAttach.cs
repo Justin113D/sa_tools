@@ -1,11 +1,14 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using SonicRetro.SAModel.ModelData.GC;
+﻿using Reloaded.Memory.Streams.Writers;
 using SonicRetro.SAModel.ModelData.Buffer;
-using System.IO;
+using SonicRetro.SAModel.ModelData.GC;
 using SonicRetro.SAModel.Structs;
-using Reloaded.Memory.Streams.Writers;
+using System;
+using System.Collections.Generic;
+using System.IO;
+using System.Linq;
+using static SonicRetro.SACommon.ByteConverter;
+using static SonicRetro.SACommon.Helper;
+using static SonicRetro.SACommon.StringExtensions;
 
 namespace SonicRetro.SAModel.ModelData.GC
 {
@@ -49,7 +52,7 @@ namespace SonicRetro.SAModel.ModelData.GC
 
 			MeshBounds = Bounds.FromPoints(VertexData.FirstOrDefault(x => x.Attribute == VertexAttribute.Position).Data.Cast<Vector3>().ToArray());
 
-			Name = "attach_" + Extensions.GenerateIdentifier();
+			Name = "attach_" + GenerateIdentifier();
 		}
 
 		/// <summary>
@@ -73,27 +76,27 @@ namespace SonicRetro.SAModel.ModelData.GC
 		public static GCAttach Read(byte[] source, uint address, uint imageBase, Dictionary<uint, string> labels)
 		{
 			string name;
-			if (labels.ContainsKey(address))
+			if(labels.ContainsKey(address))
 				name = labels[address];
 			else
 				name = "attach_" + address.ToString("X8");
 
 			// The struct is 36/0x24 bytes long
 
-			uint vertexAddress = ByteConverter.ToUInt32(source, address) - imageBase;
+			uint vertexAddress = source.ToUInt32(address) - imageBase;
 			//uint gap = ByteConverter.ToUInt32(file, address + 4);
-			uint opaqueAddress = ByteConverter.ToUInt32(source, address + 8) - imageBase;
-			uint translucentAddress = ByteConverter.ToUInt32(source, address + 12) - imageBase;
+			uint opaqueAddress = source.ToUInt32(address + 8) - imageBase;
+			uint translucentAddress = source.ToUInt32(address + 12) - imageBase;
 
-			int opaqueCount = ByteConverter.ToInt16(source, address + 16);
-			int translucentCount = ByteConverter.ToInt16(source, address + 18);
+			int opaqueCount = source.ToInt16(address + 16);
+			int translucentCount = source.ToInt16(address + 18);
 			address += 20;
 			Bounds bounds = Bounds.Read(source, ref address);
 
 			// reading vertex data
 			List<VertexSet> vertexData = new List<VertexSet>();
 			VertexSet vertexSet = VertexSet.Read(source, vertexAddress, imageBase);
-			while (vertexSet.Attribute != VertexAttribute.Null)
+			while(vertexSet.Attribute != VertexAttribute.Null)
 			{
 				vertexData.Add(vertexSet);
 				vertexAddress += 16;
@@ -103,7 +106,7 @@ namespace SonicRetro.SAModel.ModelData.GC
 			IndexAttributeFlags indexFlags = IndexAttributeFlags.HasPosition;
 
 			List<Mesh> opaqueMeshes = new List<Mesh>();
-			for (int i = 0; i < opaqueCount; i++)
+			for(int i = 0; i < opaqueCount; i++)
 			{
 				Mesh mesh = Mesh.Read(source, opaqueAddress, imageBase, ref indexFlags);
 				opaqueMeshes.Add(mesh);
@@ -113,7 +116,7 @@ namespace SonicRetro.SAModel.ModelData.GC
 			indexFlags = IndexAttributeFlags.HasPosition;
 
 			List<Mesh> translucentMeshes = new List<Mesh>();
-			for (int i = 0; i < translucentCount; i++)
+			for(int i = 0; i < translucentCount; i++)
 			{
 				Mesh mesh = Mesh.Read(source, translucentAddress, imageBase, ref indexFlags);
 				translucentMeshes.Add(mesh);
@@ -121,7 +124,7 @@ namespace SonicRetro.SAModel.ModelData.GC
 			}
 
 			return new GCAttach(vertexData.ToArray(), opaqueMeshes.ToArray(), translucentMeshes.ToArray())
-			{ 
+			{
 				Name = name,
 				MeshBounds = bounds
 			};
@@ -135,7 +138,7 @@ namespace SonicRetro.SAModel.ModelData.GC
 		public override uint Write(EndianMemoryStream writer, uint imageBase, bool DX, Dictionary<string, uint> labels)
 		{
 			// writing vertex data
-			foreach (VertexSet vtx in VertexData)
+			foreach(VertexSet vtx in VertexData)
 			{
 				vtx.WriteData(writer);
 			}
@@ -143,7 +146,7 @@ namespace SonicRetro.SAModel.ModelData.GC
 			uint vtxAddr = (uint)writer.Stream.Position + imageBase;
 
 			// writing vertex attributes
-			foreach (VertexSet vtx in VertexData)
+			foreach(VertexSet vtx in VertexData)
 			{
 				vtx.WriteAttribute(writer, imageBase);
 			}
@@ -151,31 +154,33 @@ namespace SonicRetro.SAModel.ModelData.GC
 			// empty vtx attribute
 			byte[] nullVtx = new byte[16];
 			nullVtx[0] = 0xFF;
-			writer.Write(nullVtx); 
+			writer.Write(nullVtx);
 
 			// writing geometry data
 			IndexAttributeFlags indexFlags = IndexAttributeFlags.HasPosition;
-			foreach (Mesh m in OpaqueMeshes)
+			foreach(Mesh m in OpaqueMeshes)
 			{
 				IndexAttributeFlags? t = m.IndexFlags;
-				if (t.HasValue) indexFlags = t.Value;
+				if(t.HasValue)
+					indexFlags = t.Value;
 				m.WriteData(writer, indexFlags);
 			}
-			foreach (Mesh m in TranslucentMeshes)
+			foreach(Mesh m in TranslucentMeshes)
 			{
 				IndexAttributeFlags? t = m.IndexFlags;
-				if (t.HasValue) indexFlags = t.Value;
+				if(t.HasValue)
+					indexFlags = t.Value;
 				m.WriteData(writer, indexFlags);
 			}
 
 			// writing geometry properties
 			uint opaqueAddress = (uint)writer.Stream.Position + imageBase;
-			foreach (Mesh m in OpaqueMeshes)
+			foreach(Mesh m in OpaqueMeshes)
 			{
 				m.WriteProperties(writer, imageBase);
 			}
 			uint translucentAddress = (uint)writer.Stream.Position + imageBase;
-			foreach (Mesh m in TranslucentMeshes)
+			foreach(Mesh m in TranslucentMeshes)
 			{
 				m.WriteProperties(writer, imageBase);
 			}
@@ -213,9 +218,9 @@ namespace SonicRetro.SAModel.ModelData.GC
 			BufferMesh ProcessMesh(Mesh m)
 			{
 				// setting the material properties according to the parameters
-				foreach (Parameter param in m.Parameters)
+				foreach(Parameter param in m.Parameters)
 				{
-					switch (param.Type)
+					switch(param.Type)
 					{
 						case ParameterType.BlendAlpha:
 							BlendAlphaParameter blend = param as BlendAlphaParameter;
@@ -263,16 +268,16 @@ namespace SonicRetro.SAModel.ModelData.GC
 
 
 					// converting indices to triangles
-					if (p.Type == PolyType.Triangles)
+					if(p.Type == PolyType.Triangles)
 						trianglelist.AddRange(indices);
-					else if (p.Type == PolyType.TriangleStrip)
+					else if(p.Type == PolyType.TriangleStrip)
 					{
 						bool rev = true;
 						uint[] newIndices = new uint[(indices.Length - 2) * 3];
-						for (int i = 0; i < indices.Length - 2; i++)
+						for(int i = 0; i < indices.Length - 2; i++)
 						{
 							int index = i * 3;
-							if (!rev)
+							if(!rev)
 							{
 								newIndices[index] = indices[i];
 								newIndices[index + 1] = indices[i + 1];
@@ -287,19 +292,20 @@ namespace SonicRetro.SAModel.ModelData.GC
 						}
 						trianglelist.AddRange(newIndices);
 					}
-					else throw new Exception($"Primitive type {p.Type} not a valid triangle format");
+					else
+						throw new Exception($"Primitive type {p.Type} not a valid triangle format");
 				}
 
 				return new BufferMesh(vertices.ToArray(), false, corners.ToArray(), trianglelist.ToArray(), (BufferMaterial)material.Clone());
 			}
 
 			material.UseAlpha = false;
-			foreach (Mesh m in OpaqueMeshes)
+			foreach(Mesh m in OpaqueMeshes)
 				meshes.Add(ProcessMesh(m));
 
 			material.UseAlpha = true;
 			material.Culling = true;
-			foreach (Mesh m in TranslucentMeshes)
+			foreach(Mesh m in TranslucentMeshes)
 				meshes.Add(ProcessMesh(m));
 
 			if(optimize)
@@ -313,16 +319,17 @@ namespace SonicRetro.SAModel.ModelData.GC
 				{
 					ushort[] vIDs = new ushort[m.Vertices.Length];
 
-					for (ushort i = 0; i < vIDs.Length; i++)
+					for(ushort i = 0; i < vIDs.Length; i++)
 					{
 						BufferVertex vtx = new BufferVertex(m.Vertices[i].position, m.Vertices[i].normal, (ushort)vertices.Count);
 						int index = vertices.FindIndex(x => x.EqualPosNrm(vtx));
-						if (index == -1)
+						if(index == -1)
 						{
 							vIDs[i] = vtx.index;
 							vertices.Add(vtx);
 						}
-						else vIDs[i] = (ushort)index;
+						else
+							vIDs[i] = (ushort)index;
 					}
 
 					for(int i = 0; i < m.Corners.Length; i++)
@@ -337,13 +344,14 @@ namespace SonicRetro.SAModel.ModelData.GC
 				var firstMesh = MeshData[0];
 				MeshData[0] = new BufferMesh(vertices.ToArray(), false, firstMesh.Corners, firstMesh.TriangleList, firstMesh.Material);
 			}
-			else MeshData = meshes.ToArray();
+			else
+				MeshData = meshes.ToArray();
 		}
 
 		public override Attach Clone() => new GCAttach(VertexData.ContentClone(), OpaqueMeshes.ContentClone(), TranslucentMeshes.ContentClone())
 		{
 			Name = Name,
-			 MeshBounds = MeshBounds
+			MeshBounds = MeshBounds
 		};
 
 		public override string ToString() => $"{Name} - GC: {VertexData.Length} - {OpaqueMeshes.Length} - {TranslucentMeshes.Length}";

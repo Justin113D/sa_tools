@@ -50,13 +50,6 @@
     </Reference>
   </ItemGroup>
   <ItemGroup>
-    <Compile Include="Animation.cs" />
-    <Compile Include="BasicAttach.cs" />
-    <Compile Include="Attach.cs" />
-    <Compile Include="BoundingSphere.cs" />
-    <Compile Include="POF0Helper.cs" />
-    <Compile Include="COL.cs" />
-    <Compile Include="Extensions.cs" />
     <Compile Include="ModelData\Attach.cs" />
     <Compile Include="ModelData\BASIC\BasicAttach.cs" />
     <Compile Include="ModelData\BASIC\Enums.cs" />
@@ -71,26 +64,12 @@
     <Compile Include="ModelData\CHUNK\PolyChunk.cs" />
     <Compile Include="ModelData\CHUNK\VertexChunk.cs" />
     <Compile Include="ModelData\Enums.cs" />
-    <Compile Include="GC\GCAttach.cs" />
-    <Compile Include="GC\GCEnums.cs" />
-    <Compile Include="GC\GCMesh.cs" />
-    <Compile Include="GC\Parameter.cs" />
-    <Compile Include="GC\GCPrimitive.cs" />
-    <Compile Include="GC\GCVertexSet.cs" />
-    <Compile Include="GeoAnimData.cs" />
-    <Compile Include="LandTable.cs" />
     <Compile Include="ModelData\GC\Enums.cs" />
     <Compile Include="ModelData\GC\GCAttach.cs" />
     <Compile Include="ModelData\GC\Mesh.cs" />
     <Compile Include="ModelData\GC\Parameter.cs" />
     <Compile Include="ModelData\GC\Poly.cs" />
     <Compile Include="ModelData\GC\VertexSet.cs" />
-    <Compile Include="NJS_MATERIAL.cs" />
-    <Compile Include="MathHelper.cs" />
-    <Compile Include="NJS_MESHSET.cs" />
-    <Compile Include="Enums.cs" />
-    <Compile Include="ModelFile.cs" />
-    <Compile Include="NJS_OBJECT.cs" />
     <Compile Include="ObjData\Animation\Action.cs" />
     <Compile Include="ObjData\Animation\LandEntryMotion.cs" />
     <Compile Include="ObjData\Animation\Keyframes.cs" />
@@ -101,23 +80,19 @@
     <Compile Include="ObjData\MetaData.cs" />
     <Compile Include="ObjData\ModelFile.cs" />
     <Compile Include="ObjData\NJObject.cs" />
-    <Compile Include="Poly.cs" />
-    <Compile Include="PolyChunk.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
-    <Compile Include="Rotation.cs" />
-    <Compile Include="ChunkAttach.cs" />
     <Compile Include="Structs\Bounds.cs" />
-    <Compile Include="Structs\ByteConverter.cs" />
     <Compile Include="Structs\Color.cs" />
-    <Compile Include="Structs\Helper.cs" />
+    <Compile Include="Structs\DataStruct.cs" />
     <Compile Include="Structs\Strippifier.cs" />
     <Compile Include="Structs\Vector2.cs" />
     <Compile Include="Structs\Vector3.cs" />
-    <Compile Include="UV.cs" />
-    <Compile Include="VColor.cs" />
-    <Compile Include="Vertex.cs" />
-    <Compile Include="VertexChunk.cs" />
-    <Compile Include="VertexData.cs" />
+  </ItemGroup>
+  <ItemGroup>
+    <ProjectReference Include="..\SACommon\SACommon.csproj">
+      <Project>{09f84e28-a7c7-46b1-9b04-97e82799ee1f}</Project>
+      <Name>SACommon</Name>
+    </ProjectReference>
   </ItemGroup>
   <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
   <!-- To modify your build process, add your task inside one of the targets below and uncomment it. 

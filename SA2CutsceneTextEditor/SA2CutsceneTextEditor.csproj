@@ -85,9 +85,9 @@
     </Compile>
   </ItemGroup>
   <ItemGroup>
-    <ProjectReference Include="..\SA Tools\SA Tools.csproj">
+    <ProjectReference Include="..\SA Tools\SASplit.csproj">
       <Project>{50847bdb-699d-4a2e-aaf7-1ea58e1ec48e}</Project>
-      <Name>SA Tools</Name>
+      <Name>SASplit</Name>
     </ProjectReference>
     <ProjectReference Include="..\SAModel\SAModel.csproj">
       <Project>{0EE5D36F-CACF-41E9-8C9A-76FFD946B22D}</Project>

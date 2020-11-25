@@ -3,9 +3,10 @@ using System;
 using System.Collections.Generic;
 using System.Collections.ObjectModel;
 using System.IO;
-using System.Linq;
 using System.Text;
-using System.Threading.Tasks;
+using static SonicRetro.SACommon.ByteConverter;
+using static SonicRetro.SACommon.Helper;
+
 
 namespace SonicRetro.SAModel.ObjData
 {
@@ -67,49 +68,52 @@ namespace SonicRetro.SAModel.ObjData
 		{
 			MetaData result = new MetaData();
 
-			uint tmpAddr = ByteConverter.ToUInt32(source, 0xC);
+			uint tmpAddr = source.ToUInt32(0xC);
 			Dictionary<uint, string> labels = new Dictionary<uint, string>();
-			switch (version)
+			switch(version)
 			{
 				case 0:
-					if (!mdl) goto case 1;
+					if(!mdl)
+						goto case 1;
 
 					// reading animation locations
-					if (tmpAddr != 0)
+					if(tmpAddr != 0)
 					{
-						uint pathAddr = ByteConverter.ToUInt32(source, tmpAddr);
-						while (pathAddr != uint.MaxValue)
+						uint pathAddr = source.ToUInt32(tmpAddr);
+						while(pathAddr != uint.MaxValue)
 						{
 							result.AnimFiles.Add(source.GetCString(pathAddr));
 							tmpAddr += 4;
-							pathAddr = ByteConverter.ToUInt32(source, tmpAddr);
+							pathAddr = source.ToUInt32(tmpAddr);
 						}
 					}
 
-					tmpAddr = ByteConverter.ToUInt32(source, 0x10);
+					tmpAddr = source.ToUInt32(0x10);
 					if(tmpAddr != 0)
 					{
-						uint pathAddr = ByteConverter.ToUInt32(source, tmpAddr);
-						while (pathAddr != uint.MaxValue)
+						uint pathAddr = source.ToUInt32(tmpAddr);
+						while(pathAddr != uint.MaxValue)
 						{
 							result.MorphFiles.Add(source.GetCString(pathAddr));
 							tmpAddr += 4;
-							pathAddr = ByteConverter.ToUInt32(source, tmpAddr);
+							pathAddr = source.ToUInt32(tmpAddr);
 						}
 					}
 
 					goto case 1;
 				case 1:
-					if(mdl) tmpAddr = ByteConverter.ToUInt32(source, 0x14);
-					if (tmpAddr == 0) break;
+					if(mdl)
+						tmpAddr = source.ToUInt32(0x14);
+					if(tmpAddr == 0)
+						break;
 
 					// version 1 added labels
-					uint addr = ByteConverter.ToUInt32(source, tmpAddr);
-					while (addr != uint.MaxValue)
+					uint addr = source.ToUInt32(tmpAddr);
+					while(addr != uint.MaxValue)
 					{
-						labels.Add(addr, source.GetCString(ByteConverter.ToUInt32(source, tmpAddr + 4)));
+						labels.Add(addr, source.GetCString(source.ToUInt32(tmpAddr + 4)));
 						tmpAddr += 8;
-						addr = ByteConverter.ToUInt32(source, tmpAddr);
+						addr = source.ToUInt32(tmpAddr);
 					}
 					break;
 				case 2:
@@ -118,44 +122,45 @@ namespace SonicRetro.SAModel.ObjData
 					// where version 3 refined the concept to make 
 					// a block use local addresses to that block
 
-					if (tmpAddr == 0) break;
-					MetaType type = (MetaType)ByteConverter.ToUInt32(source, tmpAddr);
+					if(tmpAddr == 0)
+						break;
+					MetaType type = (MetaType)source.ToUInt32(tmpAddr);
 
 					while(type != MetaType.End)
 					{
-						uint blockSize = ByteConverter.ToUInt32(source, tmpAddr + 4);
+						uint blockSize = source.ToUInt32(tmpAddr + 4);
 						tmpAddr += 8;
 						uint nextMetaBlock = tmpAddr + blockSize;
 						uint pathAddr;
 
-						if (version == 2)
+						if(version == 2)
 						{
 
-							switch (type)
+							switch(type)
 							{
 								case MetaType.Label:
-									while (ByteConverter.ToInt64(source, tmpAddr) != -1)
+									while(source.ToInt64(tmpAddr) != -1)
 									{
-										labels.Add(ByteConverter.ToUInt32(source, tmpAddr), source.GetCString(ByteConverter.ToUInt32(source, tmpAddr + 4)));
+										labels.Add(source.ToUInt32(tmpAddr), source.GetCString(source.ToUInt32(tmpAddr + 4)));
 										tmpAddr += 8;
 									}
 									break;
 								case MetaType.Animation:
-									pathAddr = ByteConverter.ToUInt32(source, tmpAddr);
-									while (pathAddr != uint.MaxValue)
+									pathAddr = source.ToUInt32(tmpAddr);
+									while(pathAddr != uint.MaxValue)
 									{
 										result.AnimFiles.Add(source.GetCString(pathAddr));
 										tmpAddr += 4;
-										pathAddr = ByteConverter.ToUInt32(source, tmpAddr);
+										pathAddr = source.ToUInt32(tmpAddr);
 									}
 									break;
 								case MetaType.Morph:
-									pathAddr = ByteConverter.ToUInt32(source, tmpAddr);
-									while (pathAddr != uint.MaxValue)
+									pathAddr = source.ToUInt32(tmpAddr);
+									while(pathAddr != uint.MaxValue)
 									{
 										result.MorphFiles.Add(source.GetCString(pathAddr));
 										tmpAddr += 4;
-										pathAddr = ByteConverter.ToUInt32(source, tmpAddr);
+										pathAddr = source.ToUInt32(tmpAddr);
 									}
 									break;
 								case MetaType.Author:
@@ -171,32 +176,32 @@ namespace SonicRetro.SAModel.ObjData
 							byte[] block = new byte[blockSize];
 							Array.Copy(source, tmpAddr, block, 0, blockSize);
 							uint blockAddr = 0;
-							switch (type)
+							switch(type)
 							{
 								case MetaType.Label:
-									while (ByteConverter.ToInt64(block, blockAddr) != -1)
+									while(block.ToInt64(blockAddr) != -1)
 									{
-										labels.Add(ByteConverter.ToUInt32(block, blockAddr),
-											block.GetCString(ByteConverter.ToUInt32(block, blockAddr + 4)));
+										labels.Add(block.ToUInt32(blockAddr),
+											block.GetCString(block.ToUInt32(blockAddr + 4)));
 										blockAddr += 8;
 									}
 									break;
 								case MetaType.Animation:
-									pathAddr = ByteConverter.ToUInt32(block, blockAddr);
-									while (pathAddr != uint.MaxValue)
+									pathAddr = block.ToUInt32(blockAddr);
+									while(pathAddr != uint.MaxValue)
 									{
 										result.AnimFiles.Add(block.GetCString(pathAddr));
 										blockAddr += 4;
-										pathAddr = ByteConverter.ToUInt32(block, blockAddr);
+										pathAddr = block.ToUInt32(blockAddr);
 									}
 									break;
 								case MetaType.Morph:
-									pathAddr = ByteConverter.ToUInt32(block, blockAddr);
-									while (pathAddr != uint.MaxValue)
+									pathAddr = block.ToUInt32(blockAddr);
+									while(pathAddr != uint.MaxValue)
 									{
 										result.MorphFiles.Add(block.GetCString(pathAddr));
 										blockAddr += 4;
-										pathAddr = ByteConverter.ToUInt32(block, blockAddr);
+										pathAddr = block.ToUInt32(blockAddr);
 									}
 									break;
 								case MetaType.Author:
@@ -212,7 +217,7 @@ namespace SonicRetro.SAModel.ObjData
 						}
 
 						tmpAddr = nextMetaBlock;
-						type = (MetaType)ByteConverter.ToUInt32(source, tmpAddr);
+						type = (MetaType)source.ToUInt32(tmpAddr);
 					}
 					break;
 			}
@@ -242,62 +247,62 @@ namespace SonicRetro.SAModel.ObjData
 			}
 
 			// labels
-			if (labels.Count > 0)
+			if(labels.Count > 0)
 			{
 				List<byte> meta = new List<byte>((labels.Count * 8) + 8);
 				int straddr = (labels.Count * 8) + 8;
 				List<byte> strbytes = new List<byte>();
-				foreach (KeyValuePair<string, uint> label in labels)
+				foreach(KeyValuePair<string, uint> label in labels)
 				{
-					meta.AddRange(ByteConverter.GetBytes(label.Value));
-					meta.AddRange(ByteConverter.GetBytes(straddr + strbytes.Count));
+					meta.AddRange(GetBytes(label.Value));
+					meta.AddRange(GetBytes(straddr + strbytes.Count));
 					strbytes.AddRange(Encoding.UTF8.GetBytes(label.Key));
 					strbytes.Add(0);
 					strbytes.Align(4);
 				}
-				meta.AddRange(ByteConverter.GetBytes(-1L));
+				meta.AddRange(GetBytes(-1L));
 				meta.AddRange(strbytes);
 				MetaHeader(MetaType.Label, meta);
 			}
 
 			// animation files
-			if (AnimFiles != null && AnimFiles.Count > 0)
+			if(AnimFiles != null && AnimFiles.Count > 0)
 			{
 				List<byte> meta = new List<byte>((AnimFiles.Count + 1) * 4);
 				int straddr = (AnimFiles.Count + 1) * 4;
 				List<byte> strbytes = new List<byte>();
-				for (int i = 0; i < AnimFiles.Count; i++)
+				for(int i = 0; i < AnimFiles.Count; i++)
 				{
-					meta.AddRange(ByteConverter.GetBytes(straddr + strbytes.Count));
+					meta.AddRange(GetBytes(straddr + strbytes.Count));
 					strbytes.AddRange(Encoding.UTF8.GetBytes(AnimFiles[i]));
 					strbytes.Add(0);
 					strbytes.Align(4);
 				}
-				meta.AddRange(ByteConverter.GetBytes(-1));
+				meta.AddRange(GetBytes(-1));
 				meta.AddRange(strbytes);
 				MetaHeader(MetaType.Animation, meta);
 			}
 
 			// morph files
-			if (MorphFiles != null && MorphFiles.Count > 0)
+			if(MorphFiles != null && MorphFiles.Count > 0)
 			{
 				List<byte> meta = new List<byte>((MorphFiles.Count + 1) * 4);
 				int straddr = (MorphFiles.Count + 1) * 4;
 				List<byte> strbytes = new List<byte>();
-				for (int i = 0; i < MorphFiles.Count; i++)
+				for(int i = 0; i < MorphFiles.Count; i++)
 				{
-					meta.AddRange(ByteConverter.GetBytes(straddr + strbytes.Count));
+					meta.AddRange(GetBytes(straddr + strbytes.Count));
 					strbytes.AddRange(Encoding.UTF8.GetBytes(MorphFiles[i]));
 					strbytes.Add(0);
 					strbytes.Align(4);
 				}
-				meta.AddRange(ByteConverter.GetBytes(-1));
+				meta.AddRange(GetBytes(-1));
 				meta.AddRange(strbytes);
 				MetaHeader(MetaType.Morph, meta);
 			}
 
 			// author
-			if (!string.IsNullOrEmpty(Author))
+			if(!string.IsNullOrEmpty(Author))
 			{
 				List<byte> meta = new List<byte>(Author.Length + 1);
 				meta.AddRange(Encoding.UTF8.GetBytes(Author));
@@ -307,7 +312,7 @@ namespace SonicRetro.SAModel.ObjData
 			}
 
 			// description
-			if (!string.IsNullOrEmpty(Description))
+			if(!string.IsNullOrEmpty(Description))
 			{
 				List<byte> meta = new List<byte>(Description.Length + 1);
 				meta.AddRange(Encoding.UTF8.GetBytes(Description));
@@ -317,7 +322,7 @@ namespace SonicRetro.SAModel.ObjData
 			}
 
 			// other metadata
-			foreach (var item in Other)
+			foreach(var item in Other)
 			{
 				writer.WriteUInt32(item.Key);
 				writer.WriteUInt32((uint)item.Value.Length);

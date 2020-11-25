@@ -1,9 +1,8 @@
-﻿using SonicRetro.SAModel.Structs;
-using Color = SonicRetro.SAModel.Structs.Color;
+﻿using SonicRetro.SAModel.Graphics.APIAccess;
+using SonicRetro.SAModel.Graphics.UI;
 using System.Drawing;
 using System.Windows.Interop;
-using SonicRetro.SAModel.Graphics.UI;
-using SonicRetro.SAModel.Graphics.APIAccess;
+using Color = SonicRetro.SAModel.Structs.Color;
 
 namespace SonicRetro.SAModel.Graphics
 {

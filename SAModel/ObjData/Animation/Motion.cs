@@ -1,10 +1,11 @@
 ﻿using Reloaded.Memory.Streams;
 using Reloaded.Memory.Streams.Writers;
-using SonicRetro.SAModel.ModelData;
 using System;
 using System.Collections.Generic;
 using System.IO;
 using System.Text;
+using static SonicRetro.SACommon.ByteConverter;
+using static SonicRetro.SACommon.StringExtensions;
 
 namespace SonicRetro.SAModel.ObjData.Animation
 {
@@ -80,7 +81,7 @@ namespace SonicRetro.SAModel.ObjData.Animation
 			InterpolationMode = interpolationMode;
 			Keyframes = new Dictionary<int, Keyframes>();
 
-			Name = "animation_" + Extensions.GenerateIdentifier();
+			Name = "animation_" + GenerateIdentifier();
 		}
 
 		/// <summary>
@@ -92,7 +93,8 @@ namespace SonicRetro.SAModel.ObjData.Animation
 			foreach(var k in Keyframes.Values)
 			{
 				uint count = k.KeyframeCount;
-				if (count > Frames) Frames = count;
+				if(count > Frames)
+					Frames = count;
 			}
 		}
 
@@ -109,10 +111,10 @@ namespace SonicRetro.SAModel.ObjData.Animation
 		public static Motion Read(byte[] source, ref uint address, uint imageBase, uint modelCount, Dictionary<uint, string> labels, bool shortrot = false)
 		{
 			string name = labels.ContainsKey(address) ? labels[address] : "animation_" + address.ToString("X8");
-			uint Frames = ByteConverter.ToUInt32(source, address + 4);
-			AnimFlags animtype = (AnimFlags)ByteConverter.ToUInt16(source, address + 8);
+			uint Frames = source.ToUInt32(address + 4);
+			AnimFlags animtype = (AnimFlags)source.ToUInt16(address + 8);
 
-			ushort tmp = ByteConverter.ToUInt16(source, address + 10);
+			ushort tmp = source.ToUInt16(address + 10);
 			InterpolationMode mode = (InterpolationMode)((tmp >> 6) & 0x3);
 			int channels = (tmp & 0xF);
 
@@ -122,12 +124,12 @@ namespace SonicRetro.SAModel.ObjData.Animation
 				ShortRot = shortrot
 			};
 
-			uint tmpAddr = ByteConverter.ToUInt32(source, address) - imageBase;
-			for (int i = 0; i < modelCount; i++)
+			uint tmpAddr = source.ToUInt32(address) - imageBase;
+			for(int i = 0; i < modelCount; i++)
 			{
 				Keyframes kf = Animation.Keyframes.Read(source, ref tmpAddr, imageBase, channels, animtype, shortrot);
 
-				if (kf.HasKeyframes)
+				if(kf.HasKeyframes)
 					result.Keyframes.Add(i, kf);
 			}
 
@@ -153,34 +155,35 @@ namespace SonicRetro.SAModel.ObjData.Animation
 		/// <returns></returns>
 		public static Motion ReadFile(byte[] source, int modelCount = -1)
 		{
-			bool be = ByteConverter.BigEndian;
-			ByteConverter.BigEndian = false;
+			bool be = BigEndian;
+			BigEndian = false;
 
-			if((ByteConverter.ToUInt64(source, 0) & HeaderMask) != SAANIM) return null;
+			if((source.ToUInt64(0) & HeaderMask) != SAANIM)
+				return null;
 
 			byte version = source[7];
-			if (version > CurrentVersion)
+			if(version > CurrentVersion)
 			{
-				ByteConverter.BigEndian = be;
+				BigEndian = be;
 				throw new FormatException("Not a valid SAANIM file.");
 			}
 
-			uint aniaddr = ByteConverter.ToUInt32(source, 8);
+			uint aniaddr = source.ToUInt32(8);
 			Dictionary<uint, string> labels = new Dictionary<uint, string>();
 			uint tmpaddr = BitConverter.ToUInt32(source, 0xC);
-			if (tmpaddr != 0)
+			if(tmpaddr != 0)
 				labels.Add(aniaddr, source.GetCString(tmpaddr));
-			if (version > 0)
+			if(version > 0)
 				modelCount = BitConverter.ToInt32(source, 0x10);
-			else if (modelCount == -1)
+			else if(modelCount == -1)
 			{
-				ByteConverter.BigEndian = be;
+				BigEndian = be;
 				throw new NotImplementedException("Cannot open version 0 animations without a model!");
 			}
 
 			Motion anim = Read(source, ref aniaddr, 0, (uint)(modelCount & int.MaxValue), labels, modelCount < 0);
 
-			ByteConverter.BigEndian = be;
+			BigEndian = be;
 			return anim;
 		}
 
@@ -193,14 +196,14 @@ namespace SonicRetro.SAModel.ObjData.Animation
 		public uint Write(EndianMemoryStream writer, uint imageBase, Dictionary<string, uint> labels)
 		{
 			AnimFlags type = 0;
-			foreach (Keyframes kf in Keyframes.Values)
+			foreach(Keyframes kf in Keyframes.Values)
 				type |= kf.Type;
 
 			int channels = type.ChannelCount();
 
 			(uint addr, uint count)[][] keyFrameLocations = new (uint addr, uint count)[ModelCount][];
 
-			for (int i = 0; i < ModelCount; i++)
+			for(int i = 0; i < ModelCount; i++)
 			{
 				if(!Keyframes.ContainsKey(i))
 				{
@@ -216,9 +219,9 @@ namespace SonicRetro.SAModel.ObjData.Animation
 
 			foreach(var kf in keyFrameLocations)
 			{
-				for (int i = 0; i < kf.Length; i++)
+				for(int i = 0; i < kf.Length; i++)
 					writer.WriteUInt32(kf[i].addr);
-				for (int i = 0; i < kf.Length; i++)
+				for(int i = 0; i < kf.Length; i++)
 					writer.WriteUInt32(kf[i].count);
 			}
 

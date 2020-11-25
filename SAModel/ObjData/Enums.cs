@@ -32,7 +32,7 @@ namespace SonicRetro.SAModel.ObjData
 	/// NJS object flags
 	/// </summary>
 	[Flags]
-	public enum ObjectFlags : uint	
+	public enum ObjectFlags : uint
 	{
 		NoPosition = 0x01,
 		NoRotation = 0x02,
@@ -42,6 +42,24 @@ namespace SonicRetro.SAModel.ObjData
 		RotateZYX = 0x20,
 		NoAnimate = 0x40,
 		NoMorph = 0x80
+	}
+
+	/// <summary>
+	/// Struct enum
+	/// </summary>
+	[Flags]
+	public enum NJD_EVAL
+	{
+		NJD_EVAL_UNIT_POS = 0x01, /* ignore translation */
+		NJD_EVAL_UNIT_ANG = 0x02, /* ignore rotation */
+		NJD_EVAL_UNIT_SCL = 0x04, /* ignore scaling */
+		NJD_EVAL_HIDE = 0x08, /* do not draw model */
+		NJD_EVAL_BREAK = 0x10, /* terminate tracing children */
+		NJD_EVAL_ZXY_ANG = 0x20,
+		NJD_EVAL_SKIP = 0x40,
+		NJD_EVAL_SHAPE_SKIP = 0x80,
+		NJD_EVAL_CLIP = 0x0100,
+		NJD_EVAL_MODIFIER = 0x0200
 	}
 
 	/// <summary>
@@ -95,46 +113,53 @@ namespace SonicRetro.SAModel.ObjData
 		Point = 0x1000
 	}
 
+	public enum InterpolationMode
+	{
+		Linear,
+		Spline,
+		User
+	}
+
 	/// <summary>
 	/// SA1 geometry surface information
 	/// </summary>
 	[Flags]
 	public enum SA1SurfaceFlags : uint
 	{
-		Solid					= 0x1,
-		Water					= 0x2,
-		NoFriction				= 0x4,
-		NoAcceleration			= 0x8,
-		CannotLand				= 0x40,
-		IncreasedAcceleration	= 0x80,
-		Diggable				= 0x100,
-		NotClimbable			= 0x1000,
-		Hurt					= 0x10000,
-		Footprints				= 0x100000,
-		Visible					= 0x80000000
+		Solid = 0x1,
+		Water = 0x2,
+		NoFriction = 0x4,
+		NoAcceleration = 0x8,
+		CannotLand = 0x40,
+		IncreasedAcceleration = 0x80,
+		Diggable = 0x100,
+		NotClimbable = 0x1000,
+		Hurt = 0x10000,
+		Footprints = 0x100000,
+		Visible = 0x80000000
 	}
 
 	[Flags]
 	public enum SA2SurfaceFlags : uint
 	{
-		Solid				= 0x1,
-		Water				= 0x2,
-		NoFriction			= 0x4,
-		NoAcceleration		= 0x8,
-		LessAcceleration	= 0x10,
-		Diggable			= 0x20,
-		NotClimbable		= 0x80,
-		IgnoreSlope			= 0x100,
-		Hurt				= 0x400,
-		CannotLand			= 0x1000,
-		Water2				= 0x2000,
-		NoShadows			= 0x8000,
-		NoFog				= 0x400000,
-		Unknown24			= 0x1000000,
-		Unknown27			= 0x8000000,
-		Unknown29			= 0x20000000,
-		Unknown30			= 0x40000000,
-		Visible				= 0x80000000
+		Solid = 0x1,
+		Water = 0x2,
+		NoFriction = 0x4,
+		NoAcceleration = 0x8,
+		LessAcceleration = 0x10,
+		Diggable = 0x20,
+		NotClimbable = 0x80,
+		IgnoreSlope = 0x100,
+		Hurt = 0x400,
+		CannotLand = 0x1000,
+		Water2 = 0x2000,
+		NoShadows = 0x8000,
+		NoFog = 0x400000,
+		Unknown24 = 0x1000000,
+		Unknown27 = 0x8000000,
+		Unknown29 = 0x20000000,
+		Unknown30 = 0x40000000,
+		Visible = 0x80000000
 	}
 
 	public static partial class EnumExtensions
@@ -148,27 +173,27 @@ namespace SonicRetro.SAModel.ObjData
 		{
 			SurfaceFlags result = 0;
 
-			if (flags.HasFlag(SA1SurfaceFlags.Solid))
+			if(flags.HasFlag(SA1SurfaceFlags.Solid))
 				result |= SurfaceFlags.Solid;
-			if (flags.HasFlag(SA1SurfaceFlags.Water))
+			if(flags.HasFlag(SA1SurfaceFlags.Water))
 				result |= SurfaceFlags.Water;
-			if (flags.HasFlag(SA1SurfaceFlags.NoFriction))
+			if(flags.HasFlag(SA1SurfaceFlags.NoFriction))
 				result |= SurfaceFlags.NoFriction;
-			if (flags.HasFlag(SA1SurfaceFlags.NoAcceleration))
+			if(flags.HasFlag(SA1SurfaceFlags.NoAcceleration))
 				result |= SurfaceFlags.NoAcceleration;
-			if (flags.HasFlag(SA1SurfaceFlags.CannotLand))
+			if(flags.HasFlag(SA1SurfaceFlags.CannotLand))
 				result |= SurfaceFlags.CannotLand;
-			if (flags.HasFlag(SA1SurfaceFlags.IncreasedAcceleration))
+			if(flags.HasFlag(SA1SurfaceFlags.IncreasedAcceleration))
 				result |= SurfaceFlags.IncreasedAcceleration;
-			if (flags.HasFlag(SA1SurfaceFlags.Diggable))
+			if(flags.HasFlag(SA1SurfaceFlags.Diggable))
 				result |= SurfaceFlags.Diggable;
-			if (flags.HasFlag(SA1SurfaceFlags.NotClimbable))
+			if(flags.HasFlag(SA1SurfaceFlags.NotClimbable))
 				result |= SurfaceFlags.NotClimbable;
-			if (flags.HasFlag(SA1SurfaceFlags.Hurt))
+			if(flags.HasFlag(SA1SurfaceFlags.Hurt))
 				result |= SurfaceFlags.Hurt;
-			if (flags.HasFlag(SA1SurfaceFlags.Footprints))
+			if(flags.HasFlag(SA1SurfaceFlags.Footprints))
 				result |= SurfaceFlags.Footprints;
-			if (flags.HasFlag(SA1SurfaceFlags.Visible))
+			if(flags.HasFlag(SA1SurfaceFlags.Visible))
 				result |= SurfaceFlags.Visible;
 
 			return result;
@@ -183,41 +208,41 @@ namespace SonicRetro.SAModel.ObjData
 		{
 			SurfaceFlags result = 0;
 
-			if (flags.HasFlag(SA2SurfaceFlags.Solid))
+			if(flags.HasFlag(SA2SurfaceFlags.Solid))
 				result |= SurfaceFlags.Solid;
-			if (flags.HasFlag(SA2SurfaceFlags.Water))
+			if(flags.HasFlag(SA2SurfaceFlags.Water))
 				result |= SurfaceFlags.Water;
-			if (flags.HasFlag(SA2SurfaceFlags.NoFriction))
+			if(flags.HasFlag(SA2SurfaceFlags.NoFriction))
 				result |= SurfaceFlags.NoFriction;
-			if (flags.HasFlag(SA2SurfaceFlags.NoAcceleration))
+			if(flags.HasFlag(SA2SurfaceFlags.NoAcceleration))
 				result |= SurfaceFlags.NoAcceleration;
-			if (flags.HasFlag(SA2SurfaceFlags.LessAcceleration))
+			if(flags.HasFlag(SA2SurfaceFlags.LessAcceleration))
 				result |= SurfaceFlags.LessAcceleration;
-			if (flags.HasFlag(SA2SurfaceFlags.Diggable))
+			if(flags.HasFlag(SA2SurfaceFlags.Diggable))
 				result |= SurfaceFlags.Diggable;
-			if (flags.HasFlag(SA2SurfaceFlags.NotClimbable))
+			if(flags.HasFlag(SA2SurfaceFlags.NotClimbable))
 				result |= SurfaceFlags.NotClimbable;
-			if (flags.HasFlag(SA2SurfaceFlags.IgnoreSlope))
+			if(flags.HasFlag(SA2SurfaceFlags.IgnoreSlope))
 				result |= SurfaceFlags.IgnoreSlope;
-			if (flags.HasFlag(SA2SurfaceFlags.Hurt))
+			if(flags.HasFlag(SA2SurfaceFlags.Hurt))
 				result |= SurfaceFlags.Hurt;
-			if (flags.HasFlag(SA2SurfaceFlags.CannotLand))
+			if(flags.HasFlag(SA2SurfaceFlags.CannotLand))
 				result |= SurfaceFlags.CannotLand;
-			if (flags.HasFlag(SA2SurfaceFlags.Water2))
+			if(flags.HasFlag(SA2SurfaceFlags.Water2))
 				result |= SurfaceFlags.Water2;
-			if (flags.HasFlag(SA2SurfaceFlags.NoShadows))
+			if(flags.HasFlag(SA2SurfaceFlags.NoShadows))
 				result |= SurfaceFlags.NoShadows;
-			if (flags.HasFlag(SA2SurfaceFlags.NoFog))
+			if(flags.HasFlag(SA2SurfaceFlags.NoFog))
 				result |= SurfaceFlags.NoFog;
-			if (flags.HasFlag(SA2SurfaceFlags.Unknown24))
+			if(flags.HasFlag(SA2SurfaceFlags.Unknown24))
 				result |= SurfaceFlags.Unknown24;
-			if (flags.HasFlag(SA2SurfaceFlags.Unknown27))
+			if(flags.HasFlag(SA2SurfaceFlags.Unknown27))
 				result |= SurfaceFlags.Unknown27;
-			if (flags.HasFlag(SA2SurfaceFlags.Unknown29))
+			if(flags.HasFlag(SA2SurfaceFlags.Unknown29))
 				result |= SurfaceFlags.Unknown29;
-			if (flags.HasFlag(SA2SurfaceFlags.Unknown30))
+			if(flags.HasFlag(SA2SurfaceFlags.Unknown30))
 				result |= SurfaceFlags.Unknown30;
-			if (flags.HasFlag(SA2SurfaceFlags.Visible))
+			if(flags.HasFlag(SA2SurfaceFlags.Visible))
 				result |= SurfaceFlags.Visible;
 
 			return result;
@@ -232,32 +257,31 @@ namespace SonicRetro.SAModel.ObjData
 		{
 			SA1SurfaceFlags result = 0;
 
-			if (flags.HasFlag(SurfaceFlags.Solid))
+			if(flags.HasFlag(SurfaceFlags.Solid))
 				result |= SA1SurfaceFlags.Solid;
-			if (flags.HasFlag(SurfaceFlags.Water))
+			if(flags.HasFlag(SurfaceFlags.Water))
 				result |= SA1SurfaceFlags.Water;
-			if (flags.HasFlag(SurfaceFlags.NoFriction))
+			if(flags.HasFlag(SurfaceFlags.NoFriction))
 				result |= SA1SurfaceFlags.NoFriction;
-			if (flags.HasFlag(SurfaceFlags.NoAcceleration))
+			if(flags.HasFlag(SurfaceFlags.NoAcceleration))
 				result |= SA1SurfaceFlags.NoAcceleration;
-			if (flags.HasFlag(SurfaceFlags.CannotLand))
+			if(flags.HasFlag(SurfaceFlags.CannotLand))
 				result |= SA1SurfaceFlags.CannotLand;
-			if (flags.HasFlag(SurfaceFlags.IncreasedAcceleration))
+			if(flags.HasFlag(SurfaceFlags.IncreasedAcceleration))
 				result |= SA1SurfaceFlags.IncreasedAcceleration;
-			if (flags.HasFlag(SurfaceFlags.Diggable))
+			if(flags.HasFlag(SurfaceFlags.Diggable))
 				result |= SA1SurfaceFlags.Diggable;
-			if (flags.HasFlag(SurfaceFlags.NotClimbable))
+			if(flags.HasFlag(SurfaceFlags.NotClimbable))
 				result |= SA1SurfaceFlags.NotClimbable;
-			if (flags.HasFlag(SurfaceFlags.Hurt))
+			if(flags.HasFlag(SurfaceFlags.Hurt))
 				result |= SA1SurfaceFlags.Hurt;
-			if (flags.HasFlag(SurfaceFlags.Footprints))
+			if(flags.HasFlag(SurfaceFlags.Footprints))
 				result |= SA1SurfaceFlags.Footprints;
-			if (flags.HasFlag(SurfaceFlags.Visible))
+			if(flags.HasFlag(SurfaceFlags.Visible))
 				result |= SA1SurfaceFlags.Visible;
 
 			return result;
 		}
-
 
 		/// <summary>
 		/// Converts from the combined surface flags to sa2 surface flags
@@ -268,41 +292,41 @@ namespace SonicRetro.SAModel.ObjData
 		{
 			SA2SurfaceFlags result = 0;
 
-			if (flags.HasFlag(SurfaceFlags.Solid))
+			if(flags.HasFlag(SurfaceFlags.Solid))
 				result |= SA2SurfaceFlags.Solid;
-			if (flags.HasFlag(SurfaceFlags.Water))
+			if(flags.HasFlag(SurfaceFlags.Water))
 				result |= SA2SurfaceFlags.Water;
-			if (flags.HasFlag(SurfaceFlags.NoFriction))
+			if(flags.HasFlag(SurfaceFlags.NoFriction))
 				result |= SA2SurfaceFlags.NoFriction;
-			if (flags.HasFlag(SurfaceFlags.NoAcceleration))
+			if(flags.HasFlag(SurfaceFlags.NoAcceleration))
 				result |= SA2SurfaceFlags.NoAcceleration;
-			if (flags.HasFlag(SurfaceFlags.LessAcceleration))
+			if(flags.HasFlag(SurfaceFlags.LessAcceleration))
 				result |= SA2SurfaceFlags.LessAcceleration;
-			if (flags.HasFlag(SurfaceFlags.Diggable))
+			if(flags.HasFlag(SurfaceFlags.Diggable))
 				result |= SA2SurfaceFlags.Diggable;
-			if (flags.HasFlag(SurfaceFlags.NotClimbable))
+			if(flags.HasFlag(SurfaceFlags.NotClimbable))
 				result |= SA2SurfaceFlags.NotClimbable;
-			if (flags.HasFlag(SurfaceFlags.IgnoreSlope))
+			if(flags.HasFlag(SurfaceFlags.IgnoreSlope))
 				result |= SA2SurfaceFlags.IgnoreSlope;
-			if (flags.HasFlag(SurfaceFlags.Hurt))
+			if(flags.HasFlag(SurfaceFlags.Hurt))
 				result |= SA2SurfaceFlags.Hurt;
-			if (flags.HasFlag(SurfaceFlags.CannotLand))
+			if(flags.HasFlag(SurfaceFlags.CannotLand))
 				result |= SA2SurfaceFlags.CannotLand;
-			if (flags.HasFlag(SurfaceFlags.Water2))
+			if(flags.HasFlag(SurfaceFlags.Water2))
 				result |= SA2SurfaceFlags.Water2;
-			if (flags.HasFlag(SurfaceFlags.NoShadows))
+			if(flags.HasFlag(SurfaceFlags.NoShadows))
 				result |= SA2SurfaceFlags.NoShadows;
-			if (flags.HasFlag(SurfaceFlags.NoFog))
+			if(flags.HasFlag(SurfaceFlags.NoFog))
 				result |= SA2SurfaceFlags.NoFog;
-			if (flags.HasFlag(SurfaceFlags.Unknown24))
+			if(flags.HasFlag(SurfaceFlags.Unknown24))
 				result |= SA2SurfaceFlags.Unknown24;
-			if (flags.HasFlag(SurfaceFlags.Unknown27))
+			if(flags.HasFlag(SurfaceFlags.Unknown27))
 				result |= SA2SurfaceFlags.Unknown27;
-			if (flags.HasFlag(SurfaceFlags.Unknown29))
+			if(flags.HasFlag(SurfaceFlags.Unknown29))
 				result |= SA2SurfaceFlags.Unknown29;
-			if (flags.HasFlag(SurfaceFlags.Unknown30))
+			if(flags.HasFlag(SurfaceFlags.Unknown30))
 				result |= SA2SurfaceFlags.Unknown30;
-			if (flags.HasFlag(SurfaceFlags.Visible))
+			if(flags.HasFlag(SurfaceFlags.Visible))
 				result |= SA2SurfaceFlags.Visible;
 
 			return result;
@@ -318,8 +342,9 @@ namespace SonicRetro.SAModel.ObjData
 		public static int ChannelCount(this AnimFlags flags)
 		{
 			int channels = 0;
-			foreach (AnimFlags f in Enum.GetValues(typeof(AnimFlags)))
-				if (flags.HasFlag(f)) channels++;
+			foreach(AnimFlags f in Enum.GetValues(typeof(AnimFlags)))
+				if(flags.HasFlag(f))
+					channels++;
 			return channels;
 		}
 	}

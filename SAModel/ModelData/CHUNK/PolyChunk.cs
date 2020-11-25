@@ -1,6 +1,8 @@
 ﻿using Reloaded.Memory.Streams.Writers;
 using SonicRetro.SAModel.Structs;
 using System;
+using static SonicRetro.SACommon.ByteConverter;
+using static SonicRetro.SACommon.Helper;
 
 namespace SonicRetro.SAModel.ModelData.CHUNK
 {
@@ -14,7 +16,7 @@ namespace SonicRetro.SAModel.ModelData.CHUNK
 		/// Type of the polychunk
 		/// </summary>
 		public ChunkType Type { get; protected set; }
-		
+
 		/// <summary>
 		/// Flag byte of the poly chunk
 		/// </summary>
@@ -27,7 +29,7 @@ namespace SonicRetro.SAModel.ModelData.CHUNK
 
 		protected PolyChunk(ChunkType type)
 		{
-			if (type.IsVertex())
+			if(type.IsVertex())
 				throw new ArgumentException("Chunktype has to be ");
 			Type = type;
 		}
@@ -40,12 +42,12 @@ namespace SonicRetro.SAModel.ModelData.CHUNK
 		/// <returns></returns>
 		public static PolyChunk Read(byte[] source, ref uint address)
 		{
-			ushort header = ByteConverter.ToUInt16(source, address);
+			ushort header = source.ToUInt16(address);
 			ChunkType type = (ChunkType)(header & 0xFF);
 			byte flags = (byte)(header >> 8);
 
 			PolyChunk chunk;
-			switch (type)
+			switch(type)
 			{
 				case ChunkType.Null:
 					chunk = new PolyChunkNull();
@@ -370,10 +372,10 @@ namespace SonicRetro.SAModel.ModelData.CHUNK
 		/// <returns></returns>
 		public static PolyChunkTextureID Read(byte[] source, uint address)
 		{
-			ushort header = ByteConverter.ToUInt16(source, address);
+			ushort header = source.ToUInt16(address);
 			ChunkType type = (ChunkType)(header & 0xFF);
 			byte flags = (byte)(header >> 8);
-			ushort data = ByteConverter.ToUInt16(source, address + 2);
+			ushort data = source.ToUInt16(address + 2);
 
 			return new PolyChunkTextureID(type == ChunkType.Tiny_TextureID2)
 			{
@@ -435,9 +437,12 @@ namespace SonicRetro.SAModel.ModelData.CHUNK
 			get
 			{
 				ushort val = 0;
-				if (((byte)Type & 0x01) != 0) val += 2;
-				if (((byte)Type & 0x02) != 0) val += 2;
-				if (((byte)Type & 0x04) != 0) val += 2;
+				if(((byte)Type & 0x01) != 0)
+					val += 2;
+				if(((byte)Type & 0x02) != 0)
+					val += 2;
+				if(((byte)Type & 0x04) != 0)
+					val += 2;
 				return val;
 			}
 		}
@@ -510,8 +515,10 @@ namespace SonicRetro.SAModel.ModelData.CHUNK
 		private void TypeFlag(byte val, bool state)
 		{
 			byte type = (byte)Type;
-			if (state) Type = (ChunkType)(byte)(type | val);
-			else Type = (ChunkType)(byte)(type & ~val);
+			if(state)
+				Type = (ChunkType)(byte)(type | val);
+			else
+				Type = (ChunkType)(byte)(type & ~val);
 		}
 
 		/// <summary>
@@ -522,7 +529,7 @@ namespace SonicRetro.SAModel.ModelData.CHUNK
 		/// <returns></returns>
 		public static PolyChunkMaterial Read(byte[] source, uint address)
 		{
-			ushort header = ByteConverter.ToUInt16(source, address);
+			ushort header = source.ToUInt16(address);
 			ChunkType type = (ChunkType)(header & 0xFF);
 			byte flags = (byte)(header >> 8);
 			address += 4;
@@ -537,12 +544,12 @@ namespace SonicRetro.SAModel.ModelData.CHUNK
 				mat.Diffuse = Color.Read(source, ref address, IOType.ARGB8_16);
 			}
 
-			if (((byte)type & 0x02) != 0)
+			if(((byte)type & 0x02) != 0)
 			{
 				mat.Ambient = Color.Read(source, ref address, IOType.ARGB8_16);
 			}
 
-			if (((byte)type & 0x04) != 0)
+			if(((byte)type & 0x04) != 0)
 			{
 				Color spec = Color.Read(source, ref address, IOType.ARGB8_16);
 				mat.SpecularExponent = spec.A;
@@ -558,9 +565,11 @@ namespace SonicRetro.SAModel.ModelData.CHUNK
 		public override void Write(EndianMemoryStream writer)
 		{
 			base.Write(writer);
-			if (_diffuse.HasValue) _diffuse.Value.Write(writer, IOType.ARGB8_16);
-			if (_ambient.HasValue) _ambient.Value.Write(writer, IOType.ARGB8_16);
-			if (_specular.HasValue)
+			if(_diffuse.HasValue)
+				_diffuse.Value.Write(writer, IOType.ARGB8_16);
+			if(_ambient.HasValue)
+				_ambient.Value.Write(writer, IOType.ARGB8_16);
+			if(_specular.HasValue)
 			{
 				Color wSpecular = _specular.Value;
 				wSpecular.A = SpecularExponent;
@@ -585,19 +594,19 @@ namespace SonicRetro.SAModel.ModelData.CHUNK
 
 		public static PolyChunkMaterialBump Read(byte[] source, uint address)
 		{
-			ushort header = ByteConverter.ToUInt16(source, address);
+			ushort header = source.ToUInt16(address);
 			byte flags = (byte)(header >> 8);
 			address += 4;
 
 			return new PolyChunkMaterialBump()
 			{
 				Flags = flags,
-				DX = ByteConverter.ToUInt16(source, address),
-				DY = ByteConverter.ToUInt16(source, address += 2),
-				DZ = ByteConverter.ToUInt16(source, address += 2),
-				UX = ByteConverter.ToUInt16(source, address += 2),
-				UY = ByteConverter.ToUInt16(source, address += 2),
-				UZ = ByteConverter.ToUInt16(source, address += 2),
+				DX = source.ToUInt16(address),
+				DY = source.ToUInt16(address += 2),
+				DZ = source.ToUInt16(address += 2),
+				UX = source.ToUInt16(address += 2),
+				UY = source.ToUInt16(address += 2),
+				UZ = source.ToUInt16(address += 2),
 			};
 		}
 
@@ -626,7 +635,7 @@ namespace SonicRetro.SAModel.ModelData.CHUNK
 			/// Userflags of the triangle
 			/// </summary>
 			public ushort[] UserFlags { get; private set; }
-			
+
 			public override ushort Size(byte userFlags)
 			{
 				return (ushort)(6u + userFlags * 2u);
@@ -651,13 +660,13 @@ namespace SonicRetro.SAModel.ModelData.CHUNK
 
 				for(int i = 0; i < 3; i++)
 				{
-					tri.Indices[i] = ByteConverter.ToUInt16(source, address);
+					tri.Indices[i] = source.ToUInt16(address);
 					address += 2;
 				}
 
-				for (int i = 0; i < userflags; i++)
+				for(int i = 0; i < userflags; i++)
 				{
-					tri.UserFlags[i] = ByteConverter.ToUInt16(source, address);
+					tri.UserFlags[i] = source.ToUInt16(address);
 					address += 2;
 				}
 
@@ -666,7 +675,7 @@ namespace SonicRetro.SAModel.ModelData.CHUNK
 
 			public override void Write(EndianMemoryStream writer, byte userFlags)
 			{
-				foreach (ushort i in Indices)
+				foreach(ushort i in Indices)
 					writer.WriteUInt16(i);
 				for(int i = 0; i < userFlags; i++)
 					writer.WriteUInt16(UserFlags[i]);
@@ -710,15 +719,15 @@ namespace SonicRetro.SAModel.ModelData.CHUNK
 			{
 				Quad tri = new Quad();
 
-				for (int i = 0; i < 4; i++)
+				for(int i = 0; i < 4; i++)
 				{
-					tri.Indices[i] = ByteConverter.ToUInt16(source, address);
+					tri.Indices[i] = source.ToUInt16(address);
 					address += 2;
 				}
 
-				for (int i = 0; i < userflags; i++)
+				for(int i = 0; i < userflags; i++)
 				{
-					tri.UserFlags[i] = ByteConverter.ToUInt16(source, address);
+					tri.UserFlags[i] = source.ToUInt16(address);
 					address += 2;
 				}
 
@@ -727,9 +736,9 @@ namespace SonicRetro.SAModel.ModelData.CHUNK
 
 			public override void Write(EndianMemoryStream writer, byte userFlags)
 			{
-				foreach (ushort i in Indices)
+				foreach(ushort i in Indices)
 					writer.WriteUInt16(i);
-				for (int i = 0; i < userFlags; i++)
+				for(int i = 0; i < userFlags; i++)
 					writer.WriteUInt16(UserFlags[i]);
 			}
 
@@ -796,7 +805,7 @@ namespace SonicRetro.SAModel.ModelData.CHUNK
 			/// <returns></returns>
 			public static Strip Read(byte[] source, ref uint address, byte userflags)
 			{
-				short header = ByteConverter.ToInt16(source, address);
+				short header = source.ToInt16(address);
 				Strip r = new Strip(Math.Abs(header), header < 0);
 				address += 2;
 
@@ -804,22 +813,22 @@ namespace SonicRetro.SAModel.ModelData.CHUNK
 				bool flag2 = userflags > 1;
 				bool flag3 = userflags > 2;
 
-				r.Indices[0] = ByteConverter.ToUInt16(source, address);
-				r.Indices[1] = ByteConverter.ToUInt16(source, address += 2);
+				r.Indices[0] = source.ToUInt16(address);
+				r.Indices[1] = source.ToUInt16(address += 2);
 
-				for (int i = 2; i < r.Indices.Length; i++)
+				for(int i = 2; i < r.Indices.Length; i++)
 				{
-					r.Indices[i] = ByteConverter.ToUInt16(source, address += 2);
+					r.Indices[i] = source.ToUInt16(address += 2);
 					if(flag1)
 					{
 						int j = i - 2;
-						r.UserFlags1[j] = ByteConverter.ToUInt16(source, address += 2);
-						if (flag2)
+						r.UserFlags1[j] = source.ToUInt16(address += 2);
+						if(flag2)
 						{
-							r.UserFlags2[j] = ByteConverter.ToUInt16(source, address += 2);
-							if (flag3)
+							r.UserFlags2[j] = source.ToUInt16(address += 2);
+							if(flag3)
 							{
-								r.UserFlags3[j] = ByteConverter.ToUInt16(source, address += 2);
+								r.UserFlags3[j] = source.ToUInt16(address += 2);
 							}
 						}
 					}
@@ -840,17 +849,17 @@ namespace SonicRetro.SAModel.ModelData.CHUNK
 
 				writer.WriteUInt16(Indices[0]);
 				writer.WriteUInt16(Indices[1]);
-				for (int i = 2; i < count; i++)
+				for(int i = 2; i < count; i++)
 				{
 					writer.WriteUInt16(Indices[i]);
-					if (flag1)
+					if(flag1)
 					{
 						int j = i - 2;
 						writer.WriteUInt16(UserFlags1[j]);
-						if (flag2)
+						if(flag2)
 						{
 							writer.WriteUInt16(UserFlags2[j]);
-							if (flag3)
+							if(flag3)
 							{
 								writer.WriteUInt16(UserFlags3[j]);
 							}
@@ -934,9 +943,9 @@ namespace SonicRetro.SAModel.ModelData.CHUNK
 		/// <returns></returns>
 		public static PolyChunkVolume Read(byte[] source, uint address)
 		{
-			ushort header = ByteConverter.ToUInt16(source, address);
-			ushort size = ByteConverter.ToUInt16(source, address + 2);
-			ushort Header2 = ByteConverter.ToUInt16(source, address + 4);
+			ushort header = source.ToUInt16(address);
+			ushort size = source.ToUInt16(address + 2);
+			ushort Header2 = source.ToUInt16(address + 4);
 
 			ChunkType type = (ChunkType)(header & 0xFF);
 			byte flags = (byte)(header >> 8);
@@ -952,18 +961,18 @@ namespace SonicRetro.SAModel.ModelData.CHUNK
 
 			address += 6;
 
-			switch (type)
+			switch(type)
 			{
 				case ChunkType.Volume_Polygon3:
-					for (int i = 0; i < polyCount; i++)
+					for(int i = 0; i < polyCount; i++)
 						cnk.Polys[i] = Triangle.Read(source, ref address, userFlags);
 					break;
 				case ChunkType.Volume_Polygon4:
-					for (int i = 0; i < polyCount; i++)
+					for(int i = 0; i < polyCount; i++)
 						cnk.Polys[i] = Quad.Read(source, ref address, userFlags);
 					break;
 				case ChunkType.Volume_Strip:
-					for (int i = 0; i < polyCount; i++)
+					for(int i = 0; i < polyCount; i++)
 						cnk.Polys[i] = Strip.Read(source, ref address, userFlags);
 					break;
 				default:
@@ -980,13 +989,13 @@ namespace SonicRetro.SAModel.ModelData.CHUNK
 			foreach(Poly p in Polys)
 				size += p.Size(UserFlags);
 			size /= 2;
-			if (size > ushort.MaxValue)
+			if(size > ushort.MaxValue)
 				throw new InvalidOperationException($"Volume chunk size ({size}) exceeds maximum ({ushort.MaxValue})");
 			Size = (ushort)size;
 
 			base.Write(writer);
 
-			if (Polys.Length > 0x3FFF)
+			if(Polys.Length > 0x3FFF)
 				throw new InvalidOperationException($"Poly count ({Polys.Length}) exceeds maximum ({0x3FFF})");
 
 			writer.WriteUInt16((ushort)(Math.Min(Polys.Length, 0x3FFFu) | (ushort)(UserFlags << 14)));
@@ -1097,7 +1106,7 @@ namespace SonicRetro.SAModel.ModelData.CHUNK
 			/// <returns></returns>
 			public static Strip Read(byte[] source, ref uint address, byte userflags, bool hasUV, bool HDUV, bool hasNormal, bool hasColor)
 			{
-				short header = ByteConverter.ToInt16(source, address);
+				short header = source.ToInt16(address);
 				bool reverse = header < 0;
 				Corner[] corners = new Corner[Math.Abs(header)];
 
@@ -1113,25 +1122,28 @@ namespace SonicRetro.SAModel.ModelData.CHUNK
 				{
 					Corner c = new Corner()
 					{
-						index = ByteConverter.ToUInt16(source, address)
+						index = source.ToUInt16(address)
 					};
 					address += 2;
 
-					if(hasUV) c.uv = Vector2.Read(source, ref address, IOType.Short) * multiplier;
-					if (hasNormal) c.normal = Vector3.Read(source, ref address, IOType.Float);
-					else if (hasColor) c.color = Color.Read(source, ref address, IOType.ARGB8_16);
-					
+					if(hasUV)
+						c.uv = Vector2.Read(source, ref address, IOType.Short) * multiplier;
+					if(hasNormal)
+						c.normal = Vector3.Read(source, ref address, IOType.Float);
+					else if(hasColor)
+						c.color = Color.Read(source, ref address, IOType.ARGB8_16);
+
 					if(flag1 && i > 1)
 					{
-						c.userFlag1 = ByteConverter.ToUInt16(source, address);
+						c.userFlag1 = source.ToUInt16(address);
 						address += 2;
-						if (flag2)
+						if(flag2)
 						{
-							c.userFlag2 = ByteConverter.ToUInt16(source, address);
+							c.userFlag2 = source.ToUInt16(address);
 							address += 2;
-							if (flag3)
+							if(flag3)
 							{
-								c.userFlag3 = ByteConverter.ToUInt16(source, address);
+								c.userFlag3 = source.ToUInt16(address);
 								address += 2;
 							}
 						}
@@ -1166,18 +1178,21 @@ namespace SonicRetro.SAModel.ModelData.CHUNK
 				{
 					Corner c = Corners[i];
 					writer.WriteUInt16(c.index);
-					if (hasUV) (c.uv * multiplier).Write(writer, IOType.Short);
-					if (hasNormal) c.normal.Write(writer, IOType.Float);
-					else if (hasColor) c.color.Write(writer, IOType.ARGB8_16);
+					if(hasUV)
+						(c.uv * multiplier).Write(writer, IOType.Short);
+					if(hasNormal)
+						c.normal.Write(writer, IOType.Float);
+					else if(hasColor)
+						c.color.Write(writer, IOType.ARGB8_16);
 
 
-					if (flag1 && i > 1)
+					if(flag1 && i > 1)
 					{
 						writer.WriteUInt16(c.userFlag1);
-						if (flag2)
+						if(flag2)
 						{
 							writer.WriteUInt16(c.userFlag2);
-							if (flag3)
+							if(flag3)
 							{
 								writer.WriteUInt16(c.userFlag3);
 							}
@@ -1212,7 +1227,7 @@ namespace SonicRetro.SAModel.ModelData.CHUNK
 			{
 				if(value)
 				{
-					switch (Type)
+					switch(Type)
 					{
 						case ChunkType.Strip_Strip:
 							Type = ChunkType.Strip_StripUVN;
@@ -1230,7 +1245,7 @@ namespace SonicRetro.SAModel.ModelData.CHUNK
 				}
 				else
 				{
-					switch (Type)
+					switch(Type)
 					{
 						case ChunkType.Strip_StripUVN:
 						case ChunkType.Strip_StripUVH:
@@ -1267,10 +1282,11 @@ namespace SonicRetro.SAModel.ModelData.CHUNK
 			}
 			set
 			{
-				if (!HasUV) return;
+				if(!HasUV)
+					return;
 				if(value)
 				{
-					switch (Type)
+					switch(Type)
 					{
 						case ChunkType.Strip_StripUVN:
 							Type = ChunkType.Strip_StripUVH;
@@ -1288,7 +1304,7 @@ namespace SonicRetro.SAModel.ModelData.CHUNK
 				}
 				else
 				{
-					switch (Type)
+					switch(Type)
 					{
 						case ChunkType.Strip_StripUVH:
 							Type = ChunkType.Strip_StripUVN;
@@ -1322,7 +1338,7 @@ namespace SonicRetro.SAModel.ModelData.CHUNK
 			{
 				if(value)
 				{
-					switch (Type)
+					switch(Type)
 					{
 						case ChunkType.Strip_Strip:
 						case ChunkType.Strip_StripColor:
@@ -1343,7 +1359,7 @@ namespace SonicRetro.SAModel.ModelData.CHUNK
 				}
 				else
 				{
-					switch (Type)
+					switch(Type)
 					{
 						case ChunkType.Strip_StripNormal:
 							Type = ChunkType.Strip_Strip;
@@ -1372,9 +1388,9 @@ namespace SonicRetro.SAModel.ModelData.CHUNK
 			}
 			set
 			{
-				if (value)
+				if(value)
 				{
-					switch (Type)
+					switch(Type)
 					{
 						case ChunkType.Strip_Strip:
 						case ChunkType.Strip_StripNormal:
@@ -1395,7 +1411,7 @@ namespace SonicRetro.SAModel.ModelData.CHUNK
 				}
 				else
 				{
-					switch (Type)
+					switch(Type)
 					{
 						case ChunkType.Strip_StripColor:
 							Type = ChunkType.Strip_Strip;
@@ -1453,7 +1469,7 @@ namespace SonicRetro.SAModel.ModelData.CHUNK
 		public bool DoubleSide
 		{
 			get => (Flags & 0x10) != 0;
-			set => _ = value ? Flags |= 0x10: Flags &= 0xEF;
+			set => _ = value ? Flags |= 0x10 : Flags &= 0xEF;
 		}
 
 		/// <summary>
@@ -1501,16 +1517,16 @@ namespace SonicRetro.SAModel.ModelData.CHUNK
 
 		public static PolyChunkStrip Read(byte[] source, uint address)
 		{
-			ushort header = ByteConverter.ToUInt16(source, address);
-			ushort size = ByteConverter.ToUInt16(source, address + 2);
-			ushort Header2 = ByteConverter.ToUInt16(source, address + 4);
+			ushort header = source.ToUInt16(address);
+			ushort size = source.ToUInt16(address + 2);
+			ushort Header2 = source.ToUInt16(address + 4);
 
 			ChunkType type = (ChunkType)(header & 0xFF);
 			byte flags = (byte)(header >> 8);
 			ushort polyCount = (ushort)(Header2 & 0x3FFFu);
 			byte userFlags = (byte)(Header2 >> 14);
 
-			if (type >= ChunkType.Strip_Strip2)
+			if(type >= ChunkType.Strip_Strip2)
 				throw new NotImplementedException("Param2 types for strips not supported");
 
 			PolyChunkStrip cnk = new PolyChunkStrip(polyCount, userFlags)
@@ -1544,11 +1560,11 @@ namespace SonicRetro.SAModel.ModelData.CHUNK
 
 			// recalculating the size
 			uint size = 2;
-			foreach (Strip str in Strips)
+			foreach(Strip str in Strips)
 				size += str.Size(UserFlags, hasUV, hasNormal, hasColor);
 			size /= 2;
 
-			if (size > ushort.MaxValue)
+			if(size > ushort.MaxValue)
 				throw new InvalidOperationException($"Strip chunk size ({size}) exceeds maximum ({ushort.MaxValue})");
 			Size = (ushort)size;
 
@@ -1559,7 +1575,7 @@ namespace SonicRetro.SAModel.ModelData.CHUNK
 
 			writer.WriteUInt16((ushort)(Math.Min(Strips.Length, 0x3FFFu) | (ushort)(UserFlags << 14)));
 
-			foreach (Strip s in Strips)
+			foreach(Strip s in Strips)
 				s.Write(writer, UserFlags, hasUV, uvhd, hasNormal, hasColor);
 		}
 

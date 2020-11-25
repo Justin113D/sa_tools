@@ -2,6 +2,8 @@
 using SonicRetro.SAModel.Structs;
 using System;
 using System.IO;
+using static SonicRetro.SACommon.ByteConverter;
+using static SonicRetro.SACommon.StringExtensions;
 
 namespace SonicRetro.SAModel.ModelData.BASIC
 {
@@ -237,9 +239,9 @@ namespace SonicRetro.SAModel.ModelData.BASIC
 		{
 			Color dif = Color.Read(source, ref address, IOType.ARGB8_32);
 			Color spec = Color.Read(source, ref address, IOType.ARGB8_32);
-			float exp = ByteConverter.ToSingle(source, address);
-			uint texID = ByteConverter.ToUInt32(source, address + 4);
-			uint flags = ByteConverter.ToUInt32(source, address + 8);
+			float exp = source.ToSingle(address);
+			uint texID = source.ToUInt32(address + 4);
+			uint flags = source.ToUInt32(address + 8);
 			address += 12;
 
 			return new Material()
@@ -283,7 +285,7 @@ namespace SonicRetro.SAModel.ModelData.BASIC
 			writer.Write("AttrTexId \t( ");
 			writer.Write(((StructEnums.NJD_CALLBACK)callback).ToString().Replace(", ", " | "));
 			writer.Write(", ");
-			if (textures == null || texid >= textures.Length)
+			if(textures == null || texid >= textures.Length)
 				writer.Write(texid);
 			else
 				writer.Write(textures[texid].MakeIdentifier());
@@ -292,7 +294,7 @@ namespace SonicRetro.SAModel.ModelData.BASIC
 			// writing flags
 			writer.Write("AttrFlags \t( ");
 			writer.Write(((StructEnums.MaterialFlags)(Flags & ~0x7F)).ToString().Replace(", ", " | "));
-			if (UserFlags != 0)
+			if(UserFlags != 0)
 				writer.Write(" | 0x" + UserFlags.ToString("X"));
 			writer.WriteLine(")");
 

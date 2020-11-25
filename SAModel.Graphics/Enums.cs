@@ -1,10 +1,4 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
-
-namespace SonicRetro.SAModel.Graphics
+﻿namespace SonicRetro.SAModel.Graphics
 {
 	/// <summary>
 	/// Currently open debug menu
@@ -87,7 +81,7 @@ namespace SonicRetro.SAModel.Graphics
 		/// Everything is black (used for wireframe)
 		/// </summary>
 		FullDark = 0x04,
-	
+
 		/// <summary>
 		/// Renders normals
 		/// </summary>
@@ -102,12 +96,12 @@ namespace SonicRetro.SAModel.Graphics
 		/// Renders uv coordinates
 		/// </summary>
 		Texcoords = 0x07,
-		
+
 		/// <summary>
 		/// Renders textures only
 		/// </summary>
 		Textures = 0x08,
-		
+
 		/// <summary>
 		/// Displays the culling side
 		/// </summary>

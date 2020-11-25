@@ -1,5 +1,5 @@
-﻿using System;
-using Newtonsoft.Json;
+﻿using Newtonsoft.Json;
+using System;
 using System.IO;
 using System.Reflection;
 using System.Windows.Input;
@@ -104,14 +104,14 @@ namespace SonicRetro.SAModel.Graphics
 		public DebugSettings()
 		{
 			var fields = GetType().GetTypeInfo().GetFields();
-			foreach (var field in fields)
+			foreach(var field in fields)
 			{
 				SettingsKeyAttribute attr = field.GetCustomAttribute<SettingsKeyAttribute>();
-				if (attr != null)
+				if(attr != null)
 				{
-					if (field.FieldType == typeof(Key))
+					if(field.FieldType == typeof(Key))
 						field.SetValue(this, attr.DefaultKey);
-					else if (field.FieldType == typeof(MouseButton))
+					else if(field.FieldType == typeof(MouseButton))
 						field.SetValue(this, attr.DefaultMouse);
 				}
 			}
@@ -132,8 +132,8 @@ namespace SonicRetro.SAModel.Graphics
 		public void Save(string path)
 		{
 			JsonSerializer js = new JsonSerializer() { Culture = System.Globalization.CultureInfo.InvariantCulture };
-			using (TextWriter tw = File.CreateText(Path.ChangeExtension(path, ".json")))
-			using (JsonTextWriter jtw = new JsonTextWriter(tw) { Formatting = Formatting.Indented })
+			using(TextWriter tw = File.CreateText(Path.ChangeExtension(path, ".json")))
+			using(JsonTextWriter jtw = new JsonTextWriter(tw) { Formatting = Formatting.Indented })
 				js.Serialize(jtw, this);
 		}
 
@@ -147,11 +147,11 @@ namespace SonicRetro.SAModel.Graphics
 			JsonSerializer js = new JsonSerializer() { Culture = System.Globalization.CultureInfo.InvariantCulture };
 			try
 			{
-				using (TextReader tr = File.OpenText(path))
-				using (JsonTextReader jtr = new JsonTextReader(tr))
+				using(TextReader tr = File.OpenText(path))
+				using(JsonTextReader jtr = new JsonTextReader(tr))
 					settings = js.Deserialize<DebugSettings>(jtr);
 			}
-			catch (Exception)
+			catch(Exception)
 			{
 				return;
 			}

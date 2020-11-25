@@ -2,9 +2,7 @@
 using SonicRetro.SAModel.ModelData;
 using System;
 using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
+using static SonicRetro.SACommon.ByteConverter;
 
 namespace SonicRetro.SAModel.ObjData.Animation
 {
@@ -47,13 +45,15 @@ namespace SonicRetro.SAModel.ObjData.Animation
 		/// <returns></returns>
 		public static Action Read(byte[] source, uint address, uint imagebase, AttachFormat format, bool DX, Dictionary<uint, string> labels, Dictionary<uint, ModelData.Attach> attaches)
 		{
-			uint mdlAddress = ByteConverter.ToUInt32(source, address);
-			if (mdlAddress == 0) throw new FormatException($"Action at {address:X8} does not have a model!");
+			uint mdlAddress = source.ToUInt32(address);
+			if(mdlAddress == 0)
+				throw new FormatException($"Action at {address:X8} does not have a model!");
 			mdlAddress -= imagebase;
 			NJObject mdl = NJObject.Read(source, mdlAddress, imagebase, format, DX, labels, attaches);
 
-			uint aniAddress = ByteConverter.ToUInt32(source, address + 4);
-			if(aniAddress == 0) throw new FormatException($"Action at {address:X8} does not have a model!");
+			uint aniAddress = source.ToUInt32(address + 4);
+			if(aniAddress == 0)
+				throw new FormatException($"Action at {address:X8} does not have a model!");
 			aniAddress -= imagebase;
 			Motion mtn = Motion.Read(source, ref aniAddress, imagebase, (uint)mdl.Count(), labels);
 

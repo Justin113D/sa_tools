@@ -90,9 +90,9 @@
       <Project>{29BD5A4F-1400-471C-BCFC-F1EE2A0EC73A}</Project>
       <Name>PAKLib</Name>
     </ProjectReference>
-    <ProjectReference Include="..\SA Tools\SA Tools.csproj">
+    <ProjectReference Include="..\SA Tools\SASplit.csproj">
       <Project>{50847BDB-699D-4A2E-AAF7-1EA58E1EC48E}</Project>
-      <Name>SA Tools</Name>
+      <Name>SASplit</Name>
     </ProjectReference>
     <ProjectReference Include="..\SAModel.Direct3D\SAModel.Direct3D.csproj">
       <Project>{E81631CC-8721-425B-87A3-CB6199DECAF4}</Project>

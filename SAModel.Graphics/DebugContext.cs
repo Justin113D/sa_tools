@@ -1,16 +1,16 @@
-﻿using SonicRetro.SAModel.ModelData.Buffer;
+﻿using SonicRetro.SAModel.Graphics.APIAccess;
+using SonicRetro.SAModel.Graphics.UI;
+using SonicRetro.SAModel.ModelData.Buffer;
 using SonicRetro.SAModel.ObjData;
-using Color = SonicRetro.SAModel.Structs.Color;
+using SonicRetro.SAModel.Structs;
 using System;
 using System.Drawing;
 using System.Drawing.Drawing2D;
+using System.Drawing.Imaging;
 using System.Drawing.Text;
 using System.IO;
 using System.Windows.Input;
-using System.Drawing.Imaging;
-using SonicRetro.SAModel.Graphics.UI;
-using SonicRetro.SAModel.Graphics.APIAccess;
-using SonicRetro.SAModel.Structs;
+using Color = SonicRetro.SAModel.Structs.Color;
 
 namespace SonicRetro.SAModel.Graphics
 {
@@ -376,8 +376,8 @@ namespace SonicRetro.SAModel.Graphics
 			{
 				// rotation
 				Camera.Rotation = new Vector3(
-					Math.Max(-90, Math.Min(90, Camera.Rotation.X + Input.CursorDif.Y * CamMouseSensitivity)), 
-					(Camera.Rotation.Y + Input.CursorDif.X * CamMouseSensitivity) % 360f, 
+					Math.Max(-90, Math.Min(90, Camera.Rotation.X + Input.CursorDif.Y * CamMouseSensitivity)),
+					(Camera.Rotation.Y + Input.CursorDif.X * CamMouseSensitivity) % 360f,
 					0);
 
 				// modifying movement speed 

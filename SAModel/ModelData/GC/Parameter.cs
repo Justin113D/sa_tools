@@ -1,6 +1,7 @@
 ﻿using Reloaded.Memory.Streams.Writers;
 using SonicRetro.SAModel.Structs;
 using System;
+using static SonicRetro.SACommon.ByteConverter;
 
 namespace SonicRetro.SAModel.ModelData.GC
 {
@@ -59,9 +60,9 @@ namespace SonicRetro.SAModel.ModelData.GC
 		public static Parameter Read(byte[] source, uint address)
 		{
 			Parameter result = null;
-			ParameterType paramType = (ParameterType)ByteConverter.ToUInt32(source, address);
+			ParameterType paramType = (ParameterType)source.ToUInt32(address);
 
-			switch (paramType)
+			switch(paramType)
 			{
 				case ParameterType.VtxAttrFmt:
 					result = new VtxAttrFmtParameter(VertexAttribute.Null);
@@ -89,7 +90,7 @@ namespace SonicRetro.SAModel.ModelData.GC
 					break;
 			}
 
-			result._data = ByteConverter.ToUInt32(source, address + 4);
+			result._data = source.ToUInt32(address + 4);
 
 			return result;
 		}
@@ -160,7 +161,7 @@ namespace SonicRetro.SAModel.ModelData.GC
 			VertexAttribute = vertexAttrib;
 
 			// Setting the default values
-			switch (vertexAttrib)
+			switch(vertexAttrib)
 			{
 				case VertexAttribute.Position:
 					Unknown = 5120;

@@ -2,11 +2,6 @@
 using Reloaded.Memory.Streams.Writers;
 using SonicRetro.SAModel.Graphics.APIAccess;
 using SonicRetro.SAModel.Structs;
-using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
 
 namespace SonicRetro.SAModel.Graphics
 {

@@ -1,10 +1,10 @@
-﻿using System;
-using System.Collections.ObjectModel;
+﻿using Reloaded.Memory.Streams;
 using Reloaded.Memory.Streams.Writers;
-using Reloaded.Memory.Streams;
-using SonicRetro.SAModel.Structs;
-using SonicRetro.SAModel.ModelData.Buffer;
 using SonicRetro.SAModel.Graphics.APIAccess;
+using SonicRetro.SAModel.ModelData.Buffer;
+using SonicRetro.SAModel.Structs;
+using System;
+using System.Collections.ObjectModel;
 
 namespace SonicRetro.SAModel.Graphics
 {
@@ -27,7 +27,7 @@ namespace SonicRetro.SAModel.Graphics
 		{
 			get => _bufferMaterial;
 			set
-			{ 
+			{
 				if(value == null)
 					return;
 				_bufferMaterial = value.Clone();

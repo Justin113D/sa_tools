@@ -1,10 +1,4 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
-
-namespace SonicRetro.SAModel.ModelData.CHUNK
+﻿namespace SonicRetro.SAModel.ModelData.CHUNK
 {
 	/// <summary>
 	/// Vertex chunk weight status
@@ -135,7 +129,7 @@ namespace SonicRetro.SAModel.ModelData.CHUNK
 		/// <returns></returns>
 		public static ushort Size(this ChunkType type)
 		{
-			switch (type)
+			switch(type)
 			{
 				case ChunkType.Vertex_Vertex:
 					return 3;

@@ -1,9 +1,5 @@
-﻿using SonicRetro.SAModel.Structs;
+﻿using SonicRetro.SAModel.Graphics.APIAccess;
 using System.Collections.Generic;
-using System.Drawing;
-using System;
-using System.Collections.ObjectModel;
-using SonicRetro.SAModel.Graphics.APIAccess;
 
 namespace SonicRetro.SAModel.Graphics.UI
 {
@@ -25,8 +21,8 @@ namespace SonicRetro.SAModel.Graphics.UI
 			_renderQueue = new Queue<UIElement>();
 		}
 
-		public void Draw(UIElement element) =>_renderQueue.Enqueue(element);
-		
+		public void Draw(UIElement element) => _renderQueue.Enqueue(element);
+
 		/// <summary>
 		/// Renders the entire canvas
 		/// </summary>
